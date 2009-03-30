@@ -1,0 +1,49 @@
+# PF Library
+
+#@info     Модуль для работы с Апачевской авторизацией 
+#@author   Oleg Volchkov <oleg@volchkov.net>
+#@web      http://oleg.volchkov.net
+
+@CLASS
+pfAuthApache
+
+@USE
+pf/auth/pfAuthBase.p
+
+@BASE
+pfAuthBase
+
+#----- Constructor -----
+
+@create[aOptions]
+## aOptions.security - объект, реализующий контроль доступа
+  ^cleanMethodArgument[]
+  ^BASE:create[$aOptions]
+  $_isUserLogin(false)  
+  $_user[^hash::create[]]
+
+#----- Public -----
+
+@identify[aOptions]
+## Пытаемся определить пользователя сами, или зовем логин
+  ^if(def $env:REMOTE_USER){
+    $_user[
+      $.id[$env:REMOTE_USER]
+      $.ip[$env:REMOTE_ADDR]
+    ]
+  }{
+    $result(false)
+   }
+  $_isUserLogin($result)
+  
+@login[aOptions]
+## Принудительный логин. Текущие сессии игнорируются
+  $result(^identify[])
+
+@logout[aOptions]
+## Принудительный логаут пользователя
+  ^_user{^hash::create[]}
+  ^_isUserLogin(false)
+  $result(true)
+  
+

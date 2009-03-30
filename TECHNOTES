@@ -1,0 +1,11 @@
+PF Library
+Copyright (c) Oleg Volchkov
+http://oleg.volchkov.net
+---------------------------
+
+Рефлексия:
+  Методы начинаются с двух знаков подчеркивания.
+  Используется в pfWebRequest (метод __add вызывается из pfModule)
+  для обхода конфликта имен.
+  
+  
