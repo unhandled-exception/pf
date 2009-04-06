@@ -16,8 +16,19 @@ pf/tests/pfAssert.p
 #----- Constructor -----
 
 @create[]
-  $_isSerializable(false)
-  ^defReadProperty[isSerializable]
+  $__isDynamic(true)
+
+
+#----- Properties -----
+
+@GET_isDynamic[]
+## Возвращает true, если класс создан динамически
+  $result(def $__isDynamic && $__isDynamic)
+  
+@GET_isStatic[]  
+## Возвращает true, если класс создан статически
+  $result(!def $__isDynamic || $__isDynamic)
+
 
 #----- Public -----
 
@@ -51,15 +62,6 @@ pf/tests/pfAssert.p
 
 @equals[aObject]
 ## Возвращает true, если текущий объект равен aObject.
-  $result(false)
-  
-@serialize[]
-## Преобразует состояние объекта (переменные) в строку
-  $result[]
-
-@deserialize[aString]
-## Восстанавливает состояние объекта (переменные) из строки
-## Возвращает true, если удалось преобразовать.
   $result(false)
   
 @typeOf[aValue][lDone]
@@ -104,5 +106,17 @@ pf/tests/pfAssert.p
 
 @_abstractMethod[]
   ^pfAssert:fail[Не реализовано. Вызов абстрактного метода.]
+
+#----- Reflection -----
+
+#@__asString[]
+## Формирует строковое представление объекта класса (сериализация)
+## Проверка на сериализуемость объекта: ^if($object.__toString is junction)
+
+#@__fromString[aString]
+## Метод, который позволяет создать объект класса из строки (десериализация)
+## При динамическом вызове должен заполнять текущий экземпляр данными.
+## При статическом вызове должен возвращть объект текущего класса с данными.
+## Проверка на десериализуемость объекта: ^if($object.__fromString is junction)
 
 
