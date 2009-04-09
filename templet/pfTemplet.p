@@ -27,7 +27,7 @@ pfClass
 
   ^pfAssert:isTrue(!def $aOptions.cache || (def $aOptions.cache && $aOptions.cache is pfCache))[Кэш должен быть наследником pfCache.]
 
-  $_templateFolder[^if(def $aOptions.templateFolder && -d $aOptions.templateFolder){^aOptions.templateFolder.trim[end;/]/}{/../views/}]
+  $_templateFolder[^if(def $aOptions.templateFolder){^aOptions.templateFolder.trim[end;/]/}{/../views/}]
 
 # Хранилище откомпилированных шаблонов
   $_templates[^hash::create[]]

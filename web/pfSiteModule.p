@@ -113,7 +113,7 @@ pfModule
   ^if(!def $aTemplate || ^aTemplate.left(1) ne "/"){
      $lTemplatePrefix[$templatePath]
   }
-  $result[^TEMPLET.display[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};$aOptions]]
+  $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};$aOptions]]
 
 @display[aTemplate;aOptions]
 ## DEPRECATED!
@@ -154,7 +154,7 @@ pfModule
 
 
 @SET_templatePath[aPath]
-  $_templatePath[^aPath.trim[both;/]/]
+  $_templatePath[^if(def $aPath){^aPath.trim[both;/]}/]
 
 @GET_templatePath[]
   $result[$_templatePath]
