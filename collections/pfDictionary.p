@@ -18,14 +18,14 @@ pfCollection
 
 #----- Constructor -----
 
-@create[aValues]
+@create[aValues;aOptions]
 ## Создает коллекцию. 
 ## aValues - хэш (и только!), содержимое которго копируется в новую коллекцию.
 ##           Значения ключей копируются в лексикографическом порядке.
   ^pfAssert:isTrue(!def $aValues || (def $aValues && $aValues is hash))[В словарь может быть преобразован только хэш.]
   ^clear[]
   ^reset[]
-  ^BASE:create[$aValues]
+  ^BASE:create[$aValues;$aOptions]
 
 @clear[]
 ## Удаляет все элементы из коллекции

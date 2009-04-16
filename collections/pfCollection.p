@@ -17,23 +17,27 @@ pfClass
 
 #----- Constructor -----
 
-@create[aValues]
+@create[aValues;aOptions]
 ## Создает коллекцию. 
 ## aValues - таблица, хэш или коллекция, содержимое которой копируется в новую коллекцию.
-  ^pfAssert:isTrue(!def $aValues 
-     || (def $aValues && ($aValues is pfCollection || $aValues is hash || $aValues is table))
-  )
+## Если нам передали строку, то можно задать дополнитрельные опции:
+## aOptions.separator[,] - символ-разделитель элементов списка 
+## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
+## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы
   ^BASE:create[]
 
-  ^if(def $aValues){
-  	^if($aValues is table){
+  ^switch(true){
+  	^case($aValues is table){
   		^_importFromTable[$aValues]
   	}
-  	^if($aValues is hash){
+  	^case($aValues is hash){
   		^_importFromHash[$aValues]
   	}
-  	^if($aValues is pfCollection){
+  	^case($aValues is pfCollection){
   		^_importFromCollection[$aValues]
+  	}
+  	^case($aValues is string){
+  		^_importFromString[$aValues;$aOptions]
   	}
   }
 
@@ -64,6 +68,35 @@ pfClass
    	  ^add[$it]
     }	
   } 
+
+@_importFromString[aString;aOptions][lEncloser;lSeparator;lItem;lRegex]
+## aOptions.separator[,] - символ-разделитель элементов списка 
+## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
+## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  ^cleanMethodArgument[]
+  ^if(def $aString){
+    $lEncloser[^taint[regex][^if(def $aOptions.encloser || ($aOptions is hash && ^aOptions.contains[encloser])){$aOptions.encloser}{"}]]
+    $lEncloser[^lEncloser.trim[]]
+    $lSeparator[^taint[regex][^if(def $aOptions.separator){$aOptions.separator}{,}]]
+    ^if(def $lEncloser){
+      $lRegex[((?:\s*${lEncloser}(?:[^^${lEncloser}]*|${lEncloser}{2})*${lEncloser}\s*(?:${lSeparator}|^$))|\s*${lEncloser}[^^${lEncloser}]*${lEncloser}\s*(?:${lSeparator}|^$)|[^^${lSeparator}]+(?:${lSeparator}|^$)|(?:${lSeparator}))]
+    }{
+       $lRegex[([^^${lSeparator}]+(?:${lSeparator}|^$)|(?:${lSeparator}))]
+    }
+    ^aString.match[$lRegex][g]{
+      $lItem[^match.1.trim[right;$lSeparator]]
+      ^if(^aOptions.ignoreWhitespaces.bool(true)){
+        $lItem[^lItem.trim[]]
+      }
+      ^if(def $lEncloser){
+        $lItem[^lItem.match[${lEncloser}(.*)${lEncloser}][]{^match.1.match[${lEncloser}${lEncloser}][g]{${lEncloser}}}] 
+      }
+      ^add[$lItem]
+    }
+    ^if(^aString.right(1) eq $lSeparator){
+#     Хак: добавляем пустой элемент в конец коллекции, если строка заканчивается сепаратором.
+      ^add[]
+    }
+  }
     
 #----- Properties -----
 

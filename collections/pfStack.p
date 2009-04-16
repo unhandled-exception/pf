@@ -17,11 +17,11 @@ pfCollection
 
 #----- Constructor -----
 
-@create[aValues]
+@create[aValues;aOptions]
 ## Создает коллекцию. 
 ## aValues - таблица, хэш или коллекция, содержимое которой копируется в новую коллекцию.
   ^clear[]
-  ^BASE:create[$aValues]
+  ^BASE:create[$aValues;$aOptions]
 
 @clear[]
 ## Удаляет все элементы из коллекции

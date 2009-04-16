@@ -26,6 +26,7 @@ pfModule
 ## aOptions.authOptions
 ## aOptions.templet
 ## aOptions.templetOptions
+## aOptions.
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
