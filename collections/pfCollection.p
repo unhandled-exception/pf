@@ -70,6 +70,7 @@ pfClass
   } 
 
 @_importFromString[aString;aOptions][lEncloser;lSeparator;lItem;lRegex]
+## Добавляет в коллекцию данные из строки.
 ## aOptions.separator[,] - символ-разделитель элементов списка 
 ## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
 ## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  ^cleanMethodArgument[]

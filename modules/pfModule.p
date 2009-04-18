@@ -252,7 +252,7 @@ pfClass
     ^_rewriteMap.foreach[it]{
       ^if(!$result){
         ^if($it.isStatic){
-          ^if(^aAction.match[$it.pattern.pattern][i]){
+          ^if(^aAction.match[$it.pattern.pattern][in]){
             $result[$.action[$it.action] $.args[$it.args]]
             ^if(def $it.defaults){
                $result.args[^result.args.union[$it.defaults]]
