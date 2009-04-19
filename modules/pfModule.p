@@ -332,7 +332,7 @@ pfClass
 ## Формирует url для экшна
 ## $uriPrefix$aAction?aOptions.foreach[key=value][&]
   ^if(def $aAction){$aAction[^aAction.trim[both;/\.]]}
-  $result[$uriPrefix^if(def $aAction){$aAction}]
+  $result[$uriPrefix^if(def $aAction){$aAction}^if(!def ^file:justext[/$aAction]){/}]
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]
   }

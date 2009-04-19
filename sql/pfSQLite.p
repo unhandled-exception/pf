@@ -29,11 +29,11 @@ pfSQL
   }
 
 @startTransaction[aOptions]
-## Открывает транзакцию. Необходимо перекрыть для конкретного сервера.
+## Открывает транзакцию. 
   ^void{begin transaction}
 
 @commit[aOptions]
-## Комитит транзакцию. Необходимо перекрыть для конкретного сервера.
+## Комитит транзакцию. 
   ^void{commit transaction}
 
 @rollback[]
