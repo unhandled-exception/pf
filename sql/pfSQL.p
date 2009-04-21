@@ -18,6 +18,8 @@ pfSQL
 
 @USE
 pf/types/pfClass.p
+pf/collections/pfList.p
+pf/collections/pfDictionary.p
 
 @BASE
 pfClass
@@ -30,18 +32,20 @@ pfClass
 ## aOptions.isCaching(false) - включено ли кэширование?
 ## aOptions.cacheLifetime(3600) - время кеширования в секундах
 ## aOptions.cacheKeyPrefix[sql/] - префикс для ключа кеширования
-## aOptions.isNaturalTransactions(0) - выполнять транзакции средствами SQL-сервера.
-## aOptions.enableIdentityMap(0) - включить добавление результатов запросов в коллекцию объектов.
+## aOptions.isNaturalTransactions(false) - выполнять транзакции средствами SQL-сервера.
+## aOptions.enableIdentityMap(false) - включить добавление результатов запросов в коллекцию объектов.    
+## aOptions.enableQueriesLog(false) - включить логирование sql-запросов.
 
   ^cleanMethodArgument[]
-  ^pfAssert:isTrue(def $aConnectString)[Не определана строка соединения.]
+  ^pfAssert:isTrue(def $aConnectString)[Не задана строка соединения.]
+  
+  ^BASE:create[]
 
   $_connectString[$aConnectString]
   $_transactionCount(0)
 
   $_serverType[SQL Generic]
 
-# Готовим кэш
   $isCaching(^if(def $aOptions.isCaching){$aOptions.isCaching}{0})
   ^if(def $aOptions.cache){
     ^if($aOptions.cache is pfCache){
@@ -54,20 +58,21 @@ pfClass
   $_cacheLifetime(^aOptions.cacheLifetime.int(3600))
   $_cacheKeyPrefix[^if(def $aOptions.cacheKeyPrefix){$aOptions.cacheKeyPrefix}{sql/}]
 
-  $_isNaturalTransactions[^aOptions.isNaturalTransactions.int(0)]
+  $_isNaturalTransactions[^aOptions.isNaturalTransactions.bool(false)]
 
-  $_enableIdentityMap[^aOptions.enableIdentityMap.int(0)]  
+  $_enableIdentityMap[^aOptions.enableIdentityMap.bool(false)]  
   $_identityMap[]
-
+ 
+  $_enableQueriesLog(^aOptions.enableQueriesLog.bool(false))
   $_stat[
     $.queriesCount(0) 
     $.identityMap[
       $.size(0)
       $.usage(0)
-    ]
-    $.queries[^table::create{query}]
+    ]         
+    $.queries[^pfList::create[]]
     $.queriesTime(0)
-  ]
+  ]                    
   
 #----- Properties -----
 @GET_connectString[]
@@ -75,7 +80,6 @@ pfClass
 
 @GET_identityMap[]
   ^if(!def $_identityMap){
-    ^use[pf/collections/pfDictionary.p]
     $_identityMap[^pfDictionary::create[]]
   }
   $result[$_identityMap]
@@ -156,73 +160,69 @@ pfClass
 
 #----- Queries -----
 
-@table[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+@table[aQuery;aSQLOptions;aOptions][lQuery;lOptions]                        
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;table;$aSQLOptions;$aOptions]]
   $result[^_processIdentityMap{^_sql[table]{^table::sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions]]
 
 @hash[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;hash;$aSQLOptions;$aOptions]]
   $result[^_processIdentityMap{^_sql[hash]{^hash::sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions]]
 
 @file[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;file;$aSQLOptions;$aOptions]]
   $result[^_processIdentityMap{^_sql[file]{^file::sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions]]
 
 @string[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;string;$aSQLOptions;$aOptions]]
   $result[^_processIdentityMap{^_sql[string]{^string:sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions]]
 
 @double[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;double;$aSQLOptions;$aOptions]]
   $result(^_processIdentityMap{^_sql[double]{^double:sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions])
 
 @int[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;int;$aSQLOptions;$aOptions]]
   $result(^_processIdentityMap{^_sql[int]{^int:sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions])
 
 @void[aQuery;aSQLOptions;aOptions][lQuery]
-  $lQuery[^_processQuery{$aQuery}]
+  $lQuery[$aQuery]
   $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$aOptions]]
 
 @clearIdentityMap[]
   ^identityMap.clear[]
 
 #----- Private -----
-
-@_processQuery[aQuery]
-  $result[^if($isTransaction){$aQuery}{^connect[$connectString]{$aQuery}}]
-#   ^_stat.queries.append{^taint[$result]}
-
-
-@_processIdentityMap[aCode;aOptions][lKey;lResult]
+ 
+@_processIdentityMap[aCode;aOptions][lKey;lResult;lIsIM]
 ## Возвращает результат запроса из коллекции объектов.
 ## Если объект не найден, то запускает запрос и добавляет его результат в коллекцию.
 ## aOptions.isForce(0) - принудительно отменяет кеширование
-## aOptions.identityMapKey[] - ключ для коллекции (по-умолчанию MD5 на aQuery).
-  ^if($_enableIdentityMap && !^aOptions.isForce.int(0)){
-    $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
-    ^if(^identityMap.contains[$lKey]){
-      $result[^identityMap.by[$lKey]]
-      ^_stat.identityMap.usage.inc[]
-    }{
-       $result[$aCode]
-       ^identityMap.add[$lKey;$result]
-     }
+## aOptions.identityMapKey[] - ключ для коллекции (по-умолчанию MD5 на aQuery).    
+  $lIsIM($_enableIdentityMap && !^aOptions.isForce.int(0))
+  $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
+
+  ^if($lIsIM && ^identityMap.contains[$lKey]){
+    $result[^identityMap.by[$lKey]]
+    ^_stat.identityMap.usage.inc[]
   }{
      $result[$aCode]
+
+     ^if($lIsIM){
+       ^identityMap.add[$lKey;$result]
+     }
    }
 
 @_makeQueryKey[aQuery;aType;aSQLOptions]
 ## Формирует ключ для запроса
    $result[auto-${aType}-^math:md5[$aQuery]]
-   ^if(def $aSQLOptions.limit){$result[${result}-$aSQLOptions.limit]}
-   ^if(def $aSQLOptions.offset){$result[${result}-$aSQLOptions.offset]}
+   ^if(def $aSQLOptions.limit){$result[${result}-l$aSQLOptions.limit]}
+   ^if(def $aSQLOptions.offset){$result[${result}-o$aSQLOptions.offset]}
 
 @_getOptions[aQuery;aType;aSQLOptions;aOptions]
 ## Объединяет опции запроса в один хеш, и, при необходимости, 
@@ -230,10 +230,13 @@ pfClass
   ^cleanMethodArgument[]
   ^cleanMethodArgument[aSQLOptions]
   $result[^hash::create[$aOptions]]
-  ^result.add[$aSQLOptions]
+  ^result.add[$aSQLOptions]   
   $result.type[$aType]
   ^if(!$aOptions.isForce && ($_enableIdentityMap || $isCaching)){
     $result.queryKey[^_makeQueryKey[$aQuery;$aType;$aSQLOptions]]
+  }             
+  ^if($_enableQueriesLog){
+    $result.query[$aQuery]         
   }
 
 @_sql[aType;aCode;aOptions][lResult;lCacheKey]
@@ -248,19 +251,24 @@ pfClass
       && !^aOptions.isForce.int(0)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
-    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec{$aCode}}] 
+    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec{$aCode}[$aOptions]}] 
   }{
-     $result[^_exec{$aCode}]
+     $result[^_exec{$aCode}[$aOptions]]
    }
 
-@_exec[aCode][lStart;lEnd]
+@_exec[aCode;aOptions][lStart;lEnd]
 ## Выполняет sql-запрос. Если нужно оранизует транзакцию.
   $lStart($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
   $result[^if($isTransaction){$aCode}{^transaction{$aCode}}]
   $lEnd($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
-  ^_stat.queriesCount.inc[]
+  
   $_stat.queriesTime($_stat.queriesTime + ($lEnd-$lStart))
-
+  ^_stat.queriesCount.inc[]
+  ^if($_enableQueriesLog){
+    ^_stat.queries.add[$.query[^taint[$aOptions.query]] $.time($lEnd-$lStart)]
+  }
+  
+  
 #----- DATE functions -----
 
 @today[]
@@ -284,25 +292,25 @@ pfClass
 @time[sSource]
   ^_abstractMethod[]    
 
-@date_diff[t;sDateFrom;sDateTo]
+@dateDiff[t;sDateFrom;sDateTo]
   ^_abstractMethod[]    
 
-@date_sub[sDate;iDays]
+@dateSub[sDate;iDays]
   ^_abstractMethod[]    
 
-@date_add[sDate;iDays]
+@dateAdd[sDate;iDays]
   ^_abstractMethod[]    
 
 
 #----- Functions available not for all sql servers -----
 
-@date_format[sSource;sFormatString]
+@dateFormat[sSource;sFormatString]
   ^_abstractMethod[]    
 
-@last_insert_id[sTable]
+@lastInsertId[sTable]
   ^_abstractMethod[]    
 
-@set_last_insert_id[sTable;sField]
+@setLastInsertId[sTable;sField]
   ^_abstractMethod[]    
 
 #--- STRING functions ---
@@ -324,6 +332,6 @@ pfClass
 @password[sPassword]
   ^_abstractMethod[]    
 
-@left_join[sType;sTable;sJoinConditions;last]
+@leftJoin[sType;sTable;sJoinConditions;last]
   ^_abstractMethod[]    
 

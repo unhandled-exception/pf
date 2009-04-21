@@ -67,22 +67,22 @@ pfSQL
 @time[sSource]
   $result[time($sSource)]
 
-@date_diff[t;sDateFrom;sDateTo]
+@dateDiff[t;sDateFrom;sDateTo]
   $result[^if(def $sDateTo){julianday($sDateTo)}{^now[]} - julianday($sDateFrom)]
 
-@date_sub[sDate;iDays]
+@dateSub[sDate;iDays]
   $result[date(^if(def $sDate){$sDate}{^today[]}, '+$iDays day')]
 
-@date_add[sDate;iDays]
+@dateAdd[sDate;iDays]
   $result[date(^if(def $sDate){$sDate}{^today[]}, '-$iDays day')]
 
 
 #---- functions available not for all sql servers ----
 
-@date_format[sSource;sFormatString]
+@dateFormat[sSource;sFormatString]
   $result[strftime('^if(def $sFormatString){$sFormatString}{%Y-%m-%d}',$sSource)]
 
-@last_insert_id[sTable]
+@lastInsertId[sTable]
 	$result(^int{select last_insert_rowid()}[$.limit(1) $.default{0}])
 
 # @set_last_insert_id[sTable;sField]
@@ -108,7 +108,7 @@ pfSQL
 @password[sPassword]
    $result['^math:md5[$sPassword]']
 
-@left_join[sType;sTable;sJoinConditions;last]
+@leftJoin[sType;sTable;sJoinConditions;last]
 	^switch[^sType.lower[]]{
 		^case[from]{
 			$result[LEFT JOIN $sTable ON ($sJoinConditions)]

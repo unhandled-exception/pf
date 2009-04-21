@@ -67,25 +67,25 @@ pfSQL
 @time[sSource]
   $result[DATE_FORMAT($sSource,'%H:%i:%S')]
 
-@date_diff[t;sDateFrom;sDateTo]
+@dateDiff[t;sDateFrom;sDateTo]
   $result[^if(def $sDateTo){TO_DAYS($sDateTo)}{^now[]} - TO_DAYS($sDateFrom)]
 
-@date_sub[sDate;iDays]
+@dateSub[sDate;iDays]
   $result[DATE_SUB(^if(def $sDate){$sDate}{^today[]},INTERVAL $iDays DAY)]
 
-@date_add[sDate;iDays]
+@dateAdd[sDate;iDays]
   $result[DATE_ADD(^if(def $sDate){$sDate}{^today[]},INTERVAL $iDays DAY)]
 
 
 #---- functions available not for all sql servers ----
 
-@date_format[sSource;sFormatString]
+@dateFormat[sSource;sFormatString]
   $result[DATE_FORMAT($sSource, '^if(def $sFormatString){$sFormatString}{%Y-%m-%d}')]
 
-@last_insert_id[sTable]
+@lastInsertId[sTable]
 	$result(^int{SELECT last_insert_id()}[$.limit(1) $.default{0}])
 
-@set_last_insert_id[sTable;sField]
+@setLastInsertId[sTable;sField]
 	$result(^last_insert_id[$sTable])
 	^void{UPDATE $sTable SET ^if(def $sField){$sField}{sort_order} = $result WHERE ${sTable}_id = $result}
 
@@ -108,7 +108,7 @@ pfSQL
 @password[sPassword]
   $result[PASSWORD($sPassword)]
 
-@left_join[sType;sTable;sJoinConditions;last]
+@leftJoin[sType;sTable;sJoinConditions;last]
 	^switch[^sType.lower[]]{
 		^case[from]{
 			$result[LEFT JOIN $sTable ON ($sJoinConditions)]
