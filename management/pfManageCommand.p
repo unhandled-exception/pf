@@ -1,5 +1,8 @@
 # PF Library
 
+#@author   Oleg Volchkov <oleg@volchkov.net>
+#@web      http://oleg.volchkov.net
+
 @CLASS
 pfManageCommand
 
@@ -15,15 +18,23 @@ pfModule
 @create[aOptions]
   ^BASE:create[]
   
-  $_args[]
+  $_args[^hash::create[]]
   ^defReadProperty[args]
   
   $_help[]
   ^defReadProperty[help]
   
 
+@writeln[aLine]
+## Выводит строку на терминал.
+  ^pfConsole:writeln[$aLine]
+  
+@writeTimeLine[aLine][lNow]         
+## Выводит строку с отметокой времени
+  $lNow[^date::now[]]
+  ^writeln[[^lNow.sql-string[]] $aLine]
+
 @onDEFAULT[aRequest]
 ## Основной метод команды, который необходимо перекрыть в наследнике 
   ^_abstractMethod[]
-
 

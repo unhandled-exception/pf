@@ -1,3 +1,8 @@
+# PF Library
+
+#@author   Oleg Volchkov <oleg@volchkov.net>
+#@web      http://oleg.volchkov.net
+
 @CLASS
 pfCommandsManager
 
@@ -10,36 +15,48 @@ pf/collections/pfArrayList.p
 pfModule
 
 @create[aOptions]
-## aOptions.path - путь поиск команд
+## aOptions.path[/commands] - путь поиск команд
+## aOptions.args - хеш с данными, которые передаются конструктору команд
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
-#  ^pfAssert:isTrue(def $aOptions.path && -d $aOptons.path)[Путь "$aOptions.path" не существует.]
-#  $_commandsPath[$aOptions.path]
-
-  $_commandsPath[/commands]
-  ^defReadProperty[commandsPath]
+  $_commandsPath[^if(def $aOptions.path){$aOptions.path}{/commands}]
+  ^pfAssert:isTrue(def $_commandsPath && -d $_commandsPath)[Путь "$_commandsPath" не существует.]
 
   $_commandsArgs[$aOptions.args]
-  ^defReadProperty[commandsArgs]
-
   $_commandsNames[^pfArrayList::create[]]
+
+  ^defReadProperty[commandsArgs]
+  ^defReadProperty[commandsPath]
   ^defReadProperty[commandsNames]
 
   ^_findCommands[$commandsPath]
 
-#  ^commandsNames.foreach[it]{
-#    ^pfConsole:writeln[$it - $MODULES.[$it].object.help]
-#  }
+@usage[]
+## Выводит информацию обо всех доступных модулях
+  ^if($commandsNames){   
+    ^pfConsole:writeln[Available commands:]
+    ^commandsNames.foreach[it]{
+      ^pfConsole:writeln[$it]
+    }
+  }
 
 @process[aArgs]
   ^cleanMethodArgument[aArgs]
-  ^if($aArgs){
-    ^aArgs.foreach[k;v]{
-      ^pfConsole:writeln[$k -> $v]
-      
-    }
-  }
+  ^dispatch[$aArgs.1;$aArgs] 
+
+
+@writeln[aLine]
+## Выводит строку на терминал.
+  ^pfConsole:writeln[$aLine]
+
+@writeTimeLine[aLine][lNow]         
+## Выводит строку с отметокой времени
+  $lNow[^date::now[]]
+  ^writeln[[^lNow.sql-string[]] $aLine]
+
+@onDEFAULT[aArgs]
+  ^pfConsole:writeln[Command '$action' not found.]
 
 #----- Private -----
 
@@ -52,12 +69,12 @@ pfModule
   
   ^lFiles.menu{
      $lCommandName[^file:justname[$lFiles.name]]
+     ^commandsNames.add[$lCommandName]
      ^assignModule[$lCommandName;
        $.class[^_makeSpecialName[$lCommandName]Command]
        $.file[$aPath/$lFiles.name]
        $.args[$commandsArgs]
        $.compile(true)
      ]
-     ^commandsNames.add[$lCommandName]
   }
   

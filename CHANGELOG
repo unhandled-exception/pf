@@ -95,7 +95,7 @@ CHANGELOG...
      Таким образом экшн /one/two.three/ приводит к вызову обработчика onOneTwoThree.
   2. В методе pfModule.addRewritePattern новый параметр aOptions.defaults - хеш, который
      будет добавлен к параметрам экшна.
-     ^addRewritePattern[one/:two(/:three)?;test;$.defaults[%.three[default]]]
+     ^addRewritePattern[one/:two(/:three)?;test;$.defaults[$.three[default]]]
      test/123 -> $.two[123] $.three[default]
      Удобно использовать для задания дополнительных значений для экшна.
   3. Теперь нет необходимости добавлять к шаблону параметр aOptions.isStatic - если в шаблоне

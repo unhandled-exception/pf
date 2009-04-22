@@ -9,7 +9,7 @@ pfModule
 
 @USE
 pf/types/pfClass.p
-pf/collections/pfArrayList.p
+pf/collections/pfList.p
 pf/types/pfString.p
 
 @BASE
@@ -47,7 +47,7 @@ pfClass
   $_action[]
 
 # Коллекция с шаблонами для реврайта 
-  $_rewriteMap[^pfArrayList::create[]]
+  $_rewriteMap[^pfList::create[]]
 
 #----- Properties -----
 
