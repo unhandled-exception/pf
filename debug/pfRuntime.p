@@ -22,7 +22,8 @@ pf/tests/pfAssert.p
   $_parserVersion[^hash::create[]]
 
   $_memoryLimit(4096)
-  $_lastMemorySize($status:memory.used)
+  $_lastMemorySize($status:memory.used)   
+  $_compactsCount(0)
 
 @create[]
   ^pfAssert:fail[Класс pfRuntime может быть только статическим.]
@@ -48,16 +49,18 @@ pf/tests/pfAssert.p
 @GET_memoryLimit[]
   $result($_memoryLimit)
 
-@SET_memoryLimit[]
-  $_memoryLimit($_memoryLimit)
+@SET_memoryLimit[aMemoryLimit]
+  $_memoryLimit($aMemoryLimit)
 
 #----- Methods -----
 
 @compact[aOptions]
 ## Выполняет сборку мусора, если c момента последней сборки мусора было выделено
 ## больше $memoryLimit килобайт.
+  $result[]
   ^if(!($aOptions is hash)){$aOptions[^hash::create[]]}
   ^if(^aOptions.isForce.int(0) || ($status:memory.used - $_lastMemorySize) > $memoryLimit){
      ^memory:compact[]
-     $_lastMemorySize($status:memory.used)
-  }
+     $_lastMemorySize($status:memory.used)  
+     ^_compactsCount.inc[]
+  }     
