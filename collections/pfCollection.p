@@ -53,6 +53,7 @@ pfClass
 
 @_importFromHash[aHash][result]
 ## Добавляет в коллекцию данные из хэша. 
+  $result[]
   ^pfAssert:isTrue($aHash is hash)[Параметр должен быть хэшем.]
   ^if($aHash){
     ^aHash.foreach[k;v]{
@@ -61,9 +62,10 @@ pfClass
   }
 
 @_importFromCollection[aCollection][result;it]
-## Добавляет коллекцию aCollection в текущую коллекцию.
+## Добавляет коллекцию aCollection в текущую коллекцию. 
+  $result[]
   ^pfAssert:isTrue($aCollection is pfCollection)[Параметр должен быть коллекцией.]
-  ^if($aCollection.count){
+  ^if($aCollection){
     ^aCollection.foreach[it]{
    	  ^add[$it]
     }	
@@ -151,9 +153,6 @@ pfClass
   ^reset[]
   $result[] 
   ^if($count){ 
-    ^while(^moveNext[]){
-      $caller.$aVarName[$currentItem]
-      $result[${result}$aCode^if(def $aSeparator && $currentIndex < ($count - 1)){$aSeparator}]
-    }
-    $caller.$aVarName[]
+    $result[^while(^moveNext[]){$caller.[$aVarName][$currentItem]$aCode^if(def $aSeparator && $currentIndex < ($count - 1)){$aSeparator}}]
+    $caller.[$aVarName][]
   }
