@@ -22,7 +22,7 @@ pfCollection
 ## Создает коллекцию. 
 ## aValues - хэш (и только!), содержимое которго копируется в новую коллекцию.
 ##           Значения ключей копируются в лексикографическом порядке.
-  ^pfAssert:isTrue(!def $aValues || (def $aValues && $aValues is hash))[В словарь может быть преобразован только хэш.]
+  ^pfAssert:isTrue(!def $aValues || ($aValues is hash))[В словарь может быть преобразован только хэш.]
   ^clear[]
   ^reset[]
   ^BASE:create[$aValues;$aOptions]

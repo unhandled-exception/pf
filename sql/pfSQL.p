@@ -119,14 +119,14 @@ pfClass
   			^startTransaction[]
     		$result[$aCode]
   			^commit[]
-  	    }{
-      	   $result[$aCode]
-  	     }
+ 	    }{
+     	   $result[$aCode]
+ 	     }
     	^_transactionCount.dec(1)
     }{
   	   ^switch(true){
   	     ^case($exception.type eq "sql.transaction.roll"){
-  	 	   $exception.handled(1)
+  	 	     $exception.handled(1)
   	     }
   	     ^case(!$exception.handled && $exception.type ne "sql.connect" && $isNaturalTransactions){
   	        ^rollback[]
@@ -190,9 +190,10 @@ pfClass
   $lOptions[^_getOptions[$lQuery;int;$aSQLOptions;$aOptions]]
   $result(^_processIdentityMap{^_sql[int]{^int:sql{$lQuery}[$aSQLOptions]}[$lOptions]}[$lOptions])
 
-@void[aQuery;aSQLOptions;aOptions][lQuery]
+@void[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
   $lQuery[$aQuery]
-  $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$aOptions]]
+  $lOptions[^_getOptions[$lQuery;int;$aSQLOptions;$aOptions]]
+  $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$lOptions]]
 
 @clearIdentityMap[]
   ^identityMap.clear[]
@@ -240,7 +241,7 @@ pfClass
   }
 
 @_sql[aType;aCode;aOptions][lResult;lCacheKey]
-## Возвращает результат запроса
+## Возвращает результат запроса. Если нужно оранизует транзакцию.
 ## aOptions.isForce(0) - принудительно отменяет кеширование
 ## aOptions.cacheKey[] - ключ кеширования
 ## aOptions.cacheTime[секунды|дата окончания]
@@ -253,13 +254,13 @@ pfClass
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
     $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec{$aCode}[$aOptions]}] 
   }{
-     $result[^_exec{$aCode}[$aOptions]]
+     $result[^if($isTransaction){^_exec{$aCode}[$aOptions]}{^transaction{^_exec{$aCode}[$aOptions]}}]
    }
 
 @_exec[aCode;aOptions][lStart;lEnd]
-## Выполняет sql-запрос. Если нужно оранизует транзакцию.
+## Выполняет sql-запрос. 
   $lStart($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
-  $result[^if($isTransaction){$aCode}{^transaction{$aCode}}]
+  $result[$aCode]
   $lEnd($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
   
   $_stat.queriesTime($_stat.queriesTime + ($lEnd-$lStart))
