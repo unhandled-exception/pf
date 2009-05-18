@@ -23,10 +23,13 @@ pfModule
   
   $_help[]
   ^defReadProperty[help]
-  
+
+@write[aLine]
+## Выводит строку на терминал.
+  ^pfConsole:write[$aLine]
 
 @writeln[aLine]
-## Выводит строку на терминал.
+## Выводит строку на терминал, завершая ее переводом строки.
   ^pfConsole:writeln[$aLine]
   
 @writeTimeLine[aLine][lNow]         
