@@ -1,9 +1,5 @@
 # PF Library
 
-#@module   Module Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
-
 @CLASS
 pfModule
 
@@ -165,12 +161,11 @@ pfClass
   	 ^throw[module.compile;Module "$aName" not found.]
    }
 
-@dispatch[aAction;aRequest][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite]
+@dispatch[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite]
 ## Производим обработку экшна
-#@param aAction    Действие, которое необходимо выполнить
-#@param aRequest   Параметры экшна
-
-#@todo: Составить описание составления action'ов
+## aAction    Действие, которое необходимо выполнить
+## aRequest   Параметры экшна      
+## aOptions.
   ^if(def $aAction){
     $aAction[^aAction.trim[both;/.]]
     $aAction[^aAction.lower[]]
@@ -330,7 +325,7 @@ pfClass
    
 @_makeLinkURI[aAction;aOptions;aAnchor]
 ## Формирует url для экшна
-## $uriPrefix$aAction?aOptions.foreach[key=value][&]
+## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor
   ^if(def $aAction){$aAction[^aAction.trim[both;/\.]]}
   $result[$uriPrefix^if(def $aAction){$aAction}^if(def $aAction && !def ^file:justext[$aAction]){/}]
   ^if($aOptions is hash && $aOptions){
