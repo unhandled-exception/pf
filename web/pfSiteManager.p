@@ -95,9 +95,9 @@ pfSiteModule
 
 #----- Methods -----
 
-@dispatch[aAction;aRequest]
+@dispatch[aAction;aRequest;aOptions]
   ^try{
-    $result[^BASE:dispatch[$aAction;$aRequest]]
+    $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
   }{
      ^if($exception.type eq $_redirectExceptionName){
        $exception.handled(true)
@@ -129,7 +129,7 @@ pfSiteModule
   }
    
 @_redirectTo[aURI][$lURI]
-## Делает внутренний редирект на экшн
+## Делает внутренний редирект на экшн   
   $lURI[${uriProtocol}://${uriServerName}$aURI]
   $response:location[^untaint{$lURI}]
 

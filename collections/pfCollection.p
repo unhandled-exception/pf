@@ -76,6 +76,7 @@ pfClass
 ## aOptions.separator[,] - символ-разделитель элементов списка 
 ## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
 ## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  ^cleanMethodArgument[]
+  ^cleanMethodArgument[]
   ^if(def $aString){
     $lEncloser[^taint[regex][^if(def $aOptions.encloser || ($aOptions is hash && ^aOptions.contains[encloser])){$aOptions.encloser}{"}]]
     $lEncloser[^lEncloser.trim[]]
@@ -156,3 +157,5 @@ pfClass
     $result[^while(^moveNext[]){$caller.[$aVarName][$currentItem]$aCode^if(def $aSeparator && $currentIndex < ($count - 1)){$aSeparator}}]
     $caller.[$aVarName][]
   }
+  
+  

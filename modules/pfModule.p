@@ -7,6 +7,7 @@ pfModule
 pf/types/pfClass.p
 pf/collections/pfList.p
 pf/types/pfString.p
+pf/modules/pfRouter.p
 
 @BASE
 pfClass
@@ -32,29 +33,37 @@ pfClass
   ^BASE:create[]
   ^cleanMethodArgument[]
   $_throwPrefix[pfModule]
+  $_name[$aOptions.name]
   
 # Модули
   $_MODULES[^hash::create[]]  
 
 # Префикс для uri. 
-  $_uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
+  $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
 # Текущий экшн
   $_action[]
 
-# Коллекция с шаблонами для реврайта 
-  $_rewriteMap[^pfList::create[]]
+  $_router[^pfRouter::create[]] 
+
 
 #----- Properties -----
 
 @GET_uriPrefix[]
   $result[$_uriPrefix]
 
+@SET_uriPrefix[aUriPrefix]  
+  $_uriPrefix[$aUriPrefix/]
+  $_uriPrefix[^_uriPrefix.match[(/)+][g]{$match.1}]
+  
 @GET_action[]
   $result[$_action]
   
 @GET_MODULES[]
   $result[$_MODULES]
+
+@GET_router[]
+  $result[$_router]
 
 #---- Public -----
 
@@ -110,7 +119,7 @@ pfClass
        $.object[]
        
        $.isCompiled(0)
-       $.makeAction(^aOptions.makeAction.int(1))
+       $.makeAction(^aOptions.makeAction.int(1))   
        $.uriPrefix[${uriPrefix}$aName/]
    ]
 
@@ -160,12 +169,14 @@ pfClass
   }{
   	 ^throw[module.compile;Module "$aName" not found.]
    }
-
-@dispatch[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite]
+   
+@dispatch[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite;CALLER]
 ## Производим обработку экшна
 ## aAction    Действие, которое необходимо выполнить
 ## aRequest   Параметры экшна      
-## aOptions.
+## aOptions.prefix
+  ^cleanMethodArgument[]
+ 
   ^if(def $aAction){
     $aAction[^aAction.trim[both;/.]]
     $aAction[^aAction.lower[]]
@@ -191,17 +202,21 @@ pfClass
 
 # Если у нас в первой части экшна имя модуля, то передаем управление ему
   $lModule[^aAction.match[([^^/\.]+)(.*)][]{$match.1}]
-  ^if(def $lModule && ^hasModule[$lModule]){
+  ^if(def $lModule && ^hasModule[$lModule]){  
+    $uriPrefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}] 
+#    ^pfAssert:fail[$lRewrite.prefix == $aOptions.prefix == $uriPrefix]
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
       $_action[^aAction.match[([^^/\.]+)(.*)][]{$match.2}]
       $result[^self.[^_makeActionName[$lModule]][$aRequest]]
       $_action[$aAction]
-    }{
-       $result[^self.[mod^_makeSpecialName[$lModule]].dispatch[^aAction.mid(^lModule.length[]);$aRequest]]
+    }{                                                                                                   
+       $result[^self.[mod^_makeSpecialName[$lModule]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;$.prefix[$_uriPrefix]]]
      }
-  }{
+  }{                                                        
+    $uriPrefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}}] 
+#    ^pfAssert:fail[$lRewrite.prefix == $aOptions.prefix == $uriPrefix]
 #   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
 #   Если не получится, то зовем onDEFAULT, а если и это не получится,
 #   то выбрасываем эксепшн.
@@ -216,61 +231,17 @@ pfClass
       }
    }
 
-@addRewritePattern[aPattern;aNewAction;aOptions][lPattern]
-## Добавляем шаблон в карту преобразований.
-## aOptions.args - хеш с аргументами, которые будут добавлены к полученным из шаблона.
-## aOptions.isStatic(0) - статический шаблон (если в шаблоне нет переменных, то считаем такой
-##                        шаблон тоже статическим).
-## aOptions.defaults[] - хеш со значениями по-умолчанию, который будет добавлен, 
-##                       если выполнится преобразование, но в результате будут 
-##                       отсутствовать некоторые ключи.
-  ^cleanMethodArgument[]
-  ^pfAssert:isTrue(def $aPattern)[Не задан шаблон преобразования.]
-  
-  $lPattern[^_compileRewritePattern[^aPattern.trim[both;/]]]
-  ^_rewriteMap.add[
-    $.pattern[$lPattern]
-    $.action[$aNewAction]
-    $.args[^if($aOptions.args is hash){$aOptions.args}{^hash::create[]}]
-    $.isStatic[^if(^aOptions.isStatic.int(0) || !$lPattern.keys){1}{0}]
-    $.defaults[$aOptions.defaults]
-  ]
-
 @rewriteAction[aAction;aRequest][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
 ## $result.action - новый экшн.
 ## $result.args - параметры, которые надо добавить к аргументам и передать обработчику. 
+## $result.prefix - префикс, который необходимо передать диспетчеру
 ## Стандартный обработчик проходит по карте преобразований и ищет пододящий шаблон, 
 ## иначе возвращает оригинальный экшн. 
-  $result(0)
-  ^if($_rewriteMap.count){
-    ^_rewriteMap.foreach[it]{
-      ^if(!$result){
-        ^if($it.isStatic){
-          ^if(^aAction.match[$it.pattern.pattern][in]){
-            $result[$.action[$it.action] $.args[$it.args]]
-            ^if(def $it.defaults){
-               $result.args[^result.args.union[$it.defaults]]
-            }
-          }
-        }{
-           $lRewrite[^_parseActionByPattern[$it.pattern;$aAction]]
-           ^if($lRewrite){
-             $result[$.action[$it.action] $.args[$lRewrite]]
-             ^if($it.args){^result.args.add[$it.args]}
-             ^if(def $it.defaults){
-               $result.args[^result.args.union[$it.defaults]]
-             }
-           }
-         }
-      }
-    }
-  }
-  
+  $result[^router.route[$aAction]]
   ^if(!$result){
-    $result[$.action[$aAction] $.args[]]
-  }
-   
+    $result[$.action[$aAction] $.args[] $.prefix[]]
+  } 
 
 @linkTo[aAction;aOptions;aAnchor]
   $result[^_makeLinkURI[$aAction;$aOptions;$aAnchor]]
@@ -278,7 +249,6 @@ pfClass
 @redirectTo[aAction;aOptions;aAnchor]
 ## Редирект на экшн. Реализация остается за программистом
   $result[]
-    
 
 @goTo[aAction;aOptions;aAnchor]
 ## DEPRECATED!
@@ -286,48 +256,14 @@ pfClass
   $result[^redirectTo[$aAction;$aOptions;$aAnchor]]
   
 #----- Private -----
-
-@_compileRewritePattern[aPattern][lPattern;lKeys]
-## Компилирует шаблон
-## $result.pattern
-## $result.keys  
-   $lKeys[^table::create{key}]
- 
-#  Заменяем спецсимволы и группировки
-   $lPattern[^taint[regex][$aPattern]]
-   $lPattern[^lPattern.match[\(][g]{(?:}]
-   $lPattern[^lPattern.match[\)(\?)?][g]{^taint[as-is][)$match.1]}]
-#  Заменяем макроподстановки   
-   $lPattern[^^^lPattern.match[(?<!\?)\:\{?([\p{L}\p{Nd}_\-]+)\}?(?:<(.+?)>)?][gi]{(^if(def $match.2){^taint[as-is][$match.2]}{.+?})^lKeys.append{$match.1}}^$]  
-
-   $result[$.pattern[$aPattern] $.compiled[$lPattern] $.keys[$lKeys]]
-
-@_parseActionByPattern[aPattern;aAction][lCompiled;lPattern;lKeys;lMatches;i]
-## Разбираем экшн на основании шаблона и возвращаем хеш с полученными данными.
-## Если распарсить не удалось, то возвращаем пустой хеш.
-## aPattern - шаблон "path1/path2/:arg1/(:arg2<regex>(/:{arg3}-arg4)?)?"
-##            В угловых скобках может быть указано регулярное выражение 
-##            для более точной проверки шаблона.
-   $result[^hash::create[]]
-   
-   $lPattern[$aPattern.compiled]
-   $lKeys[$aPattern.keys]
-   
-   $lMatches[^aAction.match[$lPattern][gi]]
-   ^if($lMatches){
-     ^for[i](1;$lKeys){
-       ^lKeys.offset[set]($i-1)
-       ^if(def $lMatches.[$i]){
-         $result.[$lKeys.key][$lMatches.[$i]]
-       }
-     }
-   }
    
 @_makeLinkURI[aAction;aOptions;aAnchor]
 ## Формирует url для экшна
-## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor
-  ^if(def $aAction){$aAction[^aAction.trim[both;/\.]]}
-  $result[$uriPrefix^if(def $aAction){$aAction}^if(def $aAction && !def ^file:justext[$aAction]){/}]
+## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
+  ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
+  $result[$uriPrefix^if(def $aAction){$aAction/}]
+#  ^pfAssert:fail[$aAction - $uriPrefix - $result]
+  ^if(def $result && ^result.match[\.[^^/]+?/+^$][n]){$result[^result.trim[end;/]]}
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]
   }

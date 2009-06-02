@@ -29,9 +29,9 @@ pfString
 		
 	}
 
-@rsplit[text;regex;delimiter][table_split]
+@rsplit[text;regex;options][table_split]
 ## Разбивает строку по регулярным выражениям
-## $delimiter: l - разбить слева направо (по-умолчанию);
+## $options:   l - разбить слева направо (по-умолчанию);
 ##             r - разбить справа налево;
 ##             h - сформировать безымянную таблицу где части исходной строки 
 ##                 помещаются горизонтально;
@@ -44,8 +44,8 @@ pfString
 		  $result[^text.match[(.*?)(?:$regex)][g]{^if(def $match.1){^table_split.append{$match.1}}}]
 		  ^if(def $result){^table_split.append{$result}}
 		}
-		  ^if(!def $delimiter){$delimiter[lv]}
-		  ^switch[^delimiter.lower[]]{
+		  ^if(!def $options){$options[lv]}
+		  ^switch[^options.lower[]]{
 		    ^case[r;rv;vr]{$result[^table::create[$table_split;$.reverse(1)]]}
 		    ^case[rh;hr]{$result[^table::create[$table_split;$.reverse(1)]]$result[^result.flip[]]}
 		    ^case[h;lh;hl]{$result[^table_split.flip[]]}

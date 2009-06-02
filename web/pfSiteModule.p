@@ -82,9 +82,9 @@ pfModule
    }
   ^BASE:assignModule[$aName;$aOptions]
 
-@dispatch[aAction;aRequest][lResult;lPostDispatch]
+@dispatch[aAction;aRequest;aOptions][lResult;lPostDispatch]
   ^cleanMethodArgument[]
-  $result[^BASE:dispatch[$aAction;$aRequest]]
+  $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
 
   ^if($result is hash){
     ^if(!def $result.type){
