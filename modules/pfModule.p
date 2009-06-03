@@ -204,7 +204,6 @@ pfClass
   $lModule[^aAction.match[([^^/\.]+)(.*)][]{$match.1}]
   ^if(def $lModule && ^hasModule[$lModule]){  
     $uriPrefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}] 
-#    ^pfAssert:fail[$lRewrite.prefix == $aOptions.prefix == $uriPrefix]
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
@@ -216,7 +215,6 @@ pfClass
      }
   }{                                                        
     $uriPrefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}}] 
-#    ^pfAssert:fail[$lRewrite.prefix == $aOptions.prefix == $uriPrefix]
 #   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
 #   Если не получится, то зовем onDEFAULT, а если и это не получится,
 #   то выбрасываем эксепшн.
@@ -238,7 +236,7 @@ pfClass
 ## $result.prefix - префикс, который необходимо передать диспетчеру
 ## Стандартный обработчик проходит по карте преобразований и ищет пододящий шаблон, 
 ## иначе возвращает оригинальный экшн. 
-  $result[^router.route[$aAction]]
+  $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
     $result[$.action[$aAction] $.args[] $.prefix[]]
   } 
@@ -262,7 +260,6 @@ pfClass
 ## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
   $result[$uriPrefix^if(def $aAction){$aAction/}]
-#  ^pfAssert:fail[$aAction - $uriPrefix - $result]
   ^if(def $result && ^result.match[\.[^^/]+?/+^$][n]){$result[^result.trim[end;/]]}
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]

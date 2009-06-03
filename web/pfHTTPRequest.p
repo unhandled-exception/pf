@@ -138,7 +138,7 @@ pfClass
 
 @__add[aNewFields]
 ## Add new fields in to request
-  ^pfAssert:isTrue($aNewFields is hash)[New fields must be a cache.]
+  ^pfAssert:isTrue($aNewFields is hash)[New fields must be a hash.]
   ^_FIELDS.add[$aNewFields]
 
 

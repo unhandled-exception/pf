@@ -32,8 +32,8 @@ pfClass
   ^cleanMethodArgument[]
   $result[]
   
-  ^if(!($aOptions.defaults is hash)){$aOptions.defaults[^hash::create[]]}
-  ^if(!($aOptions.requirements is hash)){$aOptions.requirements[^hash::create[]]}
+  ^if(!def $aOptions.defaults){$aOptions.defaults[^hash::create[]]}
+  ^if(!def $aOptions.requirements){$aOptions.requirements[^hash::create[]]}
 
   $lCompiledPattern[^_compilePattern[$aPattern;$aOptions]]
   ^_routes.add[
@@ -54,8 +54,8 @@ pfClass
 ## aOptions.defaults[] - хеш со значениями переменных шаблона "по-умолчанию" 
 ## aOptions.prefix[] - дополнительный, вычисляемый префикс для путей (может содержать переменные)
   ^cleanMethodArgument[]
-  ^if(!($aOptions.defaults is hash)){$aOptions.defaults[^hash::create[]]}
-  ^if(!($aOptions.requirements is hash)){$aOptions.requirements[^hash::create[]]}
+  ^if(!def $aOptions.defaults){$aOptions.defaults[^hash::create[]]}
+  ^if(!def $aOptions.requirements){$aOptions.requirements[^hash::create[]]}
   $_rootRoute[
     $.routeTo[^_trimPath[$aRouteTo]]
     $.prefix[^if(def $aOptions.prefix){$aOptions.prefix}{^_trimPath[$aRouteTo]}]
@@ -65,7 +65,8 @@ pfClass
   ]                
 
 @route[aPath;aOptions][lParsedPath;it]
-## Выполняет поиск и преобразование пути по списку маршрутов
+## Выполняет поиск и преобразование пути по списку маршрутов 
+## aOptions.args
 ## result[$.action $.args $.prefix]
   ^cleanMethodArgument[]
   $result[^hash::create[]]
@@ -73,14 +74,14 @@ pfClass
   ^if(def $aPath){
     ^_routes.foreach[it]{
       ^if(!$result){
-        $lParsedPath[^_parsePathByRoute[$aPath;$it]]
+        $lParsedPath[^_parsePathByRoute[$aPath;$it;$.args[$aOptions.args]]]
         ^if($lParsedPath){     
           $result[$lParsedPath]  
         }
       }
     }
   }{                  
-     $result[^_parsePathByRoute[$aPath;$_rootRoute]]
+     $result[^_parsePathByRoute[$aPath;$_rootRoute;$.args[$aOptions.args]]]
    }
 
 #----- Private -----
@@ -108,14 +109,15 @@ pfClass
      ]
   } 
   
-# И собираем регулярное выражение для всего шаблона
+# Собираем регулярное выражение для всего шаблона
   $result.regexp[^^^lSegments.foreach[it]{^if($it.hasVars){(?:}^if($lSegments.currentIndex){\$it.prefix}$it.regexp}^lSegments.foreach[it]{^if($it.hasVars){)?}}^$]
 
 
-@_parsePathByRoute[aPath;aRoute][lVars;i]
+@_parsePathByRoute[aPath;aRoute;aOptions][lVars;i]
+## Преобразует aPath по правилу aOptions.
+## aOptions.args
 ## result[$.action $.args $.prefix]
   $result[^hash::create[]]   
-  ^pfAssert:isTrue($aRoute.defaults is hash)[stop]
   ^if(^aPath.match[$aRoute.regexp][in]){
     $result.args[$aRoute.defaults]
     ^if($aRoute.vars){
@@ -127,10 +129,13 @@ pfClass
         }
       }
     }                         
-    $result.action[^_applyPath[$aRoute.routeTo;$result.args]]
-    $result.prefix[^_applyPath[$aRoute.prefix;$result.args]]
+    $result.action[^_applyPath[$aRoute.routeTo;$result.args;$aOptions.args]]
+    $result.prefix[^_applyPath[$aRoute.prefix;$result.args;$aOptions.args]]
   }                                                           
 
-@_applyPath[aRouteTo;aArgs]
-  $result[^aRouteTo.match[$_patternVar][gi]{^if(^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[$CLASS_NAME;Unknown variable ":$match.2" in "$aRouteTo"]}}]
+@_applyPath[aPath;aVars;aArgs]
+## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
+  ^cleanMethodArgument[aVars]
+  ^cleanMethodArgument[aArgs]
+  $result[^aPath.match[$_patternVar][gi]{^if(def $aVars.[$match.2]){$aVars.[$match.2]}{^if(def $aArgs.[$match.2]){$aArgs.[$match.2]}{^throw[$CLASS_NAME;Unknown variable ":$match.2" in "$aRouteTo"]}}}]
 
