@@ -118,10 +118,10 @@ pfClass
 ## aOptions.args
 ## result[$.action $.args $.prefix]
   $result[^hash::create[]]   
-  ^if(^aPath.match[$aRoute.regexp][in]){
-    $result.args[$aRoute.defaults]
+  $lVars[^aPath.match[$aRoute.regexp][i]]
+  ^if($lVars){
+    $result.args[^hash::create[$aRoute.defaults]]
     ^if($aRoute.vars){
-      $lVars[^aPath.match[$aRoute.regexp][i]]
       ^for[i](1;$aRoute.vars){
         ^aRoute.vars.offset[set]($i-1)
         ^if(def $lVars.$i){
