@@ -83,19 +83,19 @@ pfClass
   $result[^META.REQUEST_METHOD.lower[]]
 
 @GET_isGET[]
-  $result($method eq "get")
+  $result($METHOD eq "get")
 
 @GET_isPOST[]
-  $result($method eq "post")
+  $result($METHOD eq "post")
 
 @GET_isHEAD[]
-  $result($method eq "head")
+  $result($METHOD eq "head")
 
 @GET_isPUT[]
-  $result($method eq "put")
+  $result($METHOD eq "put")
 
 @GET_isDELETE[]
-  $result($method eq "delete")
+  $result($METHOD eq "delete")
 
 @GET_isAJAX[]
   $result(^HEADERS.[X_Requested_With].pos[XMLHttpRequest] > -1)

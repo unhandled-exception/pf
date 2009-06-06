@@ -132,8 +132,8 @@ pfAuthBase
       $.uid[^_makeUID[]]
       $.sid[^_makeUID[]]
       $.login[$aOptions.[${_formPrefix}login]]
-      $.is_persistent[^if(^aOptions.[${_formPrefix}persistent].int(0)){1}{0}]
-    ]
+      $.is_persistent[^if(def $aOptions.[${_formPrefix}persistent]){1}{0}]
+    ]                                      
     
     ^if(^storage.addSession[$lSession]){
       ^_saveSession[$lSession]
