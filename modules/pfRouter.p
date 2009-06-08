@@ -101,7 +101,7 @@ pfClass
   $lSegments[^pfList::create[]]
   ^lPattern.match[([$_segmentSeparators])([^^$_segmentSeparators]+)][g]{                                                                              
      $lHasVars(false)
-     $lRegexp[^match.2.match[$_patternVar][gi]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){$aOptions.requirements.[$match.2]}{$_varRegexp})}{$_trapRegexp}^result.vars.append{$match.2}$lHasVars(true)}]  
+     $lRegexp[^match.2.match[$_patternVar][gi]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:)}}{$_varRegexp})}{$_trapRegexp}^result.vars.append{$match.2}$lHasVars(true)}]  
      ^lSegments.add[
        $.prefix[$match.1]
        $.regexp[$lRegexp]
