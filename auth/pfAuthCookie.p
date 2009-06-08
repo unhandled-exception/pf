@@ -120,10 +120,10 @@ pfAuthBase
 ## Принудительный логин. Текущие сессии игнорируются
   ^cleanMethodArgument[]
   $result(false)
-  
+
 # Пробуем найти пользователя по имени
   $lUser[^storage.getUser[$aOptions.[${_formPrefix}login]]]
-  
+
   ^if($lUser && ($_debugMode || ^storage.isValidPassword[$aOptions.[${_formPrefix}password];$lUser.password])
      ){
 #   Если пароль верен, то логиним
