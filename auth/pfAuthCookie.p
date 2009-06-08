@@ -19,7 +19,7 @@ pfAuthBase
 ## aOptions.storage - объект-хранилище данных аутентификации
 ## aOptions.security - объект, реализующий контроль доступа
 ## aOptions.formPrefix[auth.] - префикс для переменных форм и кук. 
-## aOptions.timeout(5) - время (в минутах) текущей сессии
+## aOptions.timeout(60) - время (в минутах) текущей сессии
 ## aOptions.persistentSessionLifetime(14) - время (в днях) на которое ставится сессионная кука,
 ##                                           если нам нужно поставить сессионную куку. 
 ## aOptions.debugMode(0) - в этом режиме разработчик может войти под любым логином,
@@ -35,7 +35,7 @@ pfAuthBase
 
   ^if(def $aOptions.formPrefix){$_formPrefix[$aOptions.formPrefix]}{$_formPrefix[auth.]}
 
-  ^if(def $aOptions.timeout){$_timeout[$aOptions.timeout]}{$_timeout(5)}
+  ^if(def $aOptions.timeout){$_timeout[$aOptions.timeout]}{$_timeout(60)}
   ^if(def $aOptions.persistentSessionLifetime){
     $_persistentSessionLifetime[$aOptions.persistentSessionLifetime]
   }{
