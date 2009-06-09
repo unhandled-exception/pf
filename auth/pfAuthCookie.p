@@ -136,7 +136,7 @@ pfAuthBase
     ]                                      
     
     ^if(^storage.addSession[$lSession]){
-      ^_saveSession[$lSession]
+      ^_saveSession[$lSession]            
       $_isUserLogin(true)
       $_session[$lSession]
       $_user[$lUser]

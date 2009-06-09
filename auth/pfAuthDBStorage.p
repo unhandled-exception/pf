@@ -55,7 +55,7 @@ pfAuthStorage
   	                    from $_usersTable
   	                   where login = '$aID'
   	                         and is_active = '1'
-  	                 }]
+  	                 }[][$.isForce(true)]]
   $result[$result.fields]
   
 @getSession[aOptions]
@@ -73,7 +73,7 @@ pfAuthStorage
   	                   where uid = '$aOptions.uid'
   	                         and sid = '$aOptions.sid'
                              and is_active = '1'
-  	     }]
+  	     }[][$.isForce(true)]]
 
 @addSession[aSession]
 ## Добавляем сессию в хранилище

@@ -203,9 +203,9 @@ pfClass
 @_processIdentityMap[aCode;aOptions][lKey;lResult;lIsIM]
 ## Возвращает результат запроса из коллекции объектов.
 ## Если объект не найден, то запускает запрос и добавляет его результат в коллекцию.
-## aOptions.isForce(0) - принудительно отменяет кеширование
+## aOptions.isForce(false) - принудительно отменяет кеширование
 ## aOptions.identityMapKey[] - ключ для коллекции (по-умолчанию MD5 на aQuery).    
-  $lIsIM($_enableIdentityMap && !^aOptions.isForce.int(0))
+  $lIsIM($_enableIdentityMap && !^aOptions.isForce.bool(false))
   $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
 
   ^if($lIsIM && ^identityMap.contains[$lKey]){
@@ -242,14 +242,14 @@ pfClass
 
 @_sql[aType;aCode;aOptions][lResult;lCacheKey]
 ## Возвращает результат запроса. Если нужно оранизует транзакцию.
-## aOptions.isForce(0) - принудительно отменяет кеширование
+## aOptions.isForce(false) - принудительно отменяет кеширование
 ## aOptions.cacheKey[] - ключ кеширования
 ## aOptions.cacheTime[секунды|дата окончания]
 ## aOptions.queryKey
   ^cleanMethodArgument[]
   ^if($isCaching 
       && (def $aOptions.cacheKey || def $aOptions.queryKey) 
-      && !^aOptions.isForce.int(0)){
+      && !^aOptions.isForce.bool(false)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
     $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec{$aCode}[$aOptions]}] 
