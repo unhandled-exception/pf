@@ -18,7 +18,6 @@ pf/tests/pfAssert.p
 @create[]
   $__isDynamic(true)
 
-
 #----- Properties -----
 
 @GET_isDynamic[]

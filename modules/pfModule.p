@@ -132,14 +132,19 @@ pfClass
      ^compileModule[$aName]
    }
 
-#  Вкомпилируем в наш объект ссылку на модуль [$self.modName]
-#  Первая буква модуля становится большой.
-   ^process{
-      ^^if(!^$_MODULES.[$aName].isCompiled){
-        ^^compileModule[$aName]
+@GET_DEFAULT[aName][lName]
+## Эмулирует свойства modModule
+  $result[]
+  ^if(^aName.left(3) eq "mod"){
+    $lName[^aName.mid(3)]
+    $lName[^lName.lower[]]
+    ^if(^_MODULES.contains[$lName]){
+      ^if(!$_MODULES.[$lName].isCompiled){
+        ^compileModule[$lName]
       }
-      ^$result[^$_MODULES.${aName}.object]   
-   }[$.main[GET_mod^_makeSpecialName[$aName]]]
+      $result[$_MODULES.[$lName].object]
+    }                     
+  }
 
 @compileModule[aName][lFactory]
 ## Компилирует модуль
@@ -156,10 +161,10 @@ pfClass
        }
   	  $_MODULES.[$aName].isCompiled(1)  
     }{
-            ^if(def $_MODULES.[$aName].source){
+      ^if(def $_MODULES.[$aName].source){
   	    ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
   	  }{
-  	     ^process{^^use[$_MODULES.[$aName].file]}
+  	     ^use[$_MODULES.[$aName].file]
   	  }
   	  ^process{
   	    ^$_MODULES.[$aName].object[^^$_MODULES.[$aName].class::create[^$_MODULES.[$aName].args]]
