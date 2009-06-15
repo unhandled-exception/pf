@@ -54,7 +54,7 @@ pfClass
 @_importFromHash[aHash][result]
 ## Добавляет в коллекцию данные из хэша. 
   $result[]
-  ^pfAssert:isTrue($aHash is hash)[Параметр должен быть хэшем.]
+  ^pfAssert:isTrue($aHash is hash)[Параметр должен быть хэшем.]  
   ^if($aHash){
     ^aHash.foreach[k;v]{
    		^add[$v]
