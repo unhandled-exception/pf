@@ -24,11 +24,16 @@ pfClass
 ## aOptions.separator[,] - символ-разделитель элементов списка 
 ## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
 ## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы
+## Опции импорта из таблицы:
+## aOptions.type[string|hash] - если задан тип string (default), то берем значения из первого столбца таблицы,
+##                              если задан тип hash, то в коллекцию попадет хеш строки таблицы.
+## aOptions.key[] - имя столбца из которого берется значение, если не задано, то берем самый левый столбец.
   ^BASE:create[]
+  ^cleanMethodArgument[]
 
   ^switch(true){
   	^case($aValues is table){
-  		^_importFromTable[$aValues]
+  		^_importFromTable[$aValues;$aOptions]
   	}
   	^case($aValues is hash){
   		^_importFromHash[$aValues]
@@ -41,14 +46,28 @@ pfClass
   	}
   }
 
-@_importFromTable[aTable][result;lColumns]
+@_importFromTable[aTable;aOptions][result;lColumns;lColumnName]
 ## Добавляет в коллекцию данные из самого левого столбца таблицы.
   ^pfAssert:isTrue($aTable is table)[Параметр должен быть таблицей.]
-  ^if($aTable){
-  	$lColumns[^aTable.columns[]]
-  	^aTable.menu{
-  		^add[$aTable.[$lColumns.column]]
-  	}
+  ^if($aTable){                   
+    ^if(def $aOptions.key){
+      $lColumnName[$aOptions.key]
+    }{
+       $lColumns[^aTable.columns[]]
+       $lColumnName[$lColumns.column]
+     }
+    ^switch[$aOptions.type]{
+      ^case[string;DEFAULT]{
+        ^aTable.menu{
+          ^add[$aTable.[$lColumns.column]]
+        }
+      }
+      ^case[hash]{
+        ^aTable.menu{
+          ^add[$aTable.fields]
+        }
+      }
+    }
   }
 
 @_importFromHash[aHash][result]
