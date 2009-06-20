@@ -12,9 +12,10 @@ CHANGELOG...
 -----      
 
 20.06.2009
-  1. В pfList добавлен метод has[aString], который проверяет наличие в списке строки $aString.
+  1. В коллекции добавлен метод has[aString], который проверяет наличие в коллекции строки $aString.
      $list[^pfList::create[one, two, three]]
-     ^if(^list.has[three]){В списке есть "three"}
+     ^if(^list.has[three]){В списке есть "three"}                                  
+     Для словарей (pfDictionary) проверяются значения (value).
 
   2. Новый метод - pfOS:tempFile[aPath;aVarName;aCode]
      Формирует уникальное имя для временного файла в папке aPath[/].

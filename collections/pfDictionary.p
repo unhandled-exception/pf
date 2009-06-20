@@ -84,6 +84,16 @@ pfCollection
   $_keys[^table::create[$_keys;$.reverse(1)]]
   ^reset[]
 
+@has[aString][lItem]
+## Проверяет содержит ли значения словаря строку aString.
+  $result(false)                   
+  ^reset[]
+  ^if($count){
+    ^while(!$result && ^moveNext[]){
+      $result($currentItem.value is string && $currentItem.value eq $aString)
+    }
+  }
+
 #----- Iterator's -----
 
 @GET_currentItem[][lKeys]

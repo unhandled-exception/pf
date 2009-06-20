@@ -125,6 +125,15 @@ pfClass
 ## Меняет порядок элементов на обратный
   ^_abstractMethod[]    
 
+@has[aString][lItem]
+## Проверяет содержит ли коллекция строку aString.
+  $result(false)                   
+  ^reset[]
+  ^if($count){
+    ^while(!$result && ^moveNext[]){
+      $result($currentItem is string && $currentItem eq $aString)
+    }
+  }
     
 #----- Iterator's -----
 

@@ -127,17 +127,6 @@ pfCollection
   }
   ^reset[]
 
-@has[aString][lItem]
-## Проверяет содержит ли список строку aString.
-  $result(false)                   
-  ^reset[]
-  ^if($count){
-    ^while(!$result && ^moveNext[]){
-      $result($currentItem is string && $currentItem eq $aString)
-    }
-  }
-
-
 #----- Iterator's -----
 
 @GET_currentItem[][lIndexes]
