@@ -130,3 +130,13 @@ pfOS
   	 $result[text/plain]
    }
 
+@tempFile[aPath;aVarName;aCode][lTempFileName]
+## Формирует на время выполнения кода aCode уникальное имя дле временного
+## файла в папке aPath. После работы кода удаляет временный файл, если он создан.
+  $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
+  $caller.[$aVarName][$lTempFileName]
+  $result[$aCode]
+  ^if(-f $lTempFileName){
+    ^file:delete[$lTempFileName]
+  }
+

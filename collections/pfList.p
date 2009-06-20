@@ -127,11 +127,22 @@ pfCollection
   }
   ^reset[]
 
+@has[aString][lItem]
+## Проверяет содержит ли список строку aString.
+  $result(false)                   
+  ^reset[]
+  ^if($count){
+    ^while(!$result && ^moveNext[]){
+      $result($currentItem is string && $currentItem eq $aString)
+    }
+  }
+
+
 #----- Iterator's -----
 
 @GET_currentItem[][lIndexes]
 ## Возвращает текущий элемент коллекции
-  ^pfAssert:isTrue($count > 0)[Коллекция пустая.]
+  ^pfAssert:isTrue($count > 0)[Список пустой.]
   ^indexes.offset[set]($_currentIndex)
   $result[^at[$indexes.index]]
   

@@ -1,19 +1,25 @@
 # PF Library
-# Copyright (c) 2007 Oleg Volchkov
-
-#@module   Validate Class
-#@version  1.0
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
+# Copyright (c) Oleg Volchkov
 
 ## Класс для проверки данных на различные условия.
 
 @CLASS
 pfValidate
 
+@auto[]
+  $emptyStringRegex[\s+]
+  $alphaNumericRegexp[[\p{L}\p{Nd}_]+]
+  $slugRegex[[\p{L}\p{Nd}_-]+]
+  $onlyLettersRegex[\p{L}+]
+  $onlyDigitsRegex[\p{Nd}+]
+  $hexDecimalRegex[(?:[0-9A-Fa-f]{2})+]
+  $ipAddressRegex[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}]
+  $validEmailRegex[(?:^^[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+(?:\.[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+)*|^^"(?:[\001-\010\013\014\016-\037!\#-\[\]-\177]|\\[\001-011\013\014\016-\177])*")@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}^$]
+  $validURLRegex[(?:[a-zA-Z\-0-9]+?\:(?://)?)(?:\S+?(?:\:\S+)?@)?[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,5}(?:\:\d+)?(?:(?:/|\?)\S*)?]
+  
 @isEmpty[aString]
 ## Строка пустая или содержит только пробельные символы.
-  $result(!def $aString || ^aString.match[^^\s+^$])
+  $result(!def $aString || ^aString.match[^^$emptyStringRegex^$][n])
 
 @isNotEmpty[aString]
 ## Строка не пустая.
@@ -21,11 +27,11 @@ pfValidate
 
 @isAlphaNumeric[aString]
 ## Строка содержит только буквы, цифры и знак подчеркивания. 
-  $result(def $aString && ^aString.match[^^[\p{L}\p{Nd}_]+^$])
+  $result(def $aString && ^aString.match[^^$alphaNumericRegexp^$][n])
 
 @isSlug[aString]
 ## Строка содержит только буквы, цифры, знак подчеркивания и дефис.
-  $result(def $aString && ^aString.match[^^[\p{L}\p{Nd}_-]+^$])
+  $result(def $aString && ^aString.match[^^$slugRegex^$][n])
 
 @isLowerCase[aString]
 ## Строка содержит буквы только нижнего регистра.
@@ -38,41 +44,37 @@ pfValidate
 @isOnlyLetters[aString]
 ## Строка содержит только буквы.
 ## Проверяются только буквы.
-  $result(def $aString && ^aString.match[^^\p{L}+^$][i])
+  $result(def $aString && ^aString.match[^^$onlyLettersRegex^$][n])
 
 @isOnlyDigits[aString]
 ## Строка содержжит только цифры.
-  $result(def $aString && ^aString.match[^^\p{Nd}+^$])
+  $result(def $aString && ^aString.match[^^$onlyDigitsRegex^$][n])
 
 @isHEXDecimal[aString]
 ## Строка содержит шестнадцатиричное число (парами!).
 ## Пары символов [0-9A-F] (без учета регистра).
-  $result(def $aString && ^aString.match[^^(?:[0-9A-F]{2})+^$][i])
+  $result(def $aString && ^aString.match[^^$hexDecimalRegex^$][n])
 
 @isValidDecimal[aString;aMaxDigits;aDecimalPlaces]
 ## Число содежит вещественное число.
 ## aMaxDigits(12) - максимальное количество цифр в числе
 ## aDecimalPlaces(2) - Максимальное количество символов после точки
-  $result(def $aString && ^aString.match[^^[+\-]?\d{1,^eval(^aMaxDigits.int(12)-^aDecimalPlaces.int(2))}(?:\.\d{^aDecimalPlaces.int(2)})?^$])
+  $result(def $aString && ^aString.match[^^[+\-]?\d{1,^eval(^aMaxDigits.int(12)-^aDecimalPlaces.int(2))}(?:\.\d{^aDecimalPlaces.int(2)})?^$][n])
 
 @isValidIPV4Address[aString]
 ## Строка содержит корректный ip-адрес
-  $result(def $aString && ^aString.match[^^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}^$])
+  $result(def $aString && ^aString.match[^^$ipAddressRegex^$][n])
 
 @isValidEmail[aString]
 ## Строка содержит корректный e-mail.
   $result(def $aString 
-     && ^aString.match[
-      (?:^^[-!\#^$%&'*+/=?^^_`{}|~0-9A-Z]+(?:\.[-!\#^$%&'*+/=?^^_`{}|~0-9A-Z]+)*  # dot-atom
-       |^^"(?:[\001-\010\013\014\016-\037!\#-\[\]-\177]|\\[\001-011\013\014\016-\177])*" # quoted-string
-      )@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}^$
-         ][xi])
+     && ^aString.match[$validEmailRegex])
   )
 
 @isValidURL[aString;aOnlyHTTP]
 ## Строка содержит синтаксически-правильный URL.
 ## aOnlyHTTP - строка может содержать только URL с протоколом http
-  $result(def $aString && ^aString.match[^^(?:[A-Z\-0-9]+?\:(?://)?)(?:\S+?(?:\:\S+)?@)?[A-Z0-9\-\.]+\.[A-Z]{2,5}(?:\:\d+)?(?:(?:/|\?)\S*)?^$][i])
+  $result(def $aString && ^aString.match[^^$validURLRegex^$][n])
   ^if($result && (($aOnlyHTTP is bool && $aOnlyHTTP) || ^aOnlyHTTP.int(0))){
     $result(^aString.match[^^http://])
   }
