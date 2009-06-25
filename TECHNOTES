@@ -12,7 +12,7 @@ http://oleg.volchkov.net
   
   @__asString[aOptions]
     Формирует строковое представление объекта класса (сериализация)
-    Проверка на сериализуемость объекта: ^if($object.__toString is junction)
+    Проверка на сериализуемость объекта: ^if($object.__asString is junction)
 
   @__fromString[aString]
     Метод, который позволяет создать объект класса из строки (десериализация)
