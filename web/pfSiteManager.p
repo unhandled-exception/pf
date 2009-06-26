@@ -85,6 +85,9 @@ pfSiteModule
   $result[^untaint[as-is]{$aResponse.body}]
 
 @postFILE[aResponse]
+  ^if(!def ${aResponse.content-type}){
+    $aResponse.content-type[application/octet-stream]
+  }
   ^_setResponseHeaders[$aResponse]
   ^if(def $aResponse.download){
     $response:download[$aResponse.download]
