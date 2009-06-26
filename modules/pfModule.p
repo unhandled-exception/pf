@@ -208,15 +208,18 @@ pfClass
 # Если у нас в первой части экшна имя модуля, то передаем управление ему
   $lModule[^aAction.match[([^^/\.]+)(.*)][]{$match.1}]
   ^if(def $lModule && ^hasModule[$lModule]){  
-    $uriPrefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}] 
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
+      ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
       $_action[^aAction.match[([^^/\.]+)(.*)][]{$match.2}]
       $result[^self.[^_makeActionName[$lModule]][$aRequest]]
       $_action[$aAction]
     }{                                                                                                   
-       $result[^self.[mod^_makeSpecialName[$lModule]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;$.prefix[$_uriPrefix]]]
+       ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
+       $result[^self.[mod^_makeSpecialName[$lModule]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;
+         $.prefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}]
+       ]]
      }
   }{                                                        
     $uriPrefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}}] 
