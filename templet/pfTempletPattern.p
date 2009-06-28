@@ -1,11 +1,11 @@
 # PF Library
-# Templet Engine 1.0
 
 @CLASS
 pfTempletPattern
 
 @USE
 pf/types/pfClass.p
+pf/debug/pfRuntime.p
 
 @BASE
 pfClass
@@ -48,8 +48,15 @@ pfClass
 
 @assignPattern[aPattern]
 ## Компилируем основной метод
-   ^process{$aPattern}[ $.main[_pattern] $.file[$_FILE] ]
+  ^process{$aPattern}[ $.main[_pattern] $.file[$_FILE] ]
+  $result[]
 
 @assignVars[aVars;aOptions]
-## Присваиваем переменные шаблона 
+## Присваиваем переменные шаблона.
   $_VARS[^if($aVars is hash){$aVars}{^hash::create[]})]
+  $result[]
+
+@compact[]
+## Вызывает принуительную сборку мусора.                   
+  ^pfRuntime:compact[]
+  $result[]

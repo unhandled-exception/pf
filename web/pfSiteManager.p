@@ -88,12 +88,12 @@ pfSiteModule
   ^if(!def ${aResponse.content-type}){
     $aResponse.content-type[application/octet-stream]
   }
-  ^_setResponseHeaders[$aResponse]
   ^if(def $aResponse.download){
     $response:download[$aResponse.download]
   }{
      $response:body[$aResponse.body]
    }
+  ^_setResponseHeaders[$aResponse]
   $result[]
 
 #----- Methods -----
