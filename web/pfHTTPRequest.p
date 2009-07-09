@@ -40,8 +40,6 @@ pfClass
 ## Return all request fields
   $result[$_FIELDS]
 
-
-
 @GET_META[]
 ## Return environment values
   $result[$_META]

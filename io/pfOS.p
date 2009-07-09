@@ -11,6 +11,9 @@ pfOS
 ##  Класс с функциями для работы с ОС (файловые системы и т.п.).
 #/doc
 
+@USE
+pf/tests/pfAssert.p
+
 @create[]
 ## Конструктор. Если кому-то понадобится использовать класс динамически.
 
@@ -131,8 +134,9 @@ pfOS
    }
 
 @tempFile[aPath;aVarName;aCode][lTempFileName]
-## Формирует на время выполнения кода aCode уникальное имя дле временного
+## Формирует на время выполнения кода aCode уникальное имя для временного
 ## файла в папке aPath. После работы кода удаляет временный файл, если он создан.
+  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для имени временного файла.]
   $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
   $caller.[$aVarName][$lTempFileName]
   $result[$aCode]
@@ -140,3 +144,12 @@ pfOS
     ^file:delete[$lTempFileName]
   }
 
+@hashFile[aFileName;aVarName;aCode][lHashfile]
+## Открывает hasfile с имененм aFileName и выполняет код для работы с этим файлом.
+## Файл доступен коду в переменной с именем $aVarName.
+## После работы выполняет release хешфайла.
+  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для имени временного файла.]
+  $lHashfile[^hashfile::open[$aFileName]]
+  $caller.[$aVarName][$lHashfile]
+  $result[$aCode]
+  ^lHashfile.release[]
