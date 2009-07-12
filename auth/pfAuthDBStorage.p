@@ -57,6 +57,7 @@ pfAuthStorage
                        where login = '$aID'
                              and is_active = '1'
                    }[][$.isForce(true)]]
+  $result[^if($result){$result.fields}{^hash::create[]}]
                    
   
 @getSession[aOptions]
