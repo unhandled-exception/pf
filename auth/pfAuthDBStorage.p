@@ -76,8 +76,9 @@ pfAuthStorage
     	                         and sid = '$aOptions.sid'
                                and is_active = '1'
     	     }[][$.isForce(true)]]
+    $result[^if($result){$result.fields}{^hash::create[]}]
   }{
-    $result(false)
+    $result[^hash::create[]]
   }               
   
 @addSession[aSession]
