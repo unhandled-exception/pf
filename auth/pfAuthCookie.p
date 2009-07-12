@@ -64,6 +64,8 @@ pfAuthBase
   ^cleanMethodArgument[]
   ^if(!$aOptions){$aOptions[$form:fields]}
 
+  $_isUserLogin(false)
+
   ^if(def $aOptions.[${_formPrefix}dologin]){
     $result(^login[$aOptions])
   }{
@@ -82,29 +84,27 @@ pfAuthBase
      ^if($lSession){
      	 $lUser[^storage.getUser[$lSession.login]]
 
+       ^if($lUser){
 #      Если с момента последнего доступа прошло больше $_temout минут,
 #      то обновляем данные сессии
-	 		 ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){
-
-#	 		 ^pfAssert:fail[update session ^aCanUpdateSession.int[] $form:_action]
-
-         $lNewSession[
-           $.uid[$lSession.uid]
-           $.sid[^_makeUID[]]
-           $.dt_access[^_now.sql-string[]]
-           $.is_persistent[$lSession.is_persistent]
-         ]
-         ^if(^storage.updateSession[$lSession;$lNewSession]){
-           $lSession[^hash::create[$lNewSession]]
-           ^_saveSession[$lSession]
+  	 		 ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){
+           $lNewSession[
+             $.uid[$lSession.uid]
+             $.sid[^_makeUID[]]
+             $.dt_access[^_now.sql-string[]]
+             $.is_persistent[$lSession.is_persistent]
+           ]
+           ^if(^storage.updateSession[$lSession;$lNewSession]){
+             $lSession[^hash::create[$lNewSession]]
+             ^_saveSession[$lSession]
+           }
          }
-       }
  
-       ^if($lUser){
-          $_isUserLogin(true)
-          $_session[$lSession]
-          $_user[$lUser]
-          $_user.ip[$env:REMOTE_ADDR]
+            $_isUserLogin(true)
+            $_session[$lSession]
+            $_user[$lUser]
+            $_user.ip[$env:REMOTE_ADDR]
+         }
        }
      }{
 #@TODO: Возможно стоит вставить guest'а     	
@@ -125,9 +125,9 @@ pfAuthBase
   $lUser[^storage.getUser[$aOptions.[${_formPrefix}login]]]
 
   ^if($lUser && ($_debugMode || ^storage.isValidPassword[$aOptions.[${_formPrefix}password];$lUser.password])
-     ){
+     ){         
+       ^pfAssert:fail[stop: $lUser.id -- $lUser.login -- ^eval($lUser)]
 #   Если пароль верен, то логиним
-
     $lSession[
       $.uid[^_makeUID[]]
       $.sid[^_makeUID[]]

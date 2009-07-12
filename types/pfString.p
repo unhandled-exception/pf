@@ -97,7 +97,7 @@ pfString
 	$iMantLength(^sMantissa.length[])
 	$iFracLength(^iFracLength.int($iMantLength))
 	^if(!def $sThousandDivider){
-		$sThousandDivider[&nbsp^;]
+		$sThousandDivider[ ]
 	}
 	
 	^if(^sIntegerPart.length[] > 4){

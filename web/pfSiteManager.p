@@ -68,14 +68,14 @@ pfSiteModule
     $aResponse.content-type[text/html]
   }
   ^_setResponseHeaders[$aResponse]
-  $result[^untaint[html]{$aResponse.body}]
+  $result[$aResponse.body]
 
 @postXML[aResponse]
   ^if(!def ${aResponse.content-type}){
     $aResponse.content-type[text/xml]
   }
   ^_setResponseHeaders[$aResponse]
-  $result[^untaint[xml]{$aResponse.body}]
+  $result[^untaint[optimized-xml]{$aResponse.body}]
 
 @postTEXT[aResponse]
   ^if(!def ${aResponse.content-type}){

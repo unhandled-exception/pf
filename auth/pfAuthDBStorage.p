@@ -46,35 +46,40 @@ pfAuthStorage
   ^_extraFields.append{$aField	$aDBField}
 
 @getUser[aID]
-## Загрузить данные о пользователе по ID (как правило логину)
-  $result[^CSQL.table{select login,
-  	                         password
-                         ^if($_extraFields){
-                           , ^_extraFields.menu{^if(def $_extraFields.dbField){$_extraFields.dbField}{$_extraFields.field} as $_extraFields.field}[,]
-                         }
-  	                    from $_usersTable
-  	                   where login = '$aID'
-  	                         and is_active = '1'
-  	                 }[][$.isForce(true)]]
-  $result[$result.fields]
+## Загрузить данные о пользователе по ID (по-умолчанию логину)
+  $result[^CSQL.hash{select id,
+                             login,
+                             password
+                             ^if($_extraFields){
+                               , ^_extraFields.menu{^if(def $_extraFields.dbField){$_extraFields.dbField}{$_extraFields.field} as $_extraFields.field}[,]
+                             }
+                        from $_usersTable
+                       where login = '$aID'
+                             and is_active = '1'
+                   }[][$.isForce(true)]]
+                   
   
 @getSession[aOptions]
 ## Загрузить сессию 
 ## aOptions.uid - первый идентификатор сессии (пользовательский)
 ## aOptions.sid - второй идентификатор сессии (сессионный)
   ^cleanMethodArgument[]
-  $result[^CSQL.table{select uid, sid,
-                             login,
-                             is_persistent,
-  	                         dt_create, 
-  	                         dt_access,
-  	                         dt_close
-   	                    from $_sessionsTable
-  	                   where uid = '$aOptions.uid'
-  	                         and sid = '$aOptions.sid'
-                             and is_active = '1'
-  	     }[][$.isForce(true)]]
-
+  ^if(def $aOptions.uid && def $aOptions.sid){
+    $result[^CSQL.hash{select uid, sid,
+                               login,
+                               is_persistent,
+    	                         dt_create, 
+    	                         dt_access,
+    	                         dt_close
+     	                    from $_sessionsTable
+    	                   where uid = '$aOptions.uid'
+    	                         and sid = '$aOptions.sid'
+                               and is_active = '1'
+    	     }[][$.isForce(true)]]
+  }{
+    $result(false)
+  }               
+  
 @addSession[aSession]
 ## Добавляем сессию в хранилище
   ^try{
