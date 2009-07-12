@@ -126,7 +126,6 @@ pfAuthBase
 
   ^if($lUser && ($_debugMode || ^storage.isValidPassword[$aOptions.[${_formPrefix}password];$lUser.password])
      ){         
-       ^pfAssert:fail[stop: $lUser.id -- $lUser.login -- ^eval($lUser)]
 #   Если пароль верен, то логиним
     $lSession[
       $.uid[^_makeUID[]]

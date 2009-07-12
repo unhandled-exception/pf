@@ -64,7 +64,7 @@ pfAuthStorage
 ## aOptions.uid - первый идентификатор сессии (пользовательский)
 ## aOptions.sid - второй идентификатор сессии (сессионный)
   ^cleanMethodArgument[]
-#  ^if(def $aOptions.uid && def $aOptions.sid){
+  ^if(def $aOptions.uid && def $aOptions.sid){
     $result[^CSQL.table{select uid, sid,
                                login,
                                is_persistent,
@@ -76,9 +76,9 @@ pfAuthStorage
     	                         and sid = '$aOptions.sid'
                                and is_active = '1'
     	     }[][$.isForce(true)]]
-#  }{
-#    $result(false)
-#  }               
+  }{
+    $result(false)
+  }               
   
 @addSession[aSession]
 ## Добавляем сессию в хранилище
