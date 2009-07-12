@@ -64,8 +64,6 @@ pfAuthBase
   ^cleanMethodArgument[]
   ^if(!$aOptions){$aOptions[$form:fields]}
 
-  $_isUserLogin(false)
-
   ^if(def $aOptions.[${_formPrefix}dologin]){
     $result(^login[$aOptions])
   }{
@@ -78,12 +76,11 @@ pfAuthBase
                      $.uid[$cookie:[${_formPrefix}uid]] 
                      $.sid[$cookie:[${_formPrefix}sid]] 
                   }
-              ]]
+              ]]                                     
 
 #    Если найдена сессия то пытаемся получаем данные о пользователе 
      ^if($lSession){
-     	 $lUser[^storage.getUser[$lSession.login]]
-
+       $lUser[^storage.getUser[$lSession.login]]
        ^if($lUser){
 #      Если с момента последнего доступа прошло больше $_temout минут,
 #      то обновляем данные сессии
@@ -99,7 +96,6 @@ pfAuthBase
              ^_saveSession[$lSession]
            }
          }
- 
             $_isUserLogin(true)
             $_session[$lSession]
             $_user[$lUser]
@@ -188,7 +184,9 @@ pfAuthBase
 		}{
 			$.expires[session]
 		}
-		$.secure($_secureCookie)
+    ^if($_secureCookie){
+		  $.secure(true)
+		}
 	]
 }
   

@@ -67,7 +67,7 @@ pfAuthStorage
   ^cleanMethodArgument[]
   ^if(def $aOptions.uid && def $aOptions.sid){
     $result[^CSQL.table{select uid, sid,
-                               login,
+                               login,                                                                 
                                is_persistent,
     	                         dt_create, 
     	                         dt_access,
