@@ -267,7 +267,7 @@ pfClass
   ^_stat.queriesCount.inc[]
   ^if($_enableQueriesLog){
     ^_stat.queries.add[$.query[^taint[$aOptions.query]] $.time($lEnd-$lStart)]
-  }
+  }      
   
   
 #----- DATE functions -----

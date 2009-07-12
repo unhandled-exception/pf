@@ -64,7 +64,7 @@ pfAuthStorage
 ## Загрузить сессию 
 ## aOptions.uid - первый идентификатор сессии (пользовательский)
 ## aOptions.sid - второй идентификатор сессии (сессионный)
-  ^cleanMethodArgument[]
+  ^cleanMethodArgument[]                              
   ^if(def $aOptions.uid && def $aOptions.sid){
     $result[^CSQL.table{select uid, sid,
                                login,                                                                 
