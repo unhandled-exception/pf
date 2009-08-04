@@ -26,8 +26,8 @@ pfSiteModule
 @run[aOptions][lArgs]
 ## Основной процесс обработки запроса (как правило перекрывать не нужно).
   $lArgs[^getDispatchArgs[]]
-  ^authenticate[$lArgs.URI;$lArgs]
-  $result[^dispatch[$lArgs.URI;$lArgs]]
+  ^authenticate[$lArgs._action;$lArgs]
+  $result[^dispatch[$lArgs._action;$lArgs]]
 
 @authenticate[aAction;aOptions]
 ## Производит авторизацию.
