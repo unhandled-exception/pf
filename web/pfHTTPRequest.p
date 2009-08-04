@@ -60,11 +60,11 @@ pfClass
 ## Return cookie
   $result[$_COOKIE]
   
-@GET_qtail[]
+@GET_QTAIL[]
 ## Return form:qtail field
   $result[$_QTAIL]
 
-@GET_imap[]
+@GET_IMAP[]
 ## Return form:imap field
   $result[$_IMAP]
 
