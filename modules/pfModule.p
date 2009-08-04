@@ -166,9 +166,11 @@ pfClass
   	  }{
   	     ^use[$_MODULES.[$aName].file]
   	  }
-  	  ^process{
-  	    ^$_MODULES.[$aName].object[^^$_MODULES.[$aName].class::create[^$_MODULES.[$aName].args]]
-  	  }
+      ^if(^env:PARSER_VERSION.left(5) eq "3.4.0" ){
+        $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args]]
+      }{
+  	    ^process{^$_MODULES.[$aName].object[^^$_MODULES.[$aName].class::create[^$_MODULES.[$aName].args]]}
+  	   }
   	  $_MODULES.[$aName].isCompiled(1)  
      }
   }{
