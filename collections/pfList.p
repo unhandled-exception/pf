@@ -40,13 +40,13 @@ pfCollection
 
 @GET_count[]
 ## Возвращает количество элементов в коллекции.
-  $result(^_array._count[])
+  $result(^_array._count[])                     
 
 @GET_DEFAULT[aIndex]
   ^if(^aIndex.int(-1) >= 0){
     $result[^at[$aIndex]]
   }{
-     $result[]
+     $result[]                  
   }
   
 @GET_indexes[]
@@ -82,7 +82,6 @@ pfCollection
   $_array.[^eval($lastIndex + 1)][$aItem]
   ^_lastIndex.inc[]
   ^reset[]                   
-#  ^pfAssert:fail[$_firstIndex - $_lastIndex]
 
 @addRange[aCollection][result;it]
 ## Добавляет коллекцию aCollection в конец текуще коллекции

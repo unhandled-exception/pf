@@ -125,10 +125,10 @@ pfClass
 
 @GET_count[]
 ## Возвращает количество элементов в коллекции.
-  $result(0)
+  $result(0) 
 
 @GET[]
-  $result($count)
+  $result($count) 
 
 #----- Public -----
 

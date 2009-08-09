@@ -26,7 +26,7 @@ pf/tests/pfAssert.p
   
 @GET_isStatic[]  
 ## Возвращает true, если класс создан статически
-  $result(!def $__isDynamic || $__isDynamic)
+  $result(!def $__isDynamic || !$__isDynamic)
 
 
 #----- Public -----
@@ -34,30 +34,34 @@ pf/tests/pfAssert.p
 @cleanMethodArgument[aName]
 ## Метод проверяет пришел ли вызывающему методу
 ## параметр с именем $aName[aOptions].
-## Если пришел пустой параметр, то записываем в него пустой хеш. 
+## Если пришел пустой параметр, то записываем в него пустой хеш.
   ^if(!def $aName){$aName[aOptions]}
   ^if(!def $caller.[$aName]){$caller.[$aName][^hash::create[]]}
+  $result[]
 
 @defProperty[aPropertyName;aVarName;aType]
-## Добавляет в класс свойство с именем aPropertyName
+## Добавляет в объект свойство с именем aPropertyName
 ## ссылающееся на переменную $aVarName[_$aPropertyName].
 ## aType[read] - тип свойства (read|full: только для чтения|чтение/запись)
   ^pfAssert:isTrue(def $aPropertyName)[Не определено имя свойства]
 
-  ^process{^$result[^$^if(def $aVarName){$aVarName}{_$aPropertyName}]}[$.main[GET_$aPropertyName]]
+  ^process[$self]{^$result[^$^if(def $aVarName){$aVarName}{_$aPropertyName}]}[$.main[GET_$aPropertyName]]
   ^if($aType eq "full"){
-    ^process[$CLASS]{@SET_$aPropertyName^[aValue^]
+    ^process[$self]{@SET_$aPropertyName^[aValue^]
                        ^$^if(def $aVarName){$aVarName}{_$aPropertyName}^[^$aValue^]
     }
   }
+  $result[]
 
 @defReadProperty[aPropertyName;aVarName]
 # Добавляет свойтво только для чтения.
   ^defProperty[$aPropertyName;$aVarName]
+  $result[]
 
 @defReadWriteProperty[aPropertyName;aVarName]
 # Добавляет свойтво для чтения/записи.
   ^defProperty[$aPropertyName;$aVarName;full]
+  $result[]
 
 @equals[aObject]
 ## Возвращает true, если текущий объект равен aObject.
