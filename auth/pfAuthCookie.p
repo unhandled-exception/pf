@@ -84,7 +84,7 @@ pfAuthBase
        ^if($lUser){
 #      Если с момента последнего доступа прошло больше $_temout минут,
 #      то обновляем данные сессии
-  	 		 ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){
+         ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){
            $lNewSession[
              $.uid[$lSession.uid]
              $.sid[^_makeUID[]]
@@ -96,21 +96,25 @@ pfAuthBase
              ^_saveSession[$lSession]
            }
          }
-            $_isUserLogin(true)
-            $_session[$lSession]
-            $_user[$lUser]
-            $_user.ip[$env:REMOTE_ADDR]
-         }
-       }
+         
+         $_isUserLogin(true)
+         $_session[$lSession]
+         $_user[$lUser]
+         $_user.ip[$env:REMOTE_ADDR]
+       }{
+          $_isUserLogin(false)
+          $_user[^hash::create[]]
+          $_session[^hash::create[]]
+        }
      }{
 #@TODO: Возможно стоит вставить guest'а     	
         $_isUserLogin(false)
         $_user[^hash::create[]]
         $_session[^hash::create[]]
      	}
+ 
+     $result($_isUserLogin)
    }
-
-   $result($_isUserLogin)
 
 @login[aOptions][lUser;lSession]
 ## Принудительный логин. Текущие сессии игнорируются
