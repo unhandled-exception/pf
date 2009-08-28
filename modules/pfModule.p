@@ -288,5 +288,6 @@ pfClass
   }
   
 @_makeSpecialName[aStr][lFirst]
-## Возвращает aStr в которой первая буква прописная
-  $result[^aStr.match[(.)(.*)][]{^match.1.upper[]^match.2.lower[]}]
+## Возвращает aStr в которой первая буква прописная    
+  $lFirst[^aStr.left(1)]
+  $result[^lFirst.upper[]^aStr.mid(1)] 
