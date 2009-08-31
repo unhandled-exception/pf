@@ -174,4 +174,3 @@ pfClass
   $lName[^aName.trim[both][ :]]
   $lName[^aName.match[[-\s]][g]{_}]
   $result[$env:[HTTP_^lName.upper[]]]
-

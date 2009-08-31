@@ -32,9 +32,9 @@ pfSiteModule
 @authenticate[aAction;aOptions]
 ## Производит авторизацию.
   ^if(^AUTH.identify[$aOptions]){
-    $result[^onAuthSuccess[]]
+    $result[^onAuthSuccess[$aOptions]]
    }{
-      $result[^onAuthFailed[]]
+      $result[^onAuthFailed[$aOptions]]
     }
 
 @getDispatchArgs[aOptions]
