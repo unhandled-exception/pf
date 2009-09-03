@@ -40,7 +40,7 @@ pfClass
 @GET_type[]
   $result[$_type]  
 
-@GET_type[aType]
+@SET_type[aType]
   $type[$aType]  
 
 
