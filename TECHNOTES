@@ -163,12 +163,30 @@ http://oleg.volchkov.net
     
     
  
- = pfSiteModule и pfSiteManager
+ = pfSiteModule и pfSiteManager 
+ 
+    Добавлены два обработчика onINDEX (вызывается, если идет обращение к корневому экшну модуля - "/") и onNOTFOUND ( вызывается, если не найден обработчик).
+ 
     Класс pfSiteModule (наследник pfModule) расширяет схему маршрутизации и позволяет производить постобработку результатов работы обработчиков.
-   
     Ответом модуля может быть строка или объект с обязательными полями type и body. Строка автоматически оборачивается в класс pfHTTPResponse: сама строка попадает в поле body, а тип ответа задается исходя из переменной responseType модуля.
 
-    В файле web/pf
+    Есть несколько наследников pfHTTPResponse, которые можно удобно использовать, если необходимо вернуть ответ с различными http-статусами:
+    pfHTTPResponseRedirect, pfHTTPResponsePermanentRedirect, pfHTTPResponseNotFound, pfHTTPResponseForbidden, pfHTTPResponseNotAllowed,
+    pfHTTPResponseGone, pfHTTPResponseServerError.
+
+    Примеры:
+
+    @onSomeAction[aRequest]
+      $result[^pfHTTPResponse::create[Simple response!]]
+
+    @onRedirectAction[aRequest]
+      ^model.update[]
+      $result[^pfHTTPResponseRedirect::create[/done]]
+    
+    @onNOTFOUND[aRequest]
+      $result[^pfHTTPResponseNotFound::create[Page not found!]]
+
+    
    
     Обработчик ответа будет вызываться после диспатча по следующему алгоритму: сначала пытаемся вызвать обработчик postTYPE, а если его нет, то зовем postDEFAULT.
 
@@ -176,11 +194,11 @@ http://oleg.volchkov.net
     #@postXML[aResponse]
     #@postTEXT[aResponse]
     #@postDEFAULT[aResponse]
+    #@postREDIRECT[aResponse]
     
-    # aResponse[$.type[html|xml|file|text|...] $.body[] ...] - хэш или объект с данными ответа.
-   
+    # aResponse[$.type[html|xml|file|text|...|redirect] $.body[] ...] - объект (обычно наслдник pfHTTPResponse) или хеш с данными ответа.
     Поля, которые могут быть обработаны контейнерами (pfSiteManager) и выданы браузеру:
-      $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
+      .content-type[] .charset[] .headers[] .status[] .cookie[]
       Для типа "file" можно положить ответ не в поле body, а в поле download, что по результату аналогично response:body и response:download.
    
    
