@@ -65,9 +65,15 @@ pfClass
 
 @GET_status[]
   $result($_status)
+
+@SET_status[aStatus]
+  $_status($aStatus)
   
 @GET_charset[]
   $result[$_charset]
+
+@SET_charset[aCharset]
+  $_charset[$aCharset]
   
 
 @GET_headers[]
