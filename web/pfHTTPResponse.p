@@ -18,7 +18,7 @@ pfClass
 ## aBody              
 ## aOptions.type[html] - тип ответа
 ## aOptions.status(200) - http-статус
-## aOptions.content-type[text/html]
+## aOptions.content-type[]
 ## aOptions.charset[]
 ## aOptions.canDownload(false)
   ^cleanMethodArgument[]
@@ -26,7 +26,7 @@ pfClass
   $_body[$aBody]
 
   $_type[^if(def $aOptions.type){$aOptions.type}{html}]
-  $_contentType[^if(def $aOptions.contentType){$aOptions.contentType}{text/html}]
+  $_contentType[^if(def $aOptions.contentType){$aOptions.contentType}]
   $_status(^if(def $aOptions.status){$aOptions.status}{200})
   $_charset[^if(def $aOptions.charset){$aOptions}{$response:charset}]
   
