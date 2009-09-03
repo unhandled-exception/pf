@@ -44,7 +44,7 @@ TO-DO List...
       board/help;forum/help
       :controler/help;main/help <- если поставить первым, то правило для board/help не выполнится никогда 
       
-  + Параметр-ловушка (*var_name) в который попада/т все оставшиеся части маршрута.
+  + Параметр-ловушка (*var_name) в который попадают все оставшиеся части маршрута.
   + Для шаблона можно задать хэш с дефолтными значениями options.defaults[].
   + Возможность подстановки параметров в новый экшн
       new/action/:some/:trap -> new/action/got/last/path/part
@@ -70,8 +70,9 @@ pfModule
 
   - Сделать возможность возврата из обработчиков экшнов классов.
 
-* Классы pfHTTPResponse и наследники pfHTTPFileResponse, pfHTTPXMLResponse, pfHTTPTextResponse,
-  pfHTTPAJAXResponse. 
++ Классы pfHTTPResponse 
+  ? Специальные наследники pfHTTPFileResponse, pfHTTPXMLResponse, 
+    pfHTTPTextResponse, pfHTTPAJAXResponse. 
 
 * Работа с формами
     web/forms/*
@@ -129,7 +130,7 @@ pfString
   - Добавить методы int2hex И hex2int
 
 sql/pfSQL
-  * Сделать накапливание статистики
+  + Сделать накапливание статистики
 
 Коллекции
   - Сделать возможность импортировать в словарь другой словарь.

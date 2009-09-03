@@ -5,6 +5,7 @@ pfSiteModule
 
 @USE
 pf/modules/pfModule.p
+pf/web/pfHTTPResponse.p
 
 @BASE
 pfModule
@@ -84,23 +85,30 @@ pfModule
 
 @dispatch[aAction;aRequest;aOptions][lResult;lPostDispatch]
   ^cleanMethodArgument[]
-  $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
 
-  ^if($result is hash){
-    ^if(!def $result.type){
-      $result.type[$_responseType]
-    }
+  ^try{
+    $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
   }{
-     $result[
-       $.type[^if($result is string || $result is double){$responseType}{Unknown result type: $result.CLASS_NAME}]
-       $.body[$result]
-     ]
-   }
+    ^if($exception.type eq $_redirectExceptionName){
+      $exception.handled(true)
+      $result[^pfHTTPResponseRedirect::create[$exception.comment]]
+    } 
+  } 
+  
+  ^switch(true){
+    ^case($result is hash){
+      ^if(!def $result.type){$result.type[$_responseType]}
+      ^if(!def $result.headers){$result.headers[^hash::create[]]}
+      ^if(!def $result.cookie){$result.cookie[^hash::create[]]}
+    }
+    ^case($result is string || $result is double){
+      $result[^pfHTTPResponse::create[$result;$.type[$responseType]]]
+    }
+  }
 
   $lPostDispatch[post^result.type.upper[]]
-  $lPostDispatch[$$lPostDispatch]
-  ^if($lPostDispatch is junction){
-    $result[^lPostDispatch[$result]]
+  ^if($self.[$lPostDispatch] is junction){
+    $result[^self.[$lPostDispatch][$result]]
   }{
      ^if($postDEFAULT is junction){
        $result[^postDEFAULT[$result]]
@@ -124,7 +132,7 @@ pfModule
 ## Задает переменную для шаблона
   ^TEMPLET.assign[$aVarName;$aValue]
 
-@redirectTo[aAction;aOptions;aAnchor]
+@redirectTo[aAction;aOptions;aAnchor]  
   ^throw[$_redirectExceptionName;$action;^linkTo[$aAction;$aOptions;$aAnchor]]
 
 #----- Properties -----
@@ -175,10 +183,11 @@ pfModule
 
 #@postHTML[aResponse]
 #@postXML[aResponse]
-#@postTEXT[aResponse]
+#@postTEXT[aResponse]     
+#@postREDIRECT[aResponse]
 #@postDEFAULT[aResponse]
 
-# aResponse[$.type[html|xml|file|text|...] $.body[] ...] - хэш с данными ответа.
+# aResponse[$.type[html|xml|file|text|...|redirect] $.body[] ...] - хэш с данными ответа.
 # Поля, которые могут быть обработаны контейнерами:
 # $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
 # Для типа "file" можно положить ответ не в поле body, а в поле download.
@@ -194,7 +203,7 @@ pfModule
   $result[]
 
 ##@onNOTFOUND[aRequest]
-## Определить, если необходима обработка "404" ошибки. 
+## Определить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
 
 #----- Fabriques -----
 
@@ -206,6 +215,10 @@ pfModule
       ^use[pf/sql/pfMySQL.p]
       $result[^pfMySQL::create[$aConnectString;$aSqlOptions]]
     }
+    ^case[sqlite]{
+      ^use[pf/sql/pfSQLite.p]
+      $result[^pfSQLite::create[$aConnectString;$aSqlOptions]]
+    }
     ^case[DEFAULT]{
       ^pfAssert:fail[pfSiteModule.sqlFactory. Bad connect-string.]
     }
@@ -214,12 +227,12 @@ pfModule
 @authFactory[aAuthType;aAuthOptions]
 # Возвращает auth-объект на основании aAuthType
   ^switch[$aAuthType]{
-  	^case[base;DEFAULT]{
-  		 ^use[pf/auth/pfAuthBase.p]
-  		 $result[^pfAuthBase::create[$aAuthOptions]]
-  	}
+    ^case[base;DEFAULT]{
+      ^use[pf/auth/pfAuthBase.p]
+        $result[^pfAuthBase::create[$aAuthOptions]]
+    }
   }
-  
+
 @cacheFactory[aCacheType;aCacheOptions]
 # Возвращает cache-объект
   ^use[pf/cache/pfCache.p]

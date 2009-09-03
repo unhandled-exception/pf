@@ -9,7 +9,16 @@ CHANGELOG...
 Методы для работы с веб-формами еще в разработке и использовать их не стоит. :)
  
 0.9.3
------      
+-----  
+02.09.2009
+  1. Новый класс - web/pfHTTPResponse, который имплементирует логику работы с ответами веб-модулей. 
+     Теперь ответы модулей заворачиваются не в хеши, а в этот класс.
+  2. Наследники pfHTTPResponse: pfHTTPResponseRedirect, pfHTTPResponsePermanentRedirect,
+     pfHTTPResponseNotFound, pfHTTPResponseForbidden, pfHTTPResponseNotAllowed,
+     pfHTTPResponseGone, pfHTTPResponseServerError
+  3. Метода pfSiteModule.redirectTo теперь обрабатывается в диспетчере модуля, а не менеджере - 
+     логика обработки почти не изменилась.
+    
 08.07.2009
   1. Новый метод - pfOS:hashFile[aFileName;aVarName;aCode]
 
@@ -129,7 +138,7 @@ CHANGELOG...
      встроенную функцию хешей - contains.
 
 13.12.2008
-  1. Новый класс pfRequest, который имплементирует логику работы с запросами.
+  1. Новый класс pfHTTPRequest, который имплементирует логику работы с запросами.
      Вспомогательный класс pfHTTPRequestMeta (прокладка к env).
      Вспомогательный класс pfHTTPRequestHeaders (прокладка к заголовкам запроса),
      теперь можно написать aRequest.HEADERS.User-Agent

@@ -96,18 +96,15 @@ pfSiteModule
   ^_setResponseHeaders[$aResponse]
   $result[]
 
+@postREDIRECT[aResponse]         
+  ^if(!^aResponse.headers.location.match[^^https?://]){
+    $aResponse.headers.location[${uriProtocol}://${uriServerName}$aResponse.headers.location]
+  }  
+  ^_setResponseHeaders[$aResponse]
+  $result[]
+
 #----- Methods -----
 
-@dispatch[aAction;aRequest;aOptions]
-  ^try{
-    $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
-  }{
-     ^if($exception.type eq $_redirectExceptionName){
-       $exception.handled(true)
-       ^_redirectTo[$exception.comment]
-     }
-   }
- 
 @_setResponseHeaders[aResponse]
   $response:charset[^if(def $aResponse.charset){$aResponse.charset}{$response:charset}]
   $response:content-type[
@@ -131,9 +128,4 @@ pfSiteModule
     $response:status[$aResponse.status]
   }
    
-@_redirectTo[aURI][$lURI]
-## Делает внутренний редирект на экшн   
-  $lURI[${uriProtocol}://${uriServerName}$aURI]
-  $response:location[^untaint{$lURI}]
-
   
