@@ -16,9 +16,9 @@ pfClass
 
 @create[aBody;aOptions]
 ## aBody              
-## aOptions.type[html]
-## aOptions.status(200)
-## aOptions.contentType[text/html]
+## aOptions.type[html] - тип ответа
+## aOptions.status(200) - http-статус
+## aOptions.content-type[text/html]
 ## aOptions.charset[]
 ## aOptions.canDownload(false)
   ^cleanMethodArgument[]
@@ -35,8 +35,14 @@ pfClass
   $_headers[^hash::create[]]
   $_cookie[^hash::create[]]
 
+#----- Properties -----
+
 @GET_type[]
   $result[$_type]  
+
+@GET_type[aType]
+  $type[$aType]  
+
 
 @GET_body[]
   $result[$_body]
@@ -44,17 +50,20 @@ pfClass
 @SET_body[aBody]
   $_body[$aBody]
 
+
 @GET_canDownload[]
   $result($_canDownload)
 
 @GET_download[]
   $result[^if($canDownload){$body}]
 
+
 @GET_contentType[]
   $result[$_contentType]
 
 @SET_contentType[aContentType]
   $_contentType[$aContentType]
+
 
 @GET_content-type[]
 # Для совместимости
@@ -63,12 +72,14 @@ pfClass
 @SET_content-type[aContentType]
   $_contentType[$aContentType]
 
+
 @GET_status[]
   $result($_status)
 
 @SET_status[aStatus]
   $_status($aStatus)
   
+
 @GET_charset[]
   $result[$_charset]
 

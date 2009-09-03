@@ -106,7 +106,7 @@ pfSiteModule
 #----- Methods -----
 
 @_setResponseHeaders[aResponse]
-  $response:charset[^if(def $aResponse.charset){$aResponse.charset}{$response:charset}]
+  ^if(def $aResponse.charset){$response:charset[$aResponse.charset]}
   $response:content-type[
     $.value[^if(def ${aResponse.content-type}){$aResponse.content-type}{text/html}]
     $.charset[$response:charset]
