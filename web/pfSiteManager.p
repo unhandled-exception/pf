@@ -55,10 +55,11 @@ pfSiteModule
 
 @onAuthSuccess[aRequest]
 ## Вызывается при удачной авторизации.
-## Можно перекрыть, если есть желание
-
+  $result[]
+  
 @onAuthFailed[aRequest]
 ## Вызывается при неудачной авторизации
+  $result[]
 
 @postDEFAULT[aResponse]
   ^throw[pfSiteManager.postDEFAULT;Unknown response type "$aResponse.type".]
@@ -85,6 +86,7 @@ pfSiteModule
   $result[^untaint[as-is]{$aResponse.body}]
 
 @postFILE[aResponse]
+  $result[]
   ^if(!def ${aResponse.content-type}){
     $aResponse.content-type[application/octet-stream]
   }
@@ -94,18 +96,18 @@ pfSiteModule
      $response:body[$aResponse.body]
    }
   ^_setResponseHeaders[$aResponse]
-  $result[]
 
 @postREDIRECT[aResponse]         
+  $result[]
   ^if(!^aResponse.headers.location.match[^^https?://]){
     $aResponse.headers.location[${uriProtocol}://${uriServerName}$aResponse.headers.location]
   }  
   ^_setResponseHeaders[$aResponse]
-  $result[]
 
 #----- Methods -----
 
-@_setResponseHeaders[aResponse]
+@_setResponseHeaders[aResponse]   
+  $result[]
   ^if(def $aResponse.charset){$response:charset[$aResponse.charset]}
   $response:content-type[
     $.value[^if(def ${aResponse.content-type}){$aResponse.content-type}{text/html}]

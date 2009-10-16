@@ -35,15 +35,10 @@ pfClass
   $_throwPrefix[pfModule]
   $_name[$aOptions.name]
   
-# Модули
   $_MODULES[^hash::create[]]  
-
-# Префикс для uri. 
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
-# Текущий экшн
   $_action[]
-
   $_router[^pfRouter::create[]] 
 
 
@@ -108,9 +103,9 @@ pfClass
          $.factory[$aOptions.factory]
          $.hasFactory(1)
        }{
-       	  $.factory[]
+          $.factory[]
           $.hasFactory(0)
-       	}
+        }
 
        $.file[$aOptions.file]
        $.source[$aOptions.source]
@@ -127,7 +122,6 @@ pfClass
 #  Возможно и не самое удачное решение, но позволяет сохранить цепочку.
    $_MODULES.[$aName].args.uriPrefix[$_MODULES.[$aName].uriPrefix]
         
-#  Если необходимо, то компилируем модуль
    ^if(^aOptions.compile.int(0)){
      ^compileModule[$aName]
    }
@@ -159,7 +153,7 @@ pfClass
       }{
          $_MODULES.[$aName].object[^lFactory[]]
        }
-  	  $_MODULES.[$aName].isCompiled(1)  
+      $_MODULES.[$aName].isCompiled(1)  
     }{
       ^if(def $_MODULES.[$aName].source){
   	    ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}

@@ -1,9 +1,4 @@
 # PF Library
-# Copyright (c) 2006-07 Oleg Volchkov
-
-#@module   String Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
 
 #@compat 3.2.3
 
@@ -27,7 +22,7 @@ pfString
 		$result[^switch[^type.lower[]]{
 			^case[upper]{^str.upper[]}
 			^case[lower]{^str.lower[]}
-			^case[first]{^str.match[^^\s*([a-zа-я])(.*?)^$][i]{^if(def $match.1){^match.1.upper[]}^if(def $match.2){^match.2.lower[]}}}
+			^case[first]{^str.match[^^\s*(\pL)(.*?)^$][i]{^if(def $match.1){^match.1.upper[]}^if(def $match.2){^match.2.lower[]}}}
 			^case[DEFAULT]{$str}
 		}]
 		

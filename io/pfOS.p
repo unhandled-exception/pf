@@ -1,9 +1,5 @@
 # PF Library
 
-#@module   OS Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
-
 @CLASS
 pfOS
 
@@ -136,7 +132,7 @@ pf/tests/pfAssert.p
 @tempFile[aPath;aVarName;aCode][lTempFileName]
 ## Формирует на время выполнения кода aCode уникальное имя для временного
 ## файла в папке aPath. После работы кода удаляет временный файл, если он создан.
-  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для имени временного файла.]
+  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для названия временного файла.]
   $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
   $caller.[$aVarName][$lTempFileName]
   $result[$aCode]
@@ -145,10 +141,10 @@ pf/tests/pfAssert.p
   }
 
 @hashFile[aFileName;aVarName;aCode][lHashfile]
-## Открывает hasfile с имененм aFileName и выполняет код для работы с этим файлом.
-## Файл доступен коду в переменной с именем $aVarName.
+## Открывает хешфайл с имененм aFileName и выполняет код для работы с этим файлом.
+## Файл доступен коду в переменной с именем aVarName.
 ## После работы выполняет release хешфайла.
-  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для имени временного файла.]
+  ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для хешфайла.]
   $lHashfile[^hashfile::open[$aFileName]]
   $caller.[$aVarName][$lHashfile]
   $result[$aCode]

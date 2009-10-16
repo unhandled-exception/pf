@@ -67,8 +67,11 @@ pfModule
 
   + Сделать возможность передавать в обработчики экшнов не только хеши, но и классы.
     + Метод cleanMethodArgument теперь не "убивает" параметр, если он не хеш.
+  + Сделать возможность возврата из обработчиков экшнов классов.
 
-  - Сделать возможность возврата из обработчиков экшнов классов.
+
+pfSiteModule
+  - Добавление приложений  
 
 + Классы pfHTTPResponse 
   ? Специальные наследники pfHTTPFileResponse, pfHTTPXMLResponse, 
@@ -134,7 +137,7 @@ sql/pfSQL
 
 Коллекции
   - Сделать возможность импортировать в словарь другой словарь.
-  - Интелектуальный импорт хеша в коллекции (с лексикографической сортировкой с учетом порядка чисел)
+  ? Интелектуальный импорт хеша в коллекции (с лексикографической сортировкой с учетом порядка чисел)
   + Для списка строк сделать метод has
      $list[^pfList::create[one, two, three]]
      ^if(^list.has[three]){В списке есть "three"}
@@ -142,8 +145,12 @@ sql/pfSQL
   ? Реализовать метод equals во всех коллекциях
   ? Сделать поиск в pfList
 
-pfOS
-  + pfOS:tempFile[aPath;aVarName;aCode]
+pfOS               
+  - Добавить возможность импорта части функций для текущей платформы:
+    pfOS_posix.p, psOS_win.p - partial-классы с сметодами специфическими для конкретной OS.
+    Импортируем в pfOS:auto[]
+
+  + pfOS:tempFile[aPath;aVarName]{aCode}
     Формирует уникальное имя для временного файла в папке aPath[/].
     Имя запиывается в переменную с именем $aVarName в вызывающем коде.
     Файл удаляется с диска, после выполнения кода aCode.
@@ -152,7 +159,63 @@ pfOS
     ^pfOS:tempFile[path;tempFileName]{
       $string[Some where]
       ^string.save[$tempFileName]
-    }
+    }   
+    
+  - pfOS:walk[aPath;aFileName]{aCode}[aOptions]
+    Обходит дерево файлов начиная с aPath и выполняет для каждого найденного файла aCode.
+    Имя файла попадает в переменную aFileName.
+    
+  - pfOS:absolutePath[aPath]
+    Возвращает полный путь к файлу.
+    document-root: /home/site/public/root/
+    uri: /blog/archive
+    ^pfOS:absolutePath[/css/blog] -> /home/site/public/root/css/blog  
+    ^pfOS:absolutePath[/../temp] -> /home/site/public/temp  
+    ^pfOS:absolutePath[../images] -> /home/site/public/root/blog/images
+    
+    def normpath(path):
+        """Normalize path, eliminating double slashes, etc."""
+        if path == '':
+            return '.'
+        initial_slashes = path.startswith('/')
+        # POSIX allows one or two initial slashes, but treats three or more
+        # as single slash.
+        if (initial_slashes and
+            path.startswith('//') and not path.startswith('///')):
+            initial_slashes = 2
+        comps = path.split('/')
+        new_comps = []
+        for comp in comps:
+            if comp in ('', '.'):
+                continue
+            if (comp != '..' or (not initial_slashes and not new_comps) or
+                 (new_comps and new_comps[-1] == '..')):
+                new_comps.append(comp)
+            elif new_comps:
+                new_comps.pop()
+        comps = new_comps
+        path = '/'.join(comps)
+        if initial_slashes:
+            path = '/'*initial_slashes + path
+        return path or '.'
+
+
+    def abspath(path):
+        """Return an absolute path."""
+        if not isabs(path):
+            path = join(os.getcwd(), path)
+        return normpath(path)
+    
+    def isabs(s):
+        """Test whether a path is absolute"""
+        return s.startswith('/')
+
+  
+pfRuntime
+  - pfRuntime:measure[aVarName]{aCode}  
+    Измеряет время выполнения и ресурсы потраченные за время выполнения блока aCode.
+    Результат в виде хеша записывается в переменную aVarName
+    
 
 Тесты
   * Доделать полноценную систему классов для тестирования

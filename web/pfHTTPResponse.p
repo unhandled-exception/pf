@@ -11,9 +11,6 @@ pfClass
 
 #----- Constructor -----
 
-# HttpResponse.__init__(content='', mimetype=None, status=200, content_type=DEFAULT_CONTENT_TYPE)¶
-# $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
-
 @create[aBody;aOptions]
 ## aBody              
 ## aOptions.type[html] - тип ответа
@@ -28,7 +25,7 @@ pfClass
   $_type[^if(def $aOptions.type){$aOptions.type}{html}]
   $_contentType[^if(def $aOptions.contentType){$aOptions.contentType}]
   $_status(^if(def $aOptions.status){$aOptions.status}{200})
-  $_charset[^if(def $aOptions.charset){$aOptions}{$response:charset}]
+  $_charset[^if(def $aOptions.charset){$aOptions}]
   
   $_canDownload($aOptions.canDownload)
 
@@ -104,7 +101,7 @@ pfHTTPResponse
 @create[aPath]      
 ## aPath - полный путь для редиректа или uri
   ^BASE:create[;$.type[redirect] $.status(301)]
-  $_headers.location[^untaint{$aPath}]
+  $headers.location[^untaint{$aPath}]
 
 #################################################
 
@@ -117,7 +114,7 @@ pfHTTPResponse
 @create[aPath]      
 ## aPath - полный путь для редиректа или uri
   ^BASE:create[;$.type[redirect] $.status(302)]
-  $_headers.location[^untaint{$aPath}]
+  $headers.location[^untaint{$aPath}]
 
 #################################################
 
@@ -129,7 +126,7 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(404)
+  $status(404)
 
 #################################################
 
@@ -141,7 +138,7 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(405)
+  $status(405)
 
 #################################################
 
@@ -153,7 +150,7 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(403)
+  $status(403)
 
 #################################################
 
@@ -165,7 +162,7 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(404)
+  $status(404)
 
 #################################################
 
@@ -177,7 +174,7 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(410)
+  $status(410)
 
 #################################################
 
@@ -189,4 +186,4 @@ pfHTTPResponse
 
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
-  $_status(500)
+  $status(500)

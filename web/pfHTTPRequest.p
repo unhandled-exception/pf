@@ -11,19 +11,19 @@ pfClass
 
 #----- Constructor -----
 
-##todo: Cделать возможность задания переменных класса через конструктор (для упрощения тестов).
-
-@create[]
+@create[aOptions]   
+  ^cleanMethodArgument[]
   ^BASE:create[]
-  $_FIELDS[$form:fields]
-  $_QTAIL[$form:qtail]
-  $_IMAP[$form:imap]
-  $_TABLES[$form:tables]
-  $_FILES[$form:files]
-  $_COOKIE[$cookie:fields]
+
+  $_FIELDS[^if(def $aOptions.fields){$aOptions.fields}{$form:fields}]
+  $_QTAIL[^if(def $aOptions.qtail){$aOptions.qtail}{$form:qtail}]
+  $_IMAP[^if(def $aOptions.imap){$aOptions.imap}{$form:imap}]
+  $_TABLES[^if(def $aOptions.tables){$aOptions.tables}{$form:tables}]
+  $_FILES[^if(def $aOptions.files){$aOptions.files}{$form:files}]
+  $_COOKIE[^if(def $aOptions.cookie){$aOptions.cookie}{$cookie:fields}]
   
-  $_META[^pfHTTPRequestMeta::create[]]
-  $_HEADERS[^pfHTTPRequestHeaders::create[]]
+  $_META[^if(def $aOptions.meta){$aOptions.meta}{^pfHTTPRequestMeta::create[]}]
+  $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}]
 
 #----- Properties -----
 
@@ -69,11 +69,9 @@ pfClass
   $result[$_IMAP]
 
 
-
 @GET_isSECURE[]
 ## Проверяет пришел ли нам запрос по протоколу HTTPS.
   $result(^META.HTTPS.lower[] eq "on" || ^META.SERVER_PORT.int(80) == 443)
-
 
 
 @GET_METHOD[]
@@ -97,7 +95,6 @@ pfClass
 
 @GET_isAJAX[]
   $result(^HEADERS.[X_Requested_With].pos[XMLHttpRequest] > -1)
-
 
 
 @GET_URI[]
@@ -137,8 +134,8 @@ pfClass
 @__add[aNewFields]
 ## Add new fields in to request
   ^pfAssert:isTrue($aNewFields is hash)[New fields must be a hash.]
-  ^_FIELDS.add[$aNewFields]
-
+  ^_FIELDS.add[$aNewFields]       
+  $result[]
 
 
 #################################################
@@ -170,7 +167,11 @@ pfClass
 @GET_DEFAULT[aName][lName]
 ## Возвращает поле запроса.
 ## Позволяет задать имя в привычном виде (например, User-Agent).
-  ^pfAssert:isTrue(def $aName)[Header name must be defined.]
-  $lName[^aName.trim[both][ :]]
-  $lName[^aName.match[[-\s]][g]{_}]
-  $result[$env:[HTTP_^lName.upper[]]]
+  ^if(def $aName){
+    $lName[^aName.trim[both][ :]]
+    $lName[^aName.match[[-\s]][g]{_}]
+    $result[$env:[HTTP_^lName.upper[]]]
+  }{
+     $result[]
+  }
+  

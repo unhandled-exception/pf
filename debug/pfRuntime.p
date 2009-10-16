@@ -1,21 +1,10 @@
 # PF Library
 
-#@module   Runtime Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
-
 @CLASS
 pfRuntime
 
 @USE
 pf/tests/pfAssert.p
-
-#@doc
-##  Авторы некоторых методов:
-##  ----------------------------------------
-##    Михаил Петрушин (misha@design.ru).
-##    http://misha.design.ru/
-#/doc
 
 #----- Constructor -----
 @auto[]
@@ -31,9 +20,9 @@ pf/tests/pfAssert.p
 #----- Properties -----
 
 @GET_parserVersion[]
-	^if(!def $_parserVersion && def $env:PARSER_VERSION){
+	^if(!$_parserVersion && def $env:PARSER_VERSION){
 		^env:PARSER_VERSION.match[^^(\d+)\.((\d+)\.(\d+))(\S*)\s*(.*)][]{
-			$result[
+			$_parserVersion[
 				$.name[$match.1]
 				$.ver(^match.3.int(0))
 				$.subver(^match.4.int(0))
@@ -42,9 +31,8 @@ pf/tests/pfAssert.p
 				$.comment[$match.6]
 			]
 		}
-	}{
-		  $result[$_parserVersion]
-	 }
+	}
+	$result[$_parserVersion]
 
 @GET_memoryLimit[]
   $result($_memoryLimit)

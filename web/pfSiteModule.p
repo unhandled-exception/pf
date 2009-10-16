@@ -27,42 +27,20 @@ pfModule
 ## aOptions.authOptions
 ## aOptions.templet
 ## aOptions.templetOptions
-## aOptions.
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
   $_redirectExceptionName[pf.site.module.redirect]
 
-# Тип ответа, возвращаемый модулем
   $_responseType[html] 
+  $_createOptions[$aOptions]
 
   $templatePath[$uriPrefix]
   
-  $_createOptions[$aOptions]
-  
-  ^if(def $aOptions.sql && $aOptions.sql is pfSQL){
-    $_sql[$aOptions.sql]
-  }{
-     $_sql[]
-   }
-
-  ^if(def $aOptions.auth && $aOptions.auth is pfAuthBase){
-    $_auth[$aOptions.auth]
-  }{
-     $_auth[]
-   }
-
-  ^if(def $aOptions.cache && $aOptions.cache is pfCache){
-    $_cache[$aOptions.cache]	
-  }{
-     $_cache[]
-   }
-
-  ^if(def $aOptions.templet && $aOptions.templet is pfTemplet){
-    $_templet[$aOptions.templet]	
-  }{
-     $_templet[]
-   }
+  $_sql[^if(def $aOptions.sql){$aOptions.sql}]
+  $_auth[^if(def $aOptions.auth){$aOptions.auth}]
+  $_cache[^if(def $aOptions.cache){$aOptions.cache}]
+  $_templet[^if(def $aOptions.templet){$aOptions.templet}]
 
 #----- Public -----  
 
@@ -70,11 +48,10 @@ pfModule
 # Если нам не передали aOptions.args, то формируем штатный заменитель.
   ^cleanMethodArgument[]
   $lArgs[
-        $.sql[$CSQL]
-        $.auth[$AUTH]
-        $.cache[$CACHE]
-#        $.templet[$TEMPLET]
-	$.templetOptions[$_createOptions.templetOptions]
+    $.sql[$CSQL]
+    $.auth[$AUTH]
+    $.cache[$CACHE]
+    $.templetOptions[$_createOptions.templetOptions]
   ]
   ^if(!def $aOptions.args){
     $aOptions.args[$lArgs]
