@@ -109,13 +109,15 @@ pfClass
 
 #----- Public -----
 
-@transaction[aCode]
+@transaction[aCode;aOptions]
 ## Организует транзакцию (вместо Мишиного server), обеспечивая возможность отката.
+## aOptions.isNatural
+  ^cleanMethodArgument[]
   ^connect[$connectString]{
     ^try{
      	^_transactionCount.inc(1)
   		^setServerEnvironment[]
-  		^if($isTransaction == 1 && $isNaturalTransactions){
+  		^if($isTransaction == 1 && ($isNaturalTransactions || $aOptions.isNatural)){
   			^startTransaction[]
     		$result[$aCode]
   			^commit[]
