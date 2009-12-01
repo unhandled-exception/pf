@@ -83,7 +83,7 @@ pfSQL
   $result[DATE_FORMAT($sSource, '^if(def $sFormatString){$sFormatString}{%Y-%m-%d}')]
 
 @lastInsertId[sTable]
-	$result(^int{SELECT last_insert_id()}[$.limit(1) $.default{0}])
+	$result(^int{SELECT last_insert_id()}[$.limit(1) $.default{0}][$.isForce(true)])
 
 @setLastInsertId[sTable;sField]
 	$result(^last_insert_id[$sTable])

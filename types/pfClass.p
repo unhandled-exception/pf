@@ -103,8 +103,8 @@ pf/tests/pfAssert.p
 @unsafe[aCode;aCatchCode]
 ## Выполняет код и принудительно обрабатывает все exceptions.
 ## В случае ошибки может дополнительно выполнить aCatchCode.
-  $result[^try{$aCode}{$exception.handled(true)$aCatchCode}]
-
+  $result[^try{$aCode}{$exception.handled(true)$aCatchCode}]  
+  
 #----- Private -----
 
 @_abstractMethod[]
