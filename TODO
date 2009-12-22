@@ -133,12 +133,19 @@ pfString
   - Добавить методы int2hex И hex2int
 
 sql/pfSQL
-  + Сделать накапливание статистики
+  + Сделать накапливание статистики запросов
+  * pfSQL.safeInsert{insert code}[aSQLOptions;aOptions]{code if exists}
+
+sql/generic/
+  Классы для работы с структурами данных поверх БД
+  * pfKeyValueStorage - хранилище key-value данных
+  * pfTree - работа с деревьями
+  
 
 Коллекции
   - Сделать возможность импортировать в словарь другой словарь.
   ? Интелектуальный импорт хеша в коллекции (с лексикографической сортировкой с учетом порядка чисел)
-  + Для списка строк сделать метод has
+  + Для коллекции строк сделать метод has
      $list[^pfList::create[one, two, three]]
      ^if(^list.has[three]){В списке есть "three"}
  
@@ -147,7 +154,7 @@ sql/pfSQL
 
 pfOS               
   - Добавить возможность импорта части функций для текущей платформы:
-    pfOS_posix.p, psOS_win.p - partial-классы с сметодами специфическими для конкретной OS.
+    pfOS_posix.p, psOS_win.p - partial-классы с методами специфическими для конкретной OS.
     Импортируем в pfOS:auto[]
 
   + pfOS:tempFile[aPath;aVarName]{aCode}
@@ -212,7 +219,7 @@ pfOS
 
   
 pfRuntime
-  - pfRuntime:measure[aVarName]{aCode}  
+  - pfRuntime:measure[aVarName]{aCode} (возможно, что лучше возвращать хеш из функции $res[^pfRuntime:measure{aCode}])
     Измеряет время выполнения и ресурсы потраченные за время выполнения блока aCode.
     Результат в виде хеша записывается в переменную aVarName
     
