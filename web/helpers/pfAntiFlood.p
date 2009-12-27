@@ -74,19 +74,22 @@ pfClass
 
 @create[aOptions]
 ## aOptions.path[/../antiflood] - имя хеш-файла для хранения ключей
-## aOptions.expires(1) - сколько дней хранить пару ключ/значение
-## aOptions.autoCleanup(true) - автоматически очищать неиспользуемые пары (очистка производится не каждый раз)
+## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение
+## aOptions.autoCleanup(true) - автоматически очищать неиспользуемые пары
+## aOptions.cleanupTimeout - время в секундах между очистками хешфайла
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
   $_path[^if(def $aOptions.path){$aOptions.path}{/../antiflood}]
   ^defReadProperty[path]
   
-  $_expires(^aOptions.expire.int(1))
-  $_autoCleanup(^aOptions.autoCleanup.bool(true))
+  $_expires(^aOptions.expires.int(15*60) * (1.0/(24*60*60)))
   
+  $_autoCleanup(^aOptions.autoCleanup.bool(true))
+  $_cleanupTimeout(^aOptions.cleanupTimeout.int(60*60))
+  $_cleanupKey[LAST_CLEANUP]
+    
   $_hashFile[]
-
   $_lockKey[GET_LOCK]
 
 @GET_hashFile[]
@@ -95,8 +98,6 @@ pfClass
   }{
     ^throw[${CLASS_NAME}.fail;Не используйет методы get/set вне process.]
   }
-
-#----- Methods -----
 
 @get[aKey;aOptions]
 ## Получает ключ из хранилища
@@ -117,16 +118,19 @@ pfClass
   }
   $result[]
 
-@process[aCode]
+@process[aCode][lNow]
 ## Метод в который необходимо "завернуть" вызовы get/set
-## чтобы обеспечить безопасность работы
+## чтобы обеспечить атомарность операций
   ^pfOS:hashFile[$path][_hashFile]{
-#   Получаем блокирвоку средствами хеш-файла без file:lock
     $_hashFile.[$_lockKey][^math:uuid[]]
     $result[$aCode]
-#   Устаревшие ключи удаляем не при каждом вызове
-    ^if($_autoCleanup && ^math:random(2) == 1){
-      ^_hashFile.cleanup[]
+    
+    ^if($_autoCleanup){
+      $lNow[^date::now[]]
+      ^if(^_hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
+        ^_hashFile.cleanup[]
+        $_hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
+      }
     }
   }
   $_hashFile[]
