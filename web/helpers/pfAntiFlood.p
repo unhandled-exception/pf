@@ -28,7 +28,7 @@ pfClass
   
   $_safeValue[0]
   $_doneValue[1]
-
+  
 #----- Methods -----
 
 @protect[aUIDVarName;aCode][lUID]
@@ -73,7 +73,7 @@ pf/io/pfOS.p
 pfClass
 
 @create[aOptions]
-## aOptions.path[/../antiflood] - имя группы файлов для хранения ключей и блокировок
+## aOptions.path[/../antiflood] - имя хеш-файла для хранения ключей
 ## aOptions.expires(1) - сколько дней хранить пару ключ/значение
 ## aOptions.autoCleanup(true) - автоматически очищать неиспользуемые пары (очистка производится не каждый раз)
   ^cleanMethodArgument[]
@@ -86,6 +86,8 @@ pfClass
   $_autoCleanup(^aOptions.autoCleanup.bool(true))
   
   $_hashFile[]
+
+  $_lockKey[GET_LOCK]
 
 @GET_hashFile[]
   ^if(def $_hashFile){
@@ -118,13 +120,12 @@ pfClass
 @process[aCode]
 ## Метод в который необходимо "завернуть" вызовы get/set
 ## чтобы обеспечить безопасность работы
-  ^file:lock[${path}.lock]{
-    ^pfOS:hashFile[$path][_hashFile]{
-      $result[$aCode]
-      ^if($_autoCleanup && ^math:random(10) == 1){
-        ^_hashFile.cleanup[]
-      }
+  ^pfOS:hashFile[$path][_hashFile]{
+    $_hashFile.[$_lockKey][$_safeValue]
+    $result[$aCode]
+    ^if($_autoCleanup && ^math:random(10) == 1){
+      ^_hashFile.cleanup[]
     }
-    $_hashFile[]
   }
+  $_hashFile[]
 
