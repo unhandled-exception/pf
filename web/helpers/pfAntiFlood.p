@@ -121,9 +121,11 @@ pfClass
 ## Метод в который необходимо "завернуть" вызовы get/set
 ## чтобы обеспечить безопасность работы
   ^pfOS:hashFile[$path][_hashFile]{
-    $_hashFile.[$_lockKey][$_safeValue]
+#   Получаем блокирвоку средствами хеш-файла без file:lock
+    $_hashFile.[$_lockKey][^math:uuid[]]
     $result[$aCode]
-    ^if($_autoCleanup && ^math:random(10) == 1){
+#   Устаревшие ключи удаляем не при каждом вызове
+    ^if($_autoCleanup && ^math:random(2) == 1){
       ^_hashFile.cleanup[]
     }
   }
