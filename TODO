@@ -35,7 +35,6 @@ TO-DO List...
     - Если в части есть переменные, то формируем для нее регулярное выражение "(?:....". 
       Если определены $.requirements, то пытаемся использовать их для формирования регулярок.
     - Собираем части в одно регулярное выражение и закрываем скобки ")?"*количество_частей_с_переменными.
-    
 
     path1/path2/got/123/23-45.xml/last/path/part
      -> $.some[got] $.where[123] $.arg1[23] $.arg2[45] $.format[xml] $.trap[last/path/part]
@@ -71,7 +70,7 @@ pfModule
 
 
 pfSiteModule
-  - Добавление приложений  
+  - Добавление приложений (плагинов)
 
 + Классы pfHTTPResponse 
   ? Специальные наследники pfHTTPFileResponse, pfHTTPXMLResponse, 
@@ -88,7 +87,7 @@ pfCurlFie
   * Проверить работу по ftp/ftps. 
   * Сделать работу по протоколу file.
   * Добавить поддержку редиректов для протокола http.
-  * Сделать работу с датами при передаче заголовков удаленному серверу.
+  * Сделать работу с датами при передаче заголовков удаленному серверу (date.gmt-string).
   * Проверить работу http-авторизации.
   * Сделать работу с cookie.
 
@@ -134,13 +133,15 @@ pfString
 
 sql/pfSQL
   + Сделать накапливание статистики запросов
-  * pfSQL.safeInsert{insert code}[aSQLOptions;aOptions]{code if exists}
+  * pfSQL.safeInsert{insert code}{code if exists}[aSQLOptions;aOptions]
 
-sql/generic/
+sql/generics/
   Классы для работы с структурами данных поверх БД
   * pfKeyValueStorage - хранилище key-value данных
-  * pfTree - работа с деревьями
-  
+  * работа с деревьями
+  * Schema-less хранилище поверх SQL
+  * система тегирования
+  * система коментирования
 
 Коллекции
   - Сделать возможность импортировать в словарь другой словарь.
@@ -168,56 +169,21 @@ pfOS
       ^string.save[$tempFileName]
     }   
     
-  - pfOS:walk[aPath;aFileName]{aCode}[aOptions]
+  + pfOS:walk[aPath;aVarName]{aCode}[aSeparator]
     Обходит дерево файлов начиная с aPath и выполняет для каждого найденного файла aCode.
-    Имя файла попадает в переменную aFileName.
+    Имя файла c путем попадает в переменную aFileName.
+    Файлы сортируются по именам.
+    Между вызовами aCode вставляется aSeparator.
+
     
-  - pfOS:absolutePath[aPath]
+  + pfOS:absolutePath[aPath;aBasePath[$request:document-root]]
     Возвращает полный путь к файлу.
     document-root: /home/site/public/root/
-    uri: /blog/archive
     ^pfOS:absolutePath[/css/blog] -> /home/site/public/root/css/blog  
     ^pfOS:absolutePath[/../temp] -> /home/site/public/temp  
-    ^pfOS:absolutePath[../images] -> /home/site/public/root/blog/images
+    ^pfOS:absolutePath[../images] -> /home/site/public/images
     
-    def normpath(path):
-        """Normalize path, eliminating double slashes, etc."""
-        if path == '':
-            return '.'
-        initial_slashes = path.startswith('/')
-        # POSIX allows one or two initial slashes, but treats three or more
-        # as single slash.
-        if (initial_slashes and
-            path.startswith('//') and not path.startswith('///')):
-            initial_slashes = 2
-        comps = path.split('/')
-        new_comps = []
-        for comp in comps:
-            if comp in ('', '.'):
-                continue
-            if (comp != '..' or (not initial_slashes and not new_comps) or
-                 (new_comps and new_comps[-1] == '..')):
-                new_comps.append(comp)
-            elif new_comps:
-                new_comps.pop()
-        comps = new_comps
-        path = '/'.join(comps)
-        if initial_slashes:
-            path = '/'*initial_slashes + path
-        return path or '.'
-
-
-    def abspath(path):
-        """Return an absolute path."""
-        if not isabs(path):
-            path = join(os.getcwd(), path)
-        return normpath(path)
-    
-    def isabs(s):
-        """Test whether a path is absolute"""
-        return s.startswith('/')
-
-  
+      
 pfRuntime
   - pfRuntime:measure[aVarName]{aCode} (возможно, что лучше возвращать хеш из функции $res[^pfRuntime:measure{aCode}])
     Измеряет время выполнения и ресурсы потраченные за время выполнения блока aCode.

@@ -10,6 +10,15 @@ CHANGELOG...
  
 0.9.3
 -----  
+
+03.01.2010
+  1. Новый метод - pfOS:walk[aPath;aVarName]{aCode}[aSeparator], который обходит дерево файлов 
+     начиная с aPath и выполняет для каждого найденного файла aCode.
+
+02.01.2010
+  1. Метод pfClass.cleanMethodArgument теперь заменяет пустые сроки на хеш.
+  2. Новый метод - pfOS:absolutePath[aPath;aBasePath[$request:document-root]], который возвращает полный путь к файлу.
+
 25.12.2009
   1. Новый класс - web/helpers/pfAntiFlood, который обеспечивает интерфейс для защиты
      форм от повтороной обработки.

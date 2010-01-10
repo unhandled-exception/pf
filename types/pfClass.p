@@ -1,11 +1,6 @@
 # PF Library
-# Copyright (c) 2006-07 Oleg Volchkov
 
-#@module   Super Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
-
-## Базовый предок большинства классов Parser Framework
+## Базовый предок большинства классов PF
 
 @CLASS
 pfClass
@@ -34,9 +29,9 @@ pf/tests/pfAssert.p
 @cleanMethodArgument[aName]
 ## Метод проверяет пришел ли вызывающему методу
 ## параметр с именем $aName[aOptions].
-## Если пришел пустой параметр, то записываем в него пустой хеш.
+## Если пришел пустой параметр или строка, то записываем в него пустой хеш.
   ^if(!def $aName){$aName[aOptions]}
-  ^if(!def $caller.[$aName]){$caller.[$aName][^hash::create[]]}
+  ^if(!def $caller.[$aName] || ($caller.[$aName] is string && !def ^caller.[$aName].trim[])){$caller.[$aName][^hash::create[]]}
   $result[]
 
 @defProperty[aPropertyName;aVarName;aType]
@@ -110,16 +105,13 @@ pf/tests/pfAssert.p
 @_abstractMethod[]
   ^pfAssert:fail[Не реализовано. Вызов абстрактного метода.]
 
-#----- Reflection -----
+#----- Serialize -----
+
+## Подробности в файле pf/TECHNOTES
 
 #@__asString[]
-## Формирует строковое представление объекта класса (сериализация)
-## Проверка на сериализуемость объекта: ^if($object.__asString is junction)
-
 #@__fromString[aString]
-## Метод, который позволяет создать объект класса из строки (десериализация)
-## При динамическом вызове должен заполнять текущий экземпляр данными.
-## При статическом вызове должен возвращть объект текущего класса с данными.
-## Проверка на десериализуемость объекта: ^if($object.__fromString is junction)
+#@__asXML[aOptions]
+#@__fromXML[aXML;aOptions]
 
 

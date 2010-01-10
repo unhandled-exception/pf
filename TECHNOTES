@@ -7,10 +7,17 @@ http://oleg.volchkov.net
 =========
   Методы начинаются с двух знаков подчеркивания.
 
+  @pfWebRequest.__add[]
   Используется в pfWebRequest (метод __add вызывается из pfModule)
   для обхода конфликта имен.
   
-  @__asString[aOptions]
+
+Сериализация
+============  
+
+  Предполагается, что классы могут реализовывать (полностью или частично) интерфейc для сераилизации объектов в строковое или xml-представление. 
+
+  @__asString[]
     Формирует строковое представление объекта класса (сериализация)
     Проверка на сериализуемость объекта: ^if($object.__asString is junction)
 
@@ -19,7 +26,25 @@ http://oleg.volchkov.net
     При динамическом вызове должен заполнять текущий экземпляр данными.
     При статическом вызове должен возвращть объект текущего класса с данными.
     Проверка на десериализуемость объекта: ^if($object.__fromString is junction)
-  
+
+  @__asXML[aOptions]
+    Формирует сроку с xml-представлением объекта класса (сериализация)
+    Метод должен возвращать xml без начального <?xml>-тега.
+    Проверка на сериализуемость объекта: ^if($object.__asXML is junction)
+    aOptions.passRoot(false) - не создавать root-тег.
+    aOptions.rootName - название root-элемента [по-умолчанию используется имя класса]
+    aOptions.rootAttributes - строка с дополнительными атрибутами, которые надо 
+                             добавить root-элементу [нужно для сериализации элементов коллекций]
+    aOptions.namespace
+
+  @__fromXML[aXML;aOptions]
+    Метод, который позволяет создать объект класса из строки с xml-предсавлением (десериализация)
+    При динамическом вызове должен заполнять текущий экземпляр данными.
+    При статическом вызове должен возвращть объект текущего класса с данными.
+    Проверка на десериализуемость объекта: ^if($object.__fromXML is junction)
+    aOptions.passRoot(false) - не учитывать root-тег.
+    aOptions.rootName - название root-элемента [по-умолчанию используется имя класса]
+    aOptions.namespace
 
 Контроллеры
 ===========
@@ -171,8 +196,7 @@ http://oleg.volchkov.net
     Ответом модуля может быть строка или объект с обязательными полями type и body. Строка автоматически оборачивается в класс pfHTTPResponse: сама строка попадает в поле body, а тип ответа задается исходя из переменной responseType модуля.
 
     Есть несколько наследников pfHTTPResponse, которые можно удобно использовать, если необходимо вернуть ответ с различными http-статусами:
-    pfHTTPResponseRedirect, pfHTTPResponsePermanentRedirect, pfHTTPResponseNotFound, pfHTTPResponseForbidden, pfHTTPResponseNotAllowed,
-    pfHTTPResponseGone, pfHTTPResponseServerError.
+    pfHTTPResponseRedirect, pfHTTPResponsePermanentRedirect, pfHTTPResponseNotFound, pfHTTPResponseForbidden, pfHTTPResponseNotAllowed, pfHTTPResponseGone, pfHTTPResponseServerError.
 
     Примеры:
 
@@ -186,8 +210,7 @@ http://oleg.volchkov.net
     @onNOTFOUND[aRequest]
       $result[^pfHTTPResponseNotFound::create[Page not found!]]
 
-    
-   
+
     Обработчик ответа будет вызываться после диспатча по следующему алгоритму: сначала пытаемся вызвать обработчик postTYPE, а если его нет, то зовем postDEFAULT.
 
     #@postHTML[aResponse]
@@ -195,21 +218,11 @@ http://oleg.volchkov.net
     #@postTEXT[aResponse]
     #@postDEFAULT[aResponse]
     #@postREDIRECT[aResponse]
-    
-    # aResponse[$.type[html|xml|file|text|...|redirect] $.body[] ...] - объект (обычно наслдник pfHTTPResponse) или хеш с данными ответа.
+
+    # aResponse[$.type[html|xml|file|text|...|redirect] $.body[] ...] - объект (обычно наследник pfHTTPResponse) или хеш с данными ответа.
     Поля, которые могут быть обработаны контейнерами (pfSiteManager) и выданы браузеру:
       .content-type[] .charset[] .headers[] .status[] .cookie[]
       Для типа "file" можно положить ответ не в поле body, а в поле download, что по результату аналогично response:body и response:download.
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-       
+
+
+
