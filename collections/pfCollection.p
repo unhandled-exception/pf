@@ -94,7 +94,7 @@ pfClass
 ## Добавляет в коллекцию данные из строки.
 ## aOptions.separator[,] - символ-разделитель элементов списка 
 ## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
-## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  ^cleanMethodArgument[]
+## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  
   ^cleanMethodArgument[]
   ^if(def $aString){
     $lEncloser[^taint[regex][^if(def $aOptions.encloser || ($aOptions is hash && ^aOptions.contains[encloser])){$aOptions.encloser}{"}]]
