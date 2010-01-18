@@ -14,7 +14,7 @@ pfValidate
   $onlyDigitsRegex[\p{Nd}+]
   $hexDecimalRegex[(?:[0-9A-Fa-f]{2})+]
   $ipAddressRegex[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}]
-  $validEmailRegex[(?:^^[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+(?:\.[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+)*|^^"(?:[\001-\010\013\014\016-\037!\#-\[\]-\177]|\\[\001-011\013\014\016-\177])*")@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}^$]
+  $validEmailRegex[(?:[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+(?:\.[-!\#^$%&'*+/=?^^_`{}|~0-9A-Za-z]+)*|"(?:[\001-\010\013\014\016-\037!\#-\[\]-\177]|\\[\001-011\013\014\016-\177])*")@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}]
   $validURLRegex[(?:[a-zA-Z\-0-9]+?\:(?://)?)(?:\S+?(?:\:\S+)?@)?[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,5}(?:\:\d+)?(?:(?:/|\?)\S*)?]
   
 @isEmpty[aString]
@@ -68,7 +68,7 @@ pfValidate
 @isValidEmail[aString]
 ## Строка содержит корректный e-mail.
   $result(def $aString 
-     && ^aString.match[$validEmailRegex])
+     && ^aString.match[^^$validEmailRegex^$])
   )
 
 @isValidURL[aString;aOnlyHTTP]
