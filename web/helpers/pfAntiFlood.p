@@ -121,15 +121,17 @@ pfClass
 @process[aCode][lNow]
 ## Метод в который необходимо "завернуть" вызовы get/set
 ## чтобы обеспечить атомарность операций
-  ^pfOS:hashFile[$path][_hashFile]{
-    $_hashFile.[$_lockKey][^math:uuid[]]
-    $result[$aCode]
+  ^file:lock[${path}.lock]{
+    ^pfOS:hashFile[$path][_hashFile]{
+#    $_hashFile.[$_lockKey][^math:uuid[]]
+      $result[$aCode]
     
-    ^if($_autoCleanup){
-      $lNow[^date::now[]]
-      ^if(^_hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
-        ^_hashFile.cleanup[]
-        $_hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
+      ^if($_autoCleanup){
+        $lNow[^date::now[]]
+        ^if(^_hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
+          ^_hashFile.cleanup[]
+          $_hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
+        }
       }
     }
   }
