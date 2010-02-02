@@ -49,6 +49,7 @@ pfClass
 @_importFromTable[aTable;aOptions][result;lColumns;lColumnName]
 ## Добавляет в коллекцию данные из самого левого столбца таблицы.
   ^pfAssert:isTrue($aTable is table)[Параметр должен быть таблицей.]
+  $result[]
   ^if($aTable){                   
     ^if(def $aOptions.key){
       $lColumnName[$aOptions.key]
@@ -96,6 +97,7 @@ pfClass
 ## aOptions.encloser["] - символ, обрамляющий значение (внутри значения должен удваиваться)
 ## aOptions.ignoreWhitespaces(true) - удалить ведущие и конечные пробельные символы  
   ^cleanMethodArgument[]
+  $result[]
   ^if(def $aString){
     $lEncloser[^taint[regex][^if(def $aOptions.encloser || ($aOptions is hash && ^aOptions.contains[encloser])){$aOptions.encloser}{"}]]
     $lEncloser[^lEncloser.trim[]]
@@ -153,7 +155,13 @@ pfClass
       $result($currentItem is string && $currentItem eq $aString)
     }
   }
-    
+
+@break[]
+  ^throw[pfCollection.break]
+
+@continue[]
+  ^throw[pfCollection.continue]
+
 #----- Iterator's -----
 
 @GET_currentItem[]
@@ -182,7 +190,7 @@ pfClass
   ^reset[]
   $result[] 
   ^if($count){ 
-    $result[^while(^moveNext[]){$caller.[$aVarName][$currentItem]$aCode^if(def $aSeparator && $currentIndex < ($count - 1)){$aSeparator}}]
+    $result[^while(^moveNext[]){^try{$caller.[$aVarName][$currentItem]$aCode^if(def $aSeparator && $currentIndex < ($count - 1)){$aSeparator}}{^if($exception.type eq "pfCollection.break"){$exception.handled(true)^break[]}^if($exception.type eq "pfCollection.continue"){$exception.handled(true)^continue[]}}}]
     $caller.[$aVarName][]
   }
   

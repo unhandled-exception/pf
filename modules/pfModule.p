@@ -5,7 +5,6 @@ pfModule
 
 @USE
 pf/types/pfClass.p
-pf/collections/pfList.p
 pf/types/pfString.p
 pf/modules/pfRouter.p
 
@@ -39,9 +38,12 @@ pfClass
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
   $_action[]
-  $_router[^pfRouter::create[]] 
+  $_router[^pfRouter::create[]]   
 
-
+@auto[]
+  $_pfModuleActionPartRegex[^regex::create[([^^/\.]+)(.*)]] 
+  $_pfModuleCheckDotRegex[^regex::create[\.[^^/]+?/+^$][n]]
+  
 #----- Properties -----
 
 @GET_uriPrefix[]
@@ -64,8 +66,7 @@ pfClass
 
 @hasModule[aName]
 ## Проверяет есть ли у нас модуль с имененм aName
-##todo: Возможно стоит сделать более серьезную проверку.
-  $result($_MODULES.$aName is hash)
+  $result(^_MODULES.contains[$aName])
 
 @hasAction[aAction][lHandler]
 ## Проверяем есть ли в модуле обработчик aAction
@@ -147,28 +148,24 @@ pfClass
 ## Если для модуля есть фабрика, то зовем именно ее.
   ^if($_MODULES.[$aName]){
     ^if($_MODULES.[$aName].hasFactory){
-    	$lFactory[$_MODULES.[$aName].factory]
+      $lFactory[$_MODULES.[$aName].factory]
       ^if(def $_MODULES.[$aName].args){
-      	$_MODULES.[$aName].object[^lFactory[$_MODULES.[$aName].args]]
+        $_MODULES.[$aName].object[^lFactory[$_MODULES.[$aName].args]]
       }{
          $_MODULES.[$aName].object[^lFactory[]]
        }
       $_MODULES.[$aName].isCompiled(1)  
     }{
       ^if(def $_MODULES.[$aName].source){
-  	    ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
-  	  }{
-  	     ^use[$_MODULES.[$aName].file]
-  	  }
-      ^if(^env:PARSER_VERSION.left(5) eq "3.4.0" ){
-        $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args]]
+        ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
       }{
-  	    ^process{^$_MODULES.[$aName].object[^^$_MODULES.[$aName].class::create[^$_MODULES.[$aName].args]]}
-  	   }
-  	  $_MODULES.[$aName].isCompiled(1)  
+        ^use[$_MODULES.[$aName].file]
+       }
+      $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args]]
+      $_MODULES.[$aName].isCompiled(1)  
      }
   }{
-  	 ^throw[module.compile;Module "$aName" not found.]
+     ^throw[pfModule.compile;Module "$aName" not found.]
    }
    
 @dispatch[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite;CALLER]
@@ -188,10 +185,10 @@ pfClass
   ^if($lRewrite.args){
 #   Пытаемся воспользоваться методом рефлексии.
     ^if($aRequest.__add is junction){
-  	  ^aRequest.__add[$lRewrite.args]
-  	}{
-   	   ^aRequest.add[$lRewrite.args]
-  	 }
+      ^aRequest.__add[$lRewrite.args]
+    }{
+       ^aRequest.add[$lRewrite.args]
+     }
   }
 
   $_action[$aAction]
@@ -202,13 +199,13 @@ pfClass
   $CALLER[$self]
 
 # Если у нас в первой части экшна имя модуля, то передаем управление ему
-  $lModule[^aAction.match[([^^/\.]+)(.*)][]{$match.1}]
+  $lModule[^aAction.match[$_pfModuleActionPartRegex][]{$match.1}]
   ^if(def $lModule && ^hasModule[$lModule]){  
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
       ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
-      $_action[^aAction.match[([^^/\.]+)(.*)][]{$match.2}]
+      $_action[^aAction.match[$_pfModuleActionPartRegex][]{$match.2}]
       $result[^self.[^_makeActionName[$lModule]][$aRequest]]
       $_action[$aAction]
     }{                                                                                                   
@@ -245,9 +242,16 @@ pfClass
     $result[$.action[$aAction] $.args[] $.prefix[]]
   } 
 
-@linkTo[aAction;aOptions;aAnchor]
-  $result[^_makeLinkURI[$aAction;$aOptions;$aAnchor]]
-    
+@linkTo[aAction;aOptions;aAnchor][lReverse]
+## Формирует ссылку на экшн, выполняя бэкрезолв путей.
+## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)
+  $lReverse[^router.reverse[$aAction;$aOptions.fields]]
+  ^if($lReverse){
+    $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor]]
+  }{
+     $result[^_makeLinkURI[$aAction;$aOptions.fields;$aAnchor]]
+   }
+
 @redirectTo[aAction;aOptions;aAnchor]
 ## Редирект на экшн. Реализация остается за программистом
   $result[]
@@ -262,9 +266,12 @@ pfClass
 @_makeLinkURI[aAction;aOptions;aAnchor]
 ## Формирует url для экшна
 ## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
+  ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
+
   $result[$uriPrefix^if(def $aAction){$aAction/}]
-  ^if(def $result && ^result.match[\.[^^/]+?/+^$][n]){$result[^result.trim[end;/]]}
+
+  ^if(def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]
   }
@@ -275,10 +282,10 @@ pfClass
   $result[]
   $lSplitted[^pfString:rsplit[$aAction;[/\.]]]
   ^if($lSplitted){
-  	 $result[on]
+     $result[on]
      ^lSplitted.menu{
-     	  $result[${result}^_makeSpecialName[$lSplitted.piece]]
-     	}	
+       $result[${result}^_makeSpecialName[$lSplitted.piece]]
+     }
   }
   
 @_makeSpecialName[aStr][lFirst]

@@ -28,11 +28,13 @@ pfCollection
                                  
 
 @reset[]
+  $result[]
   ^BASE:reset[]  
   $_indexes[]
   
 @clear[]
 ## Удаляет все элементы из коллекции
+  $result[]
   $_array[^hash::create[]]
   ^reset[]
 
@@ -78,6 +80,7 @@ pfCollection
 
 @add[aItem][result;$lIndex]
 ## Добавляем элемент в коллекцию
+  $result[]
   ^if(!$count){$_firstIndex(0)}
   $_array.[^eval($lastIndex + 1)][$aItem]
   ^_lastIndex.inc[]
@@ -85,17 +88,20 @@ pfCollection
 
 @addRange[aCollection][result;it]
 ## Добавляет коллекцию aCollection в конец текуще коллекции
+  $result[]
   ^_importFromCollection[$aCollection]
 
 @insert[aIndex;aItem][result]
 ## Вставляет элемент в позицию aIndex.
   ^pfAssert:isTrue(^aIndex.int(-1) >= 0)[Неверный индекс коллекции ($aIndex).]
+  $result[]
   $_array.[$aIndex][$aItem]
   ^reset[]
 
 @removeAt[aIndex][result]
 ## Удаляет элемент с индексом aIndex из коллекции.
   ^pfAssert:isTrue(^aIndex.int(-1) >= 0)[Неверный индекс коллекции ($aIndex).]
+  $result[]
   ^if($count){
     ^_array.delete[$aIndex]
     ^reset[]
@@ -104,6 +110,7 @@ pfCollection
   
 @optimize[][result;lNew;it]
 ## Оптимизирует коллекцию, удаляя пробелы в нумерации. [1,4,18] -> [0,1,2]
+  $result[]
   ^if($count){
   	$lNew[^hash::create[]]
     ^foreach[it]{
@@ -115,7 +122,8 @@ pfCollection
   ^reset[]
 
 @reverse[][result;lNew;it]
-## Меняет порядок элементов на обратный
+## Меняет порядок элементов на обратный  
+  $result[]
   ^if($count){
   	$lNew[^hash::create[]]
     ^foreach[it]{
@@ -137,7 +145,8 @@ pfCollection
 
 #----- Private -----
 
-@_generateIndexes[]
+@_generateIndexes[]   
+  $result[]
   $_indexes[^_array._keys[index]]
   ^_indexes.sort($_indexes.index)[asc] 
 
