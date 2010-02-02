@@ -245,6 +245,7 @@ pfClass
 @linkTo[aAction;aOptions;aAnchor][lReverse]
 ## Формирует ссылку на экшн, выполняя бэкрезолв путей.
 ## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)
+  ^cleanMethodArgument[]
   $lReverse[^router.reverse[$aAction;$aOptions.fields]]
   ^if($lReverse){
     $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor]]
