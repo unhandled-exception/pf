@@ -11,17 +11,6 @@ pf/modules/pfRouter.p
 @BASE
 pfClass
 
-#@doc
-## Обработчики экшнов именуются по схеме onНазваниеСобытия. 
-## В названии первая буква переводится в верхний регистр.
-## Экшн может быть поименован по схеме "first/second/third", тогда имя обработчика будет
-## onFirstSecondThird (news/add -> onNewsAdd)
-## Все обработчики принимают один параметр [aRequest.. имя может быть любым] - 
-## хэш с параметрами события. aRequest может быть пустым.
-##
-##todo: Дописать текст про modModule
-#/doc
-
 #----- Constructor -----
 
 @create[aOptions]
@@ -145,7 +134,8 @@ pfClass
 ## Компилирует модуль
 ## Если модуль задан не в виде ссылки на файл, а в виде строки (source),
 ## то компилируем ее, не обращая при этом, внимания на файл.
-## Если для модуля есть фабрика, то зовем именно ее.
+## Если для модуля есть фабрика, то зовем именно ее. 
+  $result[]
   ^if($_MODULES.[$aName]){
     ^if($_MODULES.[$aName].hasFactory){
       $lFactory[$_MODULES.[$aName].factory]
@@ -174,6 +164,7 @@ pfClass
 ## aRequest   Параметры экшна      
 ## aOptions.prefix
   ^cleanMethodArgument[]
+  $result[]
  
   ^if(def $aAction){
     $aAction[^aAction.trim[both;/.]]

@@ -99,7 +99,7 @@ pfClass
   $aAction[^_trimPath[$aAction]]
   ^_routes.foreach[k;it]{
 #   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
-    ^if((def $it.name && $aAction eq $it.name) || (def $it.routeTo && $aAction eq $it.routeTo)){                     
+    ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){                     
 #     Проверяем все ли параметры (жесткое ограничене для резолва) _routes.vars пристутсвуют в aArgs 
       ^if($it.vars && ^it.vars.intersection[$aArgs] != $it.vars){
         ^continue[]
