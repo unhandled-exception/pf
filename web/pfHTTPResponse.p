@@ -100,7 +100,7 @@ pfHTTPResponse
 
 @create[aPath]      
 ## aPath - полный путь для редиректа или uri
-  ^BASE:create[;$.type[redirect] $.status(301)]
+  ^BASE:create[;$.type[redirect] $.status(302)]
   $headers.location[^untaint{$aPath}]
 
 #################################################
@@ -113,7 +113,7 @@ pfHTTPResponse
 
 @create[aPath]      
 ## aPath - полный путь для редиректа или uri
-  ^BASE:create[;$.type[redirect] $.status(302)]
+  ^BASE:create[;$.type[redirect] $.status(301)]
   $headers.location[^untaint{$aPath}]
 
 #################################################
@@ -128,6 +128,30 @@ pfHTTPResponse
   ^BASE:create[$aBody;$aOptions]
   $status(404)
 
+#################################################
+
+@CLASS
+pfHTTPResponseBadRequest
+
+@BASE
+pfHTTPResponse
+
+@create[aBody;aOptions]      
+  ^BASE:create[$aBody;$aOptions]
+  $status(400)
+    
+#################################################
+
+@CLASS
+pfHTTPResponseNotModified
+
+@BASE
+pfHTTPResponse
+
+@create[aBody;aOptions]      
+  ^BASE:create[$aBody;$aOptions]
+  $status(304)
+    
 #################################################
 
 @CLASS
@@ -151,18 +175,6 @@ pfHTTPResponse
 @create[aBody;aOptions]      
   ^BASE:create[$aBody;$aOptions]
   $status(403)
-
-#################################################
-
-@CLASS
-pfHTTPResponseNotFound
-
-@BASE
-pfHTTPResponse
-
-@create[aBody;aOptions]      
-  ^BASE:create[$aBody;$aOptions]
-  $status(404)
 
 #################################################
 

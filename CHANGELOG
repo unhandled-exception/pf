@@ -10,6 +10,12 @@ CHANGELOG...
  
 0.9.3
 -----  
+
+07.03.2010
+  1. Рефакторинг классов pfHTTPRequest, pfHTTPRequestHeaders и pfHTTPRequestMeta - добавлен метод get[aName;aDefault].
+  2. Новые классы pfHTTPResponseBadRequest и pfHTTPResponseNotModified. Исправлено несколько мелких ошибок в pfHTTPResponse.p
+  3. Новые методы и свойства в классе pfHTTPRequest: ^contains, ^getFullPath, ^buildAbsolutePath, $HOST.
+  4. pfSiteManager и pfSiteModule теперь корректно используют классы pfHTTPResponseRedirect*. 
      
 31.01.2010
   1. В коллекции добавлены методы pfCollection.break и pfCollection.continue (аналогично Парсеровским ^break и ^continue), 

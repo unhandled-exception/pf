@@ -68,7 +68,7 @@ pfModule
   }{
     ^if($exception.type eq $_redirectExceptionName){
       $exception.handled(true)
-      $result[^pfHTTPResponseRedirect::create[$exception.comment]]
+      $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
     } 
   } 
   

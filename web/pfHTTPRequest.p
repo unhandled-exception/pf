@@ -23,7 +23,9 @@ pfClass
   $_COOKIE[^if(def $aOptions.cookie){$aOptions.cookie}{$cookie:fields}]
   
   $_META[^if(def $aOptions.meta){$aOptions.meta}{^pfHTTPRequestMeta::create[]}]
-  $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}]
+  $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}] 
+  
+  $_HOST[]
 
 #----- Properties -----
 
@@ -33,8 +35,7 @@ pfClass
 
 @GET_DEFAULT[aName]
 ## Return request field
-  $result[$_FIELDS.[$aName]]
-  ^if($result is junction){$result[]}
+  $result[^get[$aName]]
 
 @GET_FIELDS[]
 ## Return all request fields
@@ -120,7 +121,47 @@ pfClass
 @GET_DOCUMENT-ROOT[]
 ## Return request:document-root
   $result[$request:document-root]
-  
+
+@GET_HOST[][lPort]
+## Return host.
+  ^if(!def $_HOST){
+    $result[^HEADERS.get[X_Forwarded_Host;^HEADERS.get[Host]]]
+    ^if(!def $result){
+      $result[^META.get[SERVER_NAME]]
+    }            
+    $lPort[^META.get[SERVER_PORT]]
+    $result[${result}^if($lPort ne "80" && ($isSECURE && $lPort ne "443")){:$lPort}]
+  }{
+     $result[$_HOST]
+   }
+
+#----- Methods -----
+
+@get[aName;aDefault]
+  $result[$_FIELDS.[$aName]]
+  ^if($result is junction){$result[]}
+  ^if(!def $result && def $aDefault){
+    $result[$aDefault]
+  }
+
+@contains[aName]
+  $result(^_FIELDS.contains[$aName])
+
+@getFullPath[]
+## Returns the path, plus an appended query string, if applicable.
+  $result[$URI^if(def $QUERY){/?$QUERY}]
+
+@buildAbsoluteUri[aLocation]
+## Returns the absolute URI form of location.
+## If no location is provided, the location will be set to getFullPath 
+  ^if(!def $aLocation){
+    $aLocation[^getFullPath[]]
+  }                           
+  ^if(^aLocation.left(1) ne "/"){
+    $aLocation[/$aLocation]
+  }
+  $result[http^if($isSECURE){s}://${HOST}$aLocation]
+
 
 #----- Iterators -----
 
@@ -150,7 +191,13 @@ pfClass
   ^BASE:create[]
 
 @GET_DEFAULT[aName]
+  $result[^get[$aName]]
+
+@get[aName;aDefault]
   $result[$env:[$aName]]
+  ^if(!def $result && def $aDefault){
+    $result[$aDefault]
+  }
 
 
 #################################################
@@ -164,14 +211,20 @@ pfClass
 @create[]
   ^BASE:create[]
 
-@GET_DEFAULT[aName][lName]
+@GET_DEFAULT[aName]
+  $result[^get[$aName]]
+
+@get[aName;aDefault]
 ## Возвращает поле запроса.
 ## Позволяет задать имя в привычном виде (например, User-Agent).
   ^if(def $aName){
     $lName[^aName.trim[both][ :]]
-    $lName[^aName.match[[-\s]][g]{_}]
+    $lName[^aName.match[[-\s]][g][_]]
     $result[$env:[HTTP_^lName.upper[]]]
   }{
      $result[]
+   }
+  ^if(!def $result && def $aDefault){
+    $result[$aDefault]
   }
   

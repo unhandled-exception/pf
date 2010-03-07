@@ -99,9 +99,6 @@ pfSiteModule
 
 @postREDIRECT[aResponse]         
   $result[]
-  ^if(!^aResponse.headers.location.match[^^https?://]){
-    $aResponse.headers.location[${uriProtocol}://${uriServerName}$aResponse.headers.location]
-  }  
   ^_setResponseHeaders[$aResponse]
 
 #----- Methods -----
