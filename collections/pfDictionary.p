@@ -94,6 +94,10 @@ pfCollection
     }
   }
 
+@asHash[]
+## Возвращает коллекцию в виде хеша.
+  $result[^hash::create[$_dict]]
+
 #----- Iterator's -----
 
 @GET_currentItem[][lKeys]

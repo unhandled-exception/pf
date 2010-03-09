@@ -129,8 +129,14 @@ pfClass
 ## Возвращает количество элементов в коллекции.
   $result(0) 
 
-@GET[]
-  $result($count) 
+@GET[aMode]
+  ^switch[$aMode]{
+    ^case[hash]{$result[^asHash[]]}
+    ^case[bool]{$result($count > 0)}
+    ^case[def]{$result(true)}
+    ^case[;expression;double]{$result($count)}
+    ^case[DEFAULT]{^pfAssert:fail[Коолекцию нельзя использовать в контексте "$aMode".]}
+  }
 
 #----- Public -----
 
@@ -156,11 +162,33 @@ pfClass
     }
   }
 
+
 @break[]
   ^throw[pfCollection.break]
 
 @continue[]
   ^throw[pfCollection.continue]
+
+
+@int[aDefault]
+  $result($count)
+
+@double[aDefault]
+  $result($count)
+
+@bool[aDefault]
+  $result($count > 0)
+
+
+@asHash[][it;lCount]
+## Возвращает коллекцию в виде хеша.
+  $result[^hash::create[]]
+  $lCount(0)
+  ^foreach[it]{
+    $result.[$lCount][$it]
+    ^lCount.inc[]
+  }
+
 
 #----- Iterator's -----
 

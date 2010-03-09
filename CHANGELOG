@@ -11,6 +11,9 @@ CHANGELOG...
 0.9.3
 -----  
 
+08.03.2010
+  1. В класс pfCollection добавлены методы int, double, bool, asHash (в pfDictionary он перекрыт другой реализацией).
+
 07.03.2010
   1. Рефакторинг классов pfHTTPRequest, pfHTTPRequestHeaders и pfHTTPRequestMeta - добавлен метод get[aName;aDefault].
   2. Новые классы pfHTTPResponseBadRequest и pfHTTPResponseNotModified. Исправлено несколько мелких ошибок в pfHTTPResponse.p
