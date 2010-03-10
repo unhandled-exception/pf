@@ -221,14 +221,14 @@ CHANGELOG...
 06.11.2008
   1. Метод pfModule.goTo переименован в pfModule.redirectTo. (Для goTo оставлена заглушка.)
   2. Метод pfSiteModule.display переименован в pfSiteModule.render. (Для display оставлена заглушка.)
-  3. Теперь протокол https определятеся по переменной env:HTTPS[on], а уже во вотрую очередь
+  3. Теперь протокол https определяется по переменной env:HTTPS[on], а уже во вторую очередь
      по порту (443).
   4. В pfSiteModule добавлены свойства isSecure, method (http-метод), isGET, isPOST, isPUT, 
      isDELETE, isHEAD, isAJAX.
   5. В конструктор класса pfAuthCookie добавлен параметр aOptions.secureCookie.
   6. pfSiteModule теперь добавляет в параметры обработчиков поле $._cookie, содержащее хеш со всеми cookie.
   7. В результирующем хеше ответа экшна pfSiteModule теперь может присутствовать поле $.cookie, 
-     содержимое котрого будет передано в куки браузера.
+     содержимое которго будет передано в куки браузера.
   8. Мелкие правки в pfSiteModule и pfSiteManager.
 	
 03.11.2008

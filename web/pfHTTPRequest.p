@@ -110,6 +110,10 @@ pfClass
 ## Return request:charset
   $result[$request:charset]
 
+@GET_RESPONSE-CHARSET[]
+## Return $response:charset
+  $response[$response:charset]
+
 @GET_POST-CHARSET[]
 ## Return request:post-charset
   $result[$request:post-charset]

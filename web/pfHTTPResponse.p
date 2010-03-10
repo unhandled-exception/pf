@@ -15,7 +15,7 @@ pfClass
 ## aBody              
 ## aOptions.type[html] - тип ответа
 ## aOptions.status(200) - http-статус
-## aOptions.content-type[]
+## aOptions.contentType[]
 ## aOptions.charset[]
 ## aOptions.canDownload(false)
   ^cleanMethodArgument[]
