@@ -19,7 +19,6 @@ pfSQL
 @USE
 pf/types/pfClass.p
 pf/collections/pfList.p
-pf/collections/pfDictionary.p
 
 @BASE
 pfClass
@@ -69,7 +68,7 @@ pfClass
     $.identityMap[
       $.size(0)
       $.usage(0)
-    ]         
+    ]           
     $.queries[^pfList::create[]]
     $.queriesTime(0)
   ]                    
@@ -80,7 +79,7 @@ pfClass
 
 @GET_identityMap[]
   ^if(!def $_identityMap){
-    $_identityMap[^pfDictionary::create[]]
+    ^clearIdentityMap[]
   }
   $result[$_identityMap]
 
@@ -104,7 +103,7 @@ pfClass
 
 @GET_stat[]
 ## Возвращает статистику по запросам
-  $_stat.identityMap.size($identityMap.count)
+  $_stat.identityMap.size($identityMap)
   $result[$_stat]
 
 #----- Public -----
@@ -198,7 +197,7 @@ pfClass
   $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$lOptions]]
 
 @clearIdentityMap[]
-  ^identityMap.clear[]
+  $_identityMap[^hash::create[]]
 
 #----- Private -----
  
@@ -211,13 +210,13 @@ pfClass
   $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
 
   ^if($lIsIM && ^identityMap.contains[$lKey]){
-    $result[^identityMap.by[$lKey]]
+    $result[$identityMap.[$lKey]]
     ^_stat.identityMap.usage.inc[]
   }{
      $result[$aCode]
 
      ^if($lIsIM){
-       ^identityMap.add[$lKey;$result]
+       $identityMap.[$lKey][$result]
      }
    }
 
