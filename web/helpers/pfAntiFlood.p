@@ -44,18 +44,18 @@ pfClass
 ## Возвращает html-код для поля
   $result[<input type="hidden" name="$fieldName" value="$aUID" />]
 
-@process[aRequest;aNormalCode;aFailCode][lUID]
+@process[aRequest;aNormalCode;aFailCode][lUID;lValidRequest]
 ## Вы полняет проверку полей запроса aRequest и выполняет код aNormalCode
 ## Если проверка прошла неудачно, то выполняет aFailCode
+  $lValidRequest(false)
   ^storage.process{
     $lUID[$aRequest.[$fieldName]]
     ^if(def $lUID && ^storage.get[$lUID] eq $_safeValue){
-      $result[$aNormalCode]
       ^storage.set[$lUID;$_doneValue]
-    }{
-       $result[$aFailCode]
-     }
+      $lValidRequest(true)
+    }
   }
+  $result[^if($lValidRequest){$aNormalCode}{$aFailCode}]
 
 
 
