@@ -108,6 +108,9 @@ pfClass
   ^if($_isHTTP && def $_options.body){
     $lENV.stdin[$_options.body]
   }
+
+#  $opt[^_makeOptions[]]
+#  ^pfAssert:fail[opts: ^opt.menu{$opt.arg}[ ]]
   
   $_file[^file::exec[$aFormat;$_CURL_PATH;$lENV;^_makeOptions[]]]
   ^if($_file.status){
@@ -119,7 +122,7 @@ pfClass
     ^if($_canParseHeaders){
       ^_file.text.match[^^(?:HTTP/1\.1\s100.+?\n\n)*(.+?)\n\n(.*)^$][i]{
         $_file[^file::create[text;$_URL.url;$match.2]]
-        ^match.1.match[^^HTTP\S+\s(\d+)][]{$_status($match.1)}
+        ^match.1.match[^^HTTP\S+\s(\d+)(.*?)\n][]{$_status($match.1) $_comment[$match.2]}
         $lMatches[^match.1.match[^^(\S+?):\s+(.*)^$][gm]]
         ^if($lMatches){
           ^lMatches.menu{
@@ -146,6 +149,9 @@ pfClass
 
 @GET_status[]
   $result[^_status.int(0)]
+
+@GET_comment[]
+  $result[$_comment]
 
 @GET_content-type[]
   $result[^if(def ${_content-type}){$_content-type}{$_file.content-type}]
