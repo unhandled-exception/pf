@@ -109,9 +109,6 @@ pfClass
     $lENV.stdin[$_options.body]
   }
 
-#  $opt[^_makeOptions[]]
-#  ^pfAssert:fail[opts: ^opt.menu{$opt.arg}[ ]]
-  
   $_file[^file::exec[$aFormat;$_CURL_PATH;$lENV;^_makeOptions[]]]
   ^if($_file.status){
     ^_throw[$_file.status;$_file.stderr]
