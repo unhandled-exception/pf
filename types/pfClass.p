@@ -10,18 +10,19 @@ pf/tests/pfAssert.p
 
 #----- Constructor -----
 
-@create[]
-  $__isDynamic(true)
+@create[aOptions]
+## Empty constructor
+
 
 #----- Properties -----
 
 @GET_isDynamic[]
 ## Возвращает true, если класс создан динамически
-  $result(def $__isDynamic && $__isDynamic)
+  $result(^reflection:dynamical[])
   
 @GET_isStatic[]  
 ## Возвращает true, если класс создан статически
-  $result(!def $__isDynamic || !$__isDynamic)
+  $result(!^reflection:dynamical[])
 
 
 #----- Public -----
@@ -34,16 +35,27 @@ pf/tests/pfAssert.p
   ^if(!def $caller.[$aName] || ($caller.[$aName] is string && !def ^caller.[$aName].trim[])){$caller.[$aName][^hash::create[]]}
   $result[]
 
-@defProperty[aPropertyName;aVarName;aType]
+
+@defProperty[aPropertyName;aVarName;aType][lVarName]
 ## Добавляет в объект свойство с именем aPropertyName
 ## ссылающееся на переменную $aVarName[_$aPropertyName].
 ## aType[read] - тип свойства (read|full: только для чтения|чтение/запись)
   ^pfAssert:isTrue(def $aPropertyName)[Не определено имя свойства]
+  $lVarName[^if(def $aVarName){$aVarName}{_$aPropertyName}]
 
-  ^process[$self]{^$result[^$^if(def $aVarName){$aVarName}{_$aPropertyName}]}[$.main[GET_$aPropertyName]]
+  ^process[$self]{@GET_$aPropertyName^[^]
+    ^^switch[^$self.[$lVarName].CLASS_NAME]{
+      ^^case[bool^;int^;double]{^$result(^$self.[$lVarName])}
+      ^^case[DEFAULT]{^$result[^$self.[$lVarName]]}
+    }
+  }
+
   ^if($aType eq "full"){
     ^process[$self]{@SET_$aPropertyName^[aValue^]
-                       ^$^if(def $aVarName){$aVarName}{_$aPropertyName}^[^$aValue^]
+      ^^switch[^$self.[$lVarName].CLASS_NAME]{
+        ^^case[bool^;int^;double]{^$self.[$lVarName](^$aValue)}
+        ^^case[DEFAULT]{^$self.[$lVarName][^$aValue]}
+      }
     }
   }
   $result[]
