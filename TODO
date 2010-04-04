@@ -132,6 +132,7 @@ pfString
 sql/pfSQL
   + Сделать накапливание статистики запросов
   * pfSQL.safeInsert{insert code}{code if exists}[aSQLOptions;aOptions]
+  - ключ isNaturalTransaction переимновать в transcational (сохранив совместимость)
 
 sql/generics/
   Классы для работы с структурами данных поверх БД
