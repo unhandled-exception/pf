@@ -35,7 +35,7 @@ pfAuthBase
 
   ^if(def $aOptions.formPrefix){$_formPrefix[$aOptions.formPrefix]}{$_formPrefix[auth.]}
 
-  ^if(def $aOptions.timeout){$_timeout[$aOptions.timeout]}{$_timeout(60)}
+  ^if(def $aOptions.timeout){$_timeout($aOptions.timeout)}{$_timeout(60)}
   ^if(def $aOptions.persistentSessionLifetime){
     $_persistentSessionLifetime[$aOptions.persistentSessionLifetime]
   }{
@@ -84,7 +84,7 @@ pfAuthBase
        ^if($lUser){
 #      Если с момента последнего доступа прошло больше $_temout минут,
 #      то обновляем данные сессии
-         ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){
+         ^if(^aCanUpdateSession.bool(true) && ^date::create[$lSession.dt_access] < ^date::create($_now-($_timeout/(24*60)))){  
            $lNewSession[
              $.uid[$lSession.uid]
              $.sid[^_makeUID[]]
