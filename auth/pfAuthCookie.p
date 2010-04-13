@@ -33,21 +33,15 @@ pfAuthBase
   $_debugMode(^aOptions.debugMode.int(0))
   $_secureCookie(^aOptions.secureCookie.bool(false))
 
-  ^if(def $aOptions.formPrefix){$_formPrefix[$aOptions.formPrefix]}{$_formPrefix[auth.]}
+  $_formPrefix[^if(def $aOptions.formPrefix){$aOptions.formPrefix}{auth.}]
 
-  ^if(def $aOptions.timeout){$_timeout($aOptions.timeout)}{$_timeout(60)}
-  ^if(def $aOptions.persistentSessionLifetime){
-    $_persistentSessionLifetime[$aOptions.persistentSessionLifetime]
-  }{
-     $_persistentSessionLifetime(14)
-   }
+  $_timeout(^aOptions.timeout.int(60))
+  $_persistentSessionLifetime(^aOptions.persistentSessionLifetime.int(14))
   $_UIDLifetime(365)
-
   $_now[^date::now[]]  
   
 # Данные сессии
   $_session[^hash::create[]]
-  
 
 #----- Properties -----
 
