@@ -12,7 +12,7 @@ CHANGELOG...
 -----  
 
 21.04.2010
-  1. Исправлены ошибки в pfString:parseURL, добавлен разбор nameless-параметра.
+  1. Исправлены ошибки в pfString:parseURL, добавлен разбор nameless-параметра и "якоря".
 
 31.03.2010
 	1. Свойства pfClass.isDynamic и pfClass.isStatic тереь используют reflection:dynamical.

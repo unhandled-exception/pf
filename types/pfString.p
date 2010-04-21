@@ -130,7 +130,7 @@ pfString
 
 @parseURL[aURL][lMatches;lPos]
 ## Разбирает url
-## $result[$.protocol $.user $.password $.host $.port $.path $.options $.nameless $.url]
+## $result[$.protocol $.user $.password $.host $.port $.path $.options $.nameless $.url $.hash]
 ## $result.options - таблица со столбцом piece 
   $result[^hash::create[]]
   ^if(def $aURL){
@@ -140,7 +140,8 @@ pfString
        (?:(\S+?)(?:\:(\S+))?@)?          # 2 - user, 3 - password
        (?:([a-z0-9\-\.]+))(?:\:(\d+))?   # 4 - host, 5 - port
        (/[^^\s\?]*)?                     # 6 - path
-       (?:\?(\S*+))?                     # 7 - options
+       (?:\?(\S*?))?                     # 7 - options
+       (?:\#(\S*))?                      # 8 - hash (#)
        ^$
           ][xi]]
    ^if($lMatches){
@@ -156,6 +157,7 @@ pfString
       $result.options[^if($lPos >= 0){^lMatches.7.left($lPos)}{$lMatches.7}]
       $result.options[^if(def $result.options){^result.options.split[&;lv]}{^table::create{piece}}]
 
+      $result.hash[$lMatches.8]
       $result.url[$aURL]
     }
   }
