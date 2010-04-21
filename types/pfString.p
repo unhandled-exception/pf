@@ -128,30 +128,36 @@ pfString
 	        }
 	}
 
-@parseURL[aURL][aTemp]
+@parseURL[aURL][lMatches;lPos]
 ## Разбирает url
-## $result[$.protocol $.user $.password $.host $.port $.path $.options $.url]
+## $result[$.protocol $.user $.password $.host $.port $.path $.options $.nameless $.url]
 ## $result.options - таблица со столбцом piece 
   $result[^hash::create[]]
   ^if(def $aURL){
-    $aTemp[^aURL.match[
+    $lMatches[^aURL.match[
        ^^
-       (?:(\S+?)\:(?://)?)?          #1 - protocol
-       (?:(\S+?)(?:\:(\S+))?@)?      #2 - user, 3 - password
-       (?:([A-Z\-\.]+))(?:\:(\d+))?  #4 - host, 5 - port
-       (/[^^\s\?]*)?                 #6 - path
-       (?:\?(\S*))?                  #7 - options
+       (?:([a-zA-Z\-0-9]+?)\:(?://)?)?   # 1 - protocol
+       (?:(\S+?)(?:\:(\S+))?@)?          # 2 - user, 3 - password
+       (?:([a-z0-9\-\.]+))(?:\:(\d+))?   # 4 - host, 5 - port
+       (/[^^\s\?]*)?                     # 6 - path
+       (?:\?(\S*+))?                     # 7 - options
        ^$
-          ][xi]{
-      $result.protocol[$match.1]
-      $result.user[$match.2]
-      $result.password[$match.3]
-      $result.host[$match.4]
-      $result.port[$match.5]
-      $result.path[$match.6]
-      $result.options[^if(def $match.7){^match.7.split[&&;lv]}{^table::create{piece}}]
+          ][xi]]
+   ^if($lMatches){
+      $result.protocol[$lMatches.1]
+      $result.user[$lMatches.2]
+      $result.password[$lMatches.3]
+      $result.host[$lMatches.4]
+      $result.port[$lMatches.5]
+      $result.path[$lMatches.6]
+
+      $lPos(^lMatches.7.pos[?])
+      $result.nameless[^if($lPos >= 0){^lMatches.7.mid($lPos+1)}]
+      $result.options[^if($lPos >= 0){^lMatches.7.left($lPos)}{$lMatches.7}]
+      $result.options[^if(def $result.options){^result.options.split[&;lv]}{^table::create{piece}}]
+
       $result.url[$aURL]
-    }]
+    }
   }
 
 @format[aString;aValues]
