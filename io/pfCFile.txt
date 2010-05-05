@@ -1,0 +1,61 @@
+Класс для загрузки файлов по http-протоколу через libcurl.
+----------------------------------------------------------
+Требуется Парсер не ниже 3.4.1
+
+^pfCFile:session{code} - организует сессию, если надо сделать несколько запросов
+
+
+^pfCFile:load[format;url;options] - загружает файл (автоматически организует сессию, если необходимо)
+
+  options name[] - новое имя для файла 
+  options.charset[$request:charset] - кодировка.
+  options.content-type[]
+  options.timeout(2) - таймаут в секундах.
+  options.user - имя пользователя.
+  options.password - пароль.
+                               
+  options.method[GET]
+  options.compressed(true) - использовать компрессию для http-соединений.
+
+  options.user-agent
+  options.referer
+
+  options.follow-location(false)         
+  options.max-redirs(-1)
+  options.post-redir[]
+  options.autoreferer(false)
+  options.urestricted-auth(false)
+
+  options.proxy-host[]
+  options.proxy-port[1080]
+  options.proxy-type[]
+
+  options.headers[ $.HTTP-ЗАГОЛОВОК[значение] ... ] - значение может быть строкой 
+                               или именованной таблицей с одной колонкой.
+  options.cookies[$.name[] ...] - куки           
+  options.cookiesession(false)
+  options.form[$.name[] ...] - параметры POST-запроса. Значением может выступать 
+                               строка или таблица строк с одним столбцом. 
+  options.body[] - заменяет запрос. Если задан body, то form игнорируется.
+
+  options.any-status(false) - игнорировать ошибочные результаты http-ответов.
+  
+  options.limit - количество байт (только если сервер поддерживает range)
+  options.offset - смещение (только если сервер поддерживает range)
+
+  SSL
+  options.ssl-cert[file]
+  options.ssl-certtype[]
+  options.ssl-key[file]
+  options.ssl-keytype[]
+  options.ssl-keypasswd[]
+  options.ssl-issuercert[file]
+  options.ssl-crlfile[file]
+  options.ssl-cainfo[]
+  options.ssl-capath[]
+  options.ssl-verifypeer(false)
+  options.ssl-verifyhost(false)
+  options.ssl-cipher-list[]
+  options.ssl-sessionid-cache(0)
+  
+  
