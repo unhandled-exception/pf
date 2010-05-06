@@ -16,6 +16,9 @@
                                
   options.method[GET]
   options.compressed(true) - использовать компрессию для http-соединений.
+  
+  options.enctype[application/x-www-form-urlencoded] - Допустимые значения: application/x-www-form-urlencoded или multipart/form-data.
+  Последнее должно быть использовано вместе с методом POST в случае, если вы отправляете удалённому серверу файлы.
 
   options.user-agent
   options.referer

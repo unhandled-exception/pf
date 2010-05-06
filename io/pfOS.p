@@ -173,7 +173,7 @@ pf/tests/pfAssert.p
 
 @walk[aPath;aVarName;aCode;aSeparator][lFiles]
 ## Обходит дерево файлов начиная с aPath и выполняет для каждого найденного файла aCode.
-## Имя файла c путем попадает в переменную aFileName.
+## Имя файла c путем попадает в переменную с именем из aVarName.
 ## Файлы сортируются по именам.
 ## Между вызовами aCode вставляется aSeparator.
   ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для имени файлов.]

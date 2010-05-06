@@ -37,7 +37,7 @@ pfCFile
   $result[]
   ^curl:options[$aOptions]
 
-@_makeCurlOptions[aMode;aURL;aOptions][k;v]
+@_makeCurlOptions[aMode;aURL;aOptions][k;v;lMethod]
 ## Формирует параметры для curl:load (curl:options) 
   $result[^hash::create[]]
   ^if(!($aMode eq "text" || $aMode eq "binary")){^throw[cfile.mode;Mode must be "text" or "binary".]}
@@ -64,12 +64,16 @@ pfCFile
   ^if(def ${aOptions.proxy-port}){$result.proxyport($aOptions.proxy-port)}
   ^if(def ${aOptions.proxy-type}){$result.proxytype($aOptions.proxy-type)}
 
-# Auth
-  ^if(def $result.user){$result.userpwd[${aOptions.user}:$aOptions.password]}
+# Auth (Basic)
+  ^if(def $aOptions.user){
+    $result.httpauth(1)
+    $result.userpwd[${aOptions.user}:$aOptions.password]
+  }
 
-# Method
-  ^switch[^if(def $aOptions.method){^aOptions.method.upper[]}]{
-    ^case[;GET]{$result.httpget(1)}
+# Method                  
+  $lMethod[^if(def $aOptions.method){^aOptions.method.upper[]}{GET}]
+  ^switch[$lMethod]{
+    ^case[GET]{$result.httpget(1)}
     ^case[POST]{$result.post(1)}
     ^case[HEAD]{$result.nobody(1)}
     ^case[DEFAULT]{$result.customrequest[^aOptions.method.upper[]]}
@@ -84,8 +88,30 @@ pfCFile
   ^if(def ${aOptions.user-agent}){$result.useragent[$aOptions.user-agent]}
   ^if(def $aOptions.referer){$result.referer[$aOptions.referer]}
 
+# Form's
+  ^if(def $aOptions.form){
+    ^if(!($aOptions.form is hash)){^throw[cfile.options;Параметр form должен быть хешем.]}
+    ^switch[$aOptions.enctype]{
+      ^case[;application/x-www-form-urlencoded]{
+        ^switch[$lMethod]{
+          ^case[GET;HEAD;DELETE]{
+            $result.url[$result.url^if(^result.url.pos[?] >= 0){&}{?}^_formUrlencode[$aOptions.form]]
+          } 
+          ^case[DEFAULT]{
+            $result.postfields[^_formUrlencode[$aOptions.form]]
+          }
+        }
+      } 
+      ^case[multipart/form-data]{
+        $result.httppost[$aOptions.form]
+      }
+      ^case[DEFAULT]{
+        ^throw[cfile.options;Неизвестный enctype: "$aOptions.enctype".]
+      }
+    }
+  }  
+  
 # POST body
-  ^if(def $aOptions.form){$result.httppost[$aOptions.form]}
   ^if(def $aOptions.body){$result.postfields[$aOptions.body]}
 
 # Ranges
@@ -107,5 +133,12 @@ pfCFile
   ^if(def ${aOptions.ssl-capath}){$result.capath[$aOptions.ssl-capath]}
   ^if(def ${aOptions.ssl-cipher-list}){$result.ssl_cipher_list[$aOptions.ssl-cipher-list]}
   ^if(def ${aOptions.ssl-sessionid-cache}){$result.ssl_sessionid_cache(^aOptions.ssl-sessionid-cache.int(0))}
-  
-  
+
+@_formUrlencode[aForm][k;v]
+  $result[^aForm.foreach[k;v]{^if($v is table){^_tableUrlencode[^taint[uri][$k];$v]}{^taint[uri][$k]=^taint[uri][$v]}}[&]]
+
+@_tableUrlencode[aName;aTable][lFieldName;lFields]
+  $lFields[^aTable.columns[]]
+  $lFieldName[^if($lFields){$lFields.column}{0}]
+  $result[^aTable.menu{$aName=^taint[uri][$aTable.[$lFieldName]]}[&]]
+
