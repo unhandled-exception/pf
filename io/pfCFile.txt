@@ -9,6 +9,7 @@
 
   options name[] - новое имя для файла 
   options.charset[$request:charset] - кодировка.
+  options.response-charset
   options.content-type[]
   options.timeout(2) - таймаут в секундах.
   options.user - имя пользователя.

@@ -47,6 +47,7 @@ pfCFile
   ^if(def $aOptions.name){$result.name[$aOptions.name]}
   ^if(def ${aOptions.content-type}){$result.content-type[$aOptions.content-type]}
   ^if(def $aOptions.charset){$result.charset[$aOptions.charset]}
+  ^if(def ${aOptions.response-charset}){$result.response-charset[$aOptions.response-charset]}
 
 # Connection
   $result.timeout(^aOptions.timeout.int(2))
