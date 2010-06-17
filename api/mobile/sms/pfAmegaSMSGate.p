@@ -164,7 +164,7 @@ pfClass
           }
         }
         ^case[MESSAGES]{   
-##        Для секции MESSAGE запичываем в хеш все поля, 
+##        Для секции MESSAGE запихиваем в хеш все поля, 
 ##        при этом названия тегов переводим в нижний регистр.          
           $lSubList[^lNode.getElementsByTagName[MESSAGE]]
           ^for[k](0;$lSubList - 1){

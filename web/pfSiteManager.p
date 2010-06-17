@@ -64,6 +64,14 @@ pfSiteModule
 @postDEFAULT[aResponse]
   ^throw[pfSiteManager.postDEFAULT;Unknown response type "$aResponse.type".]
 
+@postAS-IS[aResponse]
+  ^_setResponseHeaders[$aResponse]
+  ^if(def $aResponse.download){
+    $response:download[$aResponse.download]
+  }{
+     $result[$aResponse.body]
+   }
+
 @postHTML[aResponse]
   ^if(!def ${aResponse.content-type}){
     $aResponse.content-type[text/html]

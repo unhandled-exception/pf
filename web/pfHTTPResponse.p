@@ -38,7 +38,7 @@ pfClass
   $result[$_type]  
 
 @SET_type[aType]
-  $type[$aType]  
+  $_type[$aType]  
 
 
 @GET_body[]

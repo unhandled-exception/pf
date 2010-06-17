@@ -164,7 +164,7 @@ pfModule
 #@postREDIRECT[aResponse]
 #@postDEFAULT[aResponse]
 
-# aResponse[$.type[html|xml|file|text|...|redirect] $.body[] ...] - хэш с данными ответа.
+# aResponse[$.type[as-is|html|xml|file|text|...|redirect] $.body[] ...] - хэш с данными ответа.
 # Поля, которые могут быть обработаны контейнерами:
 # $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
 # Для типа "file" можно положить ответ не в поле body, а в поле download.
