@@ -47,7 +47,7 @@ pfAuthStorage
 
 @getUser[aID][k;v]
 ## Загрузить данные о пользователе по ID (по-умолчанию логину)
-  $result[^CSQL.table{select id, login, password, is_admin as isAdmin
+  $result[^CSQL.table{select id, login, password
                              ^if($_extraFields){
                                , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[,]
                              }
