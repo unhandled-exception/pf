@@ -109,6 +109,7 @@ pfClass
       ^if(^lPath.match[$it.regexp]){
 #       Добавляем оставшиеся параметры из aArgs в result.args
         $result.path[$lPath]
+        $result.prefix[^_applyPath[$it.prefix;$aArgs]]
         $result.args[^hash::create[$aArgs]]
         ^result.args.sub[$it.vars]
         ^break[]
@@ -117,9 +118,9 @@ pfClass
   }
 
   ^if(!$result && $aAction eq $_rootRoute.routeTo){
-# Если не нашли реверс, то проверяем рутовый маршрут   
+#   Если не нашли реверс, то проверяем рутовый маршрут   
     $result.path[]
-    $result.prefix[$_rootRoute.prefix]
+    $result.prefix[^_applyPath[$_rootRoute.prefix;$aArgs]]
     $result.args[$aArgs]
   }
 
@@ -178,5 +179,5 @@ pfClass
 ## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
-  $result[^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}]
+  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
 
