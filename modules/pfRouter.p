@@ -116,6 +116,14 @@ pfClass
     }
   }
 
+  ^if(!$result && $aAction eq $_rootRoute.routeTo){
+# Если не нашли реверс, то проверяем рутовый маршрут   
+    $result.path[]
+    $result.prefix[$_rootRoute.prefix]
+    $result.args[$aArgs]
+  }
+
+
 #----- Private -----
 
 @_trimPath[aPath]
@@ -170,5 +178,5 @@ pfClass
 ## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
-  $result[^aPath.match[$_pfRouterPatternRegex][]{^if(def $aVars.[$match.2]){$aVars.[$match.2]}{^if(!def $aArgs.[$match.2]){^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath"]}{$aArgs.[$match.2]}}}]
+  $result[^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}]
 
