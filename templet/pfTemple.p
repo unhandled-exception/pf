@@ -298,7 +298,7 @@ pfTempleEngine
   $result[]
   
 # Ищем ссылки на предков
-  $lBases[^aTemplate.body.match[^^#@base\s+(.+)^$][mg]]
+  $lBases[^aTemplate.body.match[^^#@base\s+(.+)^$][mgi]]
   ^lBases.menu{
     ^_compileToPattern[$aPattern;^TEMPLE.loadTemplate[^lBases.1.trim[both; ];$.base[^file:dirname[$aTemplate.path]]]]
   }
