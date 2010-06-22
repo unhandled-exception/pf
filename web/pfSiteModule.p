@@ -98,7 +98,8 @@ pfModule
 @render[aTemplate;aOptions][lTemplatePrefix]
 ## Вызывает шаблон с именем "путь/$aTemplate[.pt]"
 ## Если aTemplate начинается со "/", то не подставляем текущий перфикс.
-## Если переменная aTemplate не задана, то зовем шаблон default.
+## Если переменная aTemplate не задана, то зовем шаблон default. 
+  ^cleanMethodArgument[]
   ^if(!def $aTemplate || ^aTemplate.left(1) ne "/"){
      $lTemplatePrefix[$templatePath]
   }
