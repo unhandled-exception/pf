@@ -40,8 +40,10 @@ pfModule
   $_sql[^if(def $aOptions.sql){$aOptions.sql}]
   $_auth[^if(def $aOptions.auth){$aOptions.auth}]
   $_cache[^if(def $aOptions.cache){$aOptions.cache}]
-  $_templet[^if(def $aOptions.templet){$aOptions.templet}]
-
+  $_templet[^if(def $aOptions.templet){$aOptions.templet}] 
+  
+  $_templateVars[^hash::create[]]
+  
 #----- Public -----  
 
 @assignModule[aName;aOptions][lArgs]
@@ -52,6 +54,7 @@ pfModule
     $.auth[$AUTH]
     $.cache[$CACHE]
     $.templetOptions[$_createOptions.templetOptions]
+    $.templet[$TEMPLET]
   ]
   ^if(!def $aOptions.args){
     $aOptions.args[$lArgs]
@@ -99,7 +102,10 @@ pfModule
   ^if(!def $aTemplate || ^aTemplate.left(1) ne "/"){
      $lTemplatePrefix[$templatePath]
   }
-  $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};$aOptions]]
+  $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
+    $.vars[^if(def $aOptions.vars){$aOptions.vars}{$_templateVars}]
+    $.force($aOptions.force)
+  ]]
 
 @display[aTemplate;aOptions]
 ## DEPRECATED!
@@ -107,7 +113,9 @@ pfModule
 
 @assignVar[aVarName;aValue]
 ## Задает переменную для шаблона
-  ^TEMPLET.assign[$aVarName;$aValue]
+#  ^TEMPLET.assign[$aVarName;$aValue]
+  $_templateVars.[$aVarName][$aValue]
+  $result[]
 
 @redirectTo[aAction;aOptions;aAnchor]  
   ^throw[$_redirectExceptionName;$action;^linkTo[$aAction;$aOptions;$aAnchor]]
@@ -216,6 +224,8 @@ pfModule
   $result[^pfCache::create[$aCacheOptions]]
 
 @templetFactory[aTempletOptions]
-# Возвращает templet-объект
-  ^use[pf/templet/pfTemplet.p]
-  $result[^pfTemplet::create[$aTempletOptions]]
+# Возвращает temple-объект
+#  ^use[pf/templet/pfTemplet.p]
+#  $result[^pfTemplet::create[$aTempletOptions]]
+  ^use[pf/templet/pfTemple.p]
+  $result[^pfTemple::create[$aTempletOptions]]
