@@ -356,3 +356,6 @@ pfClass
   ^pfRuntime:compact[]
   $result[]  
 
+@include[aTemplateName;aOptions]
+  $result[^TEMPLET.render[$aTemplateName;$aOptions]]
+  
