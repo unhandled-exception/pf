@@ -349,6 +349,9 @@ $aClassName
 @CLASS
 pfTempleParserPattern
 
+@BASE
+pfClass
+
 @create[aOptions]
 ## aOptions.file
   ^if(!def $aOptions){$aOptions[^hash::create[]]}
