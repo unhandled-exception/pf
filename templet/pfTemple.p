@@ -168,7 +168,8 @@ pfClass
       $lEngineName[$k]
       ^break[]
     }
-  }
+  }         
+  ^if(def $aEngineName){$lEngineName[$aEngineName]}
   ^if(def $lEngineName){
     $result[^_getEngine[$lEngineName]]
   }{
@@ -289,73 +290,102 @@ pfTempleEngine
 ## aTemplate[$.body $.path]
 ## aOptions.vars[]
   ^cleanMethodArgument[]
-  $lPattern[^pfTempleParserPattern::create[$.temple[$TEMPLE] $.file[$aTemplate.path]]]
-  ^_compileToPattern[$lPattern;$aTemplate]
+  $lClassName[^_compileToPattern[$aTemplate]]
 
+  $lPattern[^reflection:create[$lClassName;create;$.temple[$TEMPLE] $.file[$aTemplate.path]]]
   $result[^lPattern.__process__[$.global[$TEMPLE.VARS] $.local[$aOptions.vars]]]
 
-@_compileToPattern[aPattern;aTemplate][lBases]
-  $result[]
+@_compileToPattern[aTemplate;aBaseName][lBases;lClass;lParent;lTemplateName]
+  $result[^_buildClassName[$aTemplate.path]] 
   
-# Ищем ссылки на предков
-  $lBases[^aTemplate.body.match[^^#@base\s+(.+)^$][mgi]]
-  ^lBases.menu{
-    ^_compileToPattern[$aPattern;^TEMPLE.loadTemplate[^lBases.1.trim[both; ];$.base[^file:dirname[$aTemplate.path]]]]
+# Обрабатываем наследование
+  $lBases[^aTemplate.body.match[^^#@base\s+(.+)^$][gmi]]
+  ^if($lBases > 1){^throw[template.base.fail;У шаблона "$aTemplate.path" может быть только один предок.]}
+  ^if($lBases){
+    $lTemplateName[^lBases.1.trim[both; ]]         
+    ^if($lTemplateName eq ^file:basename[$aTemplate.path]){^throw[template.base.fail;Шаблон "$aTemplate.path" не может быть собственным предком.]}
+    $lParent[^_compileToPattern[^TEMPLE.loadTemplate[$lTemplateName;$.base[^file:dirname[$aTemplate.path]]];$lParent]]
   }
-
+           
 # Компилируем текущий шаблон  
-  ^process[$aPattern]{^taint[as-is][$aTemplate.body]}[$.main[__pattern__] $.file[$aTemplate.path]]
+  ^_buildClass[$result;$lParent;$aTemplate]
+
+@_buildClassName[aFileName] 
+  $result[^math:uid64[]]
+
+@_buildClass[aClassName;aBaseName;aTemplate][lClass;lImports;lTempl;lBase;lTemplateName;lImportName]
+## Формирует пустой класс aClassName с предком aBaseName 
+$result[]
+
+# Компилируем базовый клас с учетом наследования
+^process{
+^@CLASS
+$aClassName
+^@BASE
+^if(def $aBaseName){$aBaseName}{pfTempleParserPattern}
+^@__create__[]
+
+}[$.file[$aTemplate.file]]
+  
+  $lClass[^reflection:create[$aClassName;__create__]]
+
+# Ищем и компилируем импорты
+  $lImports[^aTemplate.body.match[^^#@import\s+(.+)^$][gmi]]
+  $lBase[^file:dirname[$aTemplate.path]]
+  $lTemplateName[^file:basename[$aTemplate.path]]
+  ^lImports.menu{                     
+    $lImportName[^lImports.1.trim[both; ]]
+    ^if($lImportName eq $lTemplateName){^throw[temlate.import.fail;Нельзя импортировать шаблон "$aTemplate.path" самого в себя.]}
+    $lTempl[^TEMPLE.loadTemplate[$lImportName;$.base[$lBase]]]
+    ^process[$lClass.CLASS]{^taint[as-is][$lTempl.body]}[$.main[__main__] $.file[$aTemplate.path]]
+  }
+  
+# Компилируем тело шаблона в класс
+  ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
 
 
 #---------------------------------------------------------------------------------------------------
 
-
 @CLASS
 pfTempleParserPattern
 
-@BASE
-pfClass
-
 @create[aOptions]
 ## aOptions.file
-  ^cleanMethodArgument[]
-  ^BASE:create[$aOptions] 
-
-  $_temple[$aOptions.temple]
-  $_FILE[$aOptions.file]  
-  $_GLOBAL[]
-  $_LOCAL[]
+  ^if(!def $aOptions){$aOptions[^hash::create[]]}
+  $__temple[$aOptions.temple]
+  $__FILE[$aOptions.file]  
+  $__GLOBAL[]
+  $__LOCAL[]
 
 @GET_DEFAULT[aName]
-  $result[^if(^_LOCAL.contains[$aName]){$_LOCAL.[$aName]}{$_GLOBAL.[$aName]}]
+  $result[^if(^__LOCAL.contains[$aName]){$__LOCAL.[$aName]}{$__GLOBAL.[$aName]}]
 
-@GET_GLOBAL[]
-  $result[$_GLOBAL]
+@GET___GLOBAL__[]
+  $result[$__GLOBAL]
 
-@GET_LOCAL[]
-  $result[$_LOCAL]
+@GET___LOCAL__[]
+  $result[$__LOCAL]
 
 @GET_TEMPLET[]
-  $result[$_temple]
+  $result[$__temple]
     
 @__process__[aOptions]
 ## aOptions.global
 ## aOptions.local
-  ^cleanMethodArgument[]
-  $_GLOBAL[^if(def $aOptions.global){$aOptions.global}{^hash::create[]}]
-  $_LOCAL[^if(def $aOptions.local){$aOptions.local}{^hash::create[]}]
-  $result[^__pattern__[]]
-  $_GLOBAL[]
-  $_LOCAL[]
+  ^if(!def $aOptions){$aOptions[^hash::create[]]}
+  $__GLOBAL[^if(def $aOptions.global){$aOptions.global}{^hash::create[]}]
+  $__LOCAL[^if(def $aOptions.local){$aOptions.local}{^hash::create[]}]
+  $result[^__main__[]]
+  $__GLOBAL[]
+  $__LOCAL[]
 
-@__pattern__[]
+@__main__[]
   ^throw[template.empty;Не задано тело шаблона.]  
 
 @compact[]
 ## Вызывает принуительную сборку мусора.                   
-  ^pfRuntime:compact[]
   $result[]  
-
-@include[aTemplateName;aOptions]
-  $result[^TEMPLET.render[$aTemplateName;$aOptions]]
+  ^pfRuntime:compact[]
   
+@include[aTemplateName;aOptions]
+  $result[^__temple.render[$aTemplateName;$aOptions]]

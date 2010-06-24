@@ -106,6 +106,7 @@ pfModule
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
     $.vars[^if(def $aOptions.vars){$aOptions.vars}{$_templateVars}]
     $.force($aOptions.force)
+    $.engine[$aOptions.engine]
   ]]
 
 @display[aTemplate;aOptions]
