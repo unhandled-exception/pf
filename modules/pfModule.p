@@ -285,7 +285,6 @@ pfClass
 @_findHandler[aAction;aRequest]
 ## Ищет и возвращает имя функции-обработчика для экшна.
   $result[^_makeActionName[$aAction]]
-
   ^if(!def $result || !($self.[$result] is junction)){
     $result[^if($onDEFAULT is junction){onDEFAULT}]
   }
