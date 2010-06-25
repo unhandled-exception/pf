@@ -210,14 +210,11 @@ pfClass
 #   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
 #   Если не получится, то зовем onDEFAULT, а если и это не получится,
 #   то выбрасываем эксепшн.
-     ^if(^hasAction[$aAction]){
-       $result[^self.[^_makeActionName[$aAction]][$aRequest]]
+     $lHandler[^_findHandler[$aAction;$aRequest]]
+     ^if(def $lHandler){
+       $result[^self.[$lHandler][$aRequest]]
      }{
-        ^if($onDEFAULT is junction){
-          $result[^onDEFAULT[$aRequest]]
-        }{
-           ^throw[module.dispatch.action.not.found;Action "$aAction" not found.]
-         }
+        ^throw[module.dispatch.action.not.found;Action "$aAction" not found.]
       }
    }
 
@@ -284,3 +281,10 @@ pfClass
 ## Возвращает aStr в которой первая буква прописная    
   $lFirst[^aStr.left(1)]
   $result[^lFirst.upper[]^aStr.mid(1)] 
+
+@_findHandler[aAction;aRequest]
+## Ищет и возвращает имя функции-обработчика для экшна.
+  $result[^_makeActionName[$aAction]]
+  ^if(!def $result || !$self.[$result] is junction){
+    $result[^if($onDEFAULT is junction){onDEFAULT}]
+  }

@@ -179,18 +179,27 @@ pfModule
 # $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
 # Для типа "file" можно положить ответ не в поле body, а в поле download.
 
-@onDEFAULT[aRequest]
-  ^if($onNOTFOUND is junction && def $action){
-    $result[^onNOTFOUND[$aRequest]]
-  }{
-    $result[^onINDEX[$aRequest]]
-   }
-
 @onINDEX[aRequest]
   $result[]
 
 ##@onNOTFOUND[aRequest]
 ## Определить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
+
+#----- Private -----
+
+@_findHandler[aAction;aRequest][lActionName]
+## Ищет и возвращает имя функции-обработчика для экшна.
+  $result[^BASE:_findHandler[$aAction;$aRequest]]
+  
+# Ищем onActionHTTPMETHOD-обработчик
+  $lActionName[^_makeActionName[$aAction]]
+  ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[$lActionName^aRequest.METHOD.upper[]] is junction){$result[$lActionName^aRequest.METHOD.upper[]]}
+
+# Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
+  ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
+  ^if(!def $result && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
+  ^if(!def $result && $onINDEX is junction){$result[onINDEX]}
+
 
 #----- Fabriques -----
 
@@ -227,7 +236,5 @@ pfModule
 
 @templetFactory[aTempletOptions]
 # Возвращает temple-объект
-#  ^use[pf/templet/pfTemplet.p]
-#  $result[^pfTemplet::create[$aTempletOptions]]
   ^use[pf/templet/pfTemple.p]
   $result[^pfTemple::create[$aTempletOptions]]
