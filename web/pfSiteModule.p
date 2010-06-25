@@ -187,14 +187,17 @@ pfModule
 
 #----- Private -----
 
-@_findHandler[aAction;aRequest][lActionName]
+@_findHandler[aAction;aRequest][lActionName;lMethod]
 ## Ищет и возвращает имя функции-обработчика для экшна.
   $result[^BASE:_findHandler[$aAction;$aRequest]]
          
 # Ищем onActionHTTPMETHOD-обработчик
-  $lActionName[^if($result eq "onDEFAULT"){^_makeActionName[$aAction]}{$result}]
-  ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[$lActionName^aRequest.METHOD.upper[]] is junction){$result[$lActionName^aRequest.METHOD.upper[]]}
-
+  $lMethod[^if(def $aRequest.METHOD){^aRequest.METHOD.upper[]}]
+  ^if(def $lMethod){
+    $lActionName[^if($result eq "onDEFAULT"){^_makeActionName[$aAction]}{$result}]
+    ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[${lActionName}$lMethod] is junction){$result[${lActionName}$lMethod]}
+  }
+  
 # Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
   ^if(!def $result && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
   ^if(!def $result && $onINDEX is junction){$result[onINDEX]}
