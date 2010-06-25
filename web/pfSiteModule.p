@@ -192,7 +192,7 @@ pfModule
   $result[^BASE:_findHandler[$aAction;$aRequest]]
          
 # Ищем onActionHTTPMETHOD-обработчик
-  $lActionName[^_makeActionName[$aAction]]
+  $lActionName[^if($result eq "onDEFAULT"){^_makeActionName[$aAction]}{$result}]
   ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[$lActionName^aRequest.METHOD.upper[]] is junction){$result[$lActionName^aRequest.METHOD.upper[]]}
 
 # Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
