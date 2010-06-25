@@ -190,15 +190,15 @@ pfModule
 @_findHandler[aAction;aRequest][lActionName]
 ## Ищет и возвращает имя функции-обработчика для экшна.
   $result[^BASE:_findHandler[$aAction;$aRequest]]
-  
+         
 # Ищем onActionHTTPMETHOD-обработчик
   $lActionName[^_makeActionName[$aAction]]
   ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[$lActionName^aRequest.METHOD.upper[]] is junction){$result[$lActionName^aRequest.METHOD.upper[]]}
 
 # Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
-  ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
   ^if(!def $result && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
   ^if(!def $result && $onINDEX is junction){$result[onINDEX]}
+  ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
 
 
 #----- Fabriques -----
