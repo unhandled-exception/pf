@@ -170,6 +170,7 @@ pfClass
     }
   }         
   ^if(def $aEngineName){$lEngineName[$aEngineName]}
+  ^if(!def $lEngineName){$lEngineName[$_defaultEngine]}
   ^if(def $lEngineName){
     $result[^_getEngine[$lEngineName]]
   }{
@@ -265,12 +266,17 @@ pfTempleEngine
 pfClass
 
 @create[aTemple;aOptions]
+## aTemple - ссылка на объект темпла, которому принадлежит энжин
   ^pfAssert:isTrue($aTemple is pfTemple)[Не передан объект pfTemple.]
   $_temple[$aTemple]  
 
 @GET_TEMPLE[]
   $result[$_temple]
 
+@render[aTemplate;aOptions]
+## aTemplate[$.body $.path]
+## aOptions.vars[]
+  ^_abstractMethod[]
 
 #---------------------------------------------------------------------------------------------------
 
