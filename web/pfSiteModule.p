@@ -197,7 +197,7 @@ pfModule
     $lActionName[^if($result eq "onDEFAULT"){^_makeActionName[$aAction]}{$result}]
     ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[${lActionName}$lMethod] is junction){$result[${lActionName}$lMethod]}
   }
-  
+ 
 # Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
   ^if(!def $result && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
   ^if(!def $result && $onINDEX is junction){$result[onINDEX]}
