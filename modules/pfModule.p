@@ -258,7 +258,7 @@ pfClass
   ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
 
-  $result[$uriPrefix^if(def $aAction){$aAction/}]
+  $result[$uriPrefix^if(def $aAction){^taint[uri][$aAction]/}]
 
   ^if(def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
   ^if($aOptions is hash && $aOptions){
