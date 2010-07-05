@@ -34,6 +34,7 @@ pfClass
 ## aOptions.requirements[] - хеш с регулярными выражениями для проверки переменных шаблона
 ## aOptions.prefix[] - дополнительный, вычисляемый префикс для путей (может содержать переменные)
 ## aOptions.name[] - имя шаблона (используется в reverse, нечувствительно к регистру)
+## aOptions.ignoreCase(true) - игнорироавть регистр букв при обработке шаблона
   ^cleanMethodArgument[]
   $result[]
   
@@ -44,7 +45,8 @@ pfClass
   $_routes.[^eval($_routes + 1)][
     $.pattern[$lCompiledPattern.pattern]
 #    $.regexp[$lCompiledPattern.regexp]
-    $.regexp[^regex::create[$lCompiledPattern.regexp][i]]
+    $.regexp[^regex::create[$lCompiledPattern.regexp][^if(^aOptions.ignoreCase.bool(true)){i}]]
+    $.ignoreCase(^aOptions.ignoreCase.bool(true))
     $.vars[$lCompiledPattern.vars]
     
     $.routeTo[^_trimPath[$aRouteTo]]

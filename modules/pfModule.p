@@ -55,7 +55,7 @@ pfClass
 
 @hasModule[aName]
 ## Проверяет есть ли у нас модуль с имененм aName
-  $result(^_MODULES.contains[$aName])
+  $result(^_MODULES.contains[^aName.lower[]])
 
 @hasAction[aAction][lHandler]
 ## Проверяем есть ли в модуле обработчик aAction
@@ -84,6 +84,8 @@ pfClass
 ##                       $result[^pfModule::create[$aArgs]]
 ##       
   ^cleanMethodArgument[]
+  ^pfAssert:isTrue(def $aName)[Не задано имя для модуля.]
+  $aName[^aName.lower[]]
 
 #  Добавляем в хэш с модулями данные о модуле
    $_MODULES.[$aName][
@@ -136,6 +138,7 @@ pfClass
 ## то компилируем ее, не обращая при этом, внимания на файл.
 ## Если для модуля есть фабрика, то зовем именно ее. 
   $result[]
+  $aName[^aName.lower[]]
   ^if($_MODULES.[$aName]){
     ^if($_MODULES.[$aName].hasFactory){
       $lFactory[$_MODULES.[$aName].factory]
@@ -168,7 +171,7 @@ pfClass
  
   ^if(def $aAction){
     $aAction[^aAction.trim[both;/.]]
-    $aAction[^aAction.lower[]]
+#    $aAction[^aAction.lower[]]
   }
 
   $lRewrite[^rewriteAction[$aAction;$aRequest]]
@@ -182,7 +185,7 @@ pfClass
      }
   }
 
-  $_action[$aAction]
+  $_action[^aAction.lower[]]
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
@@ -196,12 +199,12 @@ pfClass
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
       ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
-      $_action[^aAction.match[$_pfModuleActionPartRegex][]{$match.2}]
+      $_action[^aAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
       $result[^self.[^_makeActionName[$lModule]][$aRequest]]
       $_action[$aAction]
     }{                                                                                                   
        ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
-       $result[^self.[mod^_makeSpecialName[$lModule]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;
+       $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;
          $.prefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}]
        ]]
      }
@@ -268,7 +271,8 @@ pfClass
 
 @_makeActionName[aAction][lSplitted;lFirst]
 ## Формирует имя метода для экшна.
-  $result[]
+  $result[]  
+  ^if(def $aAction){$aAction[^aAction.lower[]]}
   $lSplitted[^pfString:rsplit[$aAction;[/\.]]]
   ^if($lSplitted){
      $result[on]
