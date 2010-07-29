@@ -199,8 +199,9 @@ pfModule
   }
  
 # Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
-  ^if(!def $result && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
-  ^if(!def $result && $onINDEX is junction){$result[onINDEX]}
+  ^if(!def $result && $aAction eq "" && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
+  ^if(!def $result && $aAction eq "" && $onINDEX is junction){$result[onINDEX]}
+  ^if(!def $result && $onDEFAULT is junction){$result[onDEFAULT]}
   ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
 
 
