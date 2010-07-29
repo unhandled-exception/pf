@@ -182,8 +182,9 @@ pfModule
 @onINDEX[aRequest]
   $result[]
 
-##@onNOTFOUND[aRequest]
-## Определить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
+@onNOTFOUND[aRequest]
+## Переопределить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
+  $result[^onINDEX[$aRequest]]
 
 #----- Private -----
 
