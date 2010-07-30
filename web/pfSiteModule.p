@@ -179,12 +179,12 @@ pfModule
 # $.content-type[] $.charset[] $.headers[] $.status[] $.cookie[]
 # Для типа "file" можно положить ответ не в поле body, а в поле download.
 
-@onINDEX[aRequest]
-  $result[]
-
 @onNOTFOUND[aRequest]
 ## Переопределить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
-  ^redirectTo[/]
+  $result[]
+  ^if($self.onINDEX is junction || $self.onDEFAULT is junction){
+    ^redirectTo[/]
+  }
   
 #----- Private -----
 
