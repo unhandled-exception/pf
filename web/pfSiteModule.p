@@ -183,7 +183,7 @@ pfModule
 ## Переопределить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
   $result[]
   ^if($self.onINDEX is junction || $self.onDEFAULT is junction){
-    ^redirectTo[/]
+#    ^redirectTo[/]
   }{
      ^throw[pfSiteModule.action.not.found;Action "$action" not found.]
    }
