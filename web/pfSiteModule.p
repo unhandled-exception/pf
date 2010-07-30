@@ -184,7 +184,9 @@ pfModule
   $result[]
   ^if($self.onINDEX is junction || $self.onDEFAULT is junction){
     ^redirectTo[/]
-  }
+  }{
+     ^throw[pfSiteModule.action.not.found;Action "$action" not found.]
+   }
   
 #----- Private -----
 
