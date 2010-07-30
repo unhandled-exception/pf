@@ -271,15 +271,15 @@ pfClass
 
 @_makeActionName[aAction][lSplitted;lFirst]
 ## Формирует имя метода для экшна.
-  $result[]  
-  ^if(def $aAction){$aAction[^aAction.lower[]]}
-  $lSplitted[^pfString:rsplit[$aAction;[/\.]]]
-  ^if($lSplitted){
-     $result[on]
-     ^lSplitted.menu{
-       $result[${result}^_makeSpecialName[$lSplitted.piece]]
-     }
-  }
+  ^if(def $aAction){
+    $aAction[^aAction.lower[]]
+    $lSplitted[^pfString:rsplit[$aAction;[/\.]]]
+    ^if($lSplitted){
+     $result[on^lSplitted.menu{^_makeSpecialName[$lSplitted.piece]}]
+   }
+  }{
+     $result[onINDEX]
+   }
   
 @_makeSpecialName[aStr][lFirst]
 ## Возвращает aStr в которой первая буква прописная    

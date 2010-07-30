@@ -184,8 +184,8 @@ pfModule
 
 @onNOTFOUND[aRequest]
 ## Переопределить, если необходима отдельная обработка неизвестного экшна (аналог "404"). 
-  $result[^onINDEX[$aRequest]]
-
+  ^redirectTo[/]
+  
 #----- Private -----
 
 @_findHandler[aAction;aRequest][lActionName;lMethod]
@@ -195,16 +195,12 @@ pfModule
 # Ищем onActionHTTPMETHOD-обработчик
   $lMethod[^if(def $aRequest.METHOD){^aRequest.METHOD.upper[]}]
   ^if(def $lMethod){
-    $lActionName[^if($result eq "onDEFAULT"){^_makeActionName[$aAction]}{$result}]
-    ^if(($result eq "onDEFAULT" || def $lActionName) && $self.[${lActionName}$lMethod] is junction){$result[${lActionName}$lMethod]}
+    $lActionName[^_makeActionName[$aAction]]
+    ^if(def $lActionName && $self.[${lActionName}$lMethod] is junction){$result[${lActionName}$lMethod]}
   }
- 
-# Ищем дефолтные обработчики (INDEX, NOTFOUND) обработчики
-  ^if(!def $result && $aAction eq "" && $self.[onINDEX^aRequest.METHOD.upper[]] is junction){$result[onINDEX^aRequest.METHOD.upper[]]}
-  ^if(!def $result && $aAction eq "" && $onINDEX is junction){$result[onINDEX]}
-  ^if(!def $result && $onDEFAULT is junction){$result[onDEFAULT]}
-  ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
 
+# Если не определен onDEFAULT, то зовем onNOTFOUND.
+  ^if(!def $result && $onNOTFOUND is junction){$result[onNOTFOUND]}
 
 #----- Fabriques -----
 
