@@ -219,7 +219,11 @@ pfModule
       $result[^pfSQLite::create[$aConnectString;$aSqlOptions]]
     }
     ^case[DEFAULT]{
-      ^pfAssert:fail[pfSiteModule.sqlFactory. Bad connect-string.]
+      ^if(def $aConnectString){
+        ^throw[pfSiteModule.bad.connect.string;Bad connect-string: "$aConnectString".]
+      }{
+         $result[]
+       }
     }
   }
 
