@@ -152,7 +152,9 @@ pfClass
       ^if(def $_MODULES.[$aName].source){
         ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
       }{
-        ^use[$_MODULES.[$aName].file]
+        ^if(def $_MODULES.[$aName].file){
+          ^use[$_MODULES.[$aName].file]
+        }
        }
       $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args]]
       $_MODULES.[$aName].isCompiled(1)  

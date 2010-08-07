@@ -73,7 +73,7 @@ pfModule
      ^assignModule[$lCommandName;
        $.class[^_makeSpecialName[$lCommandName]Command]
        $.file[$aPath/$lFiles.name]
-       $.args[$commandsArgs]
+       $.args[$_commandsArgs]
        $.compile(true)
      ]
   }
