@@ -234,6 +234,10 @@ pfModule
       ^use[pf/auth/pfAuthBase.p]
         $result[^pfAuthBase::create[$aAuthOptions]]
     }
+    ^case[apache]{
+      ^use[pf/auth/pfAuthApache.p]
+        $result[^pfAuthBase::create[$aAuthOptions]]
+    }
   }
 
 @cacheFactory[aCacheType;aCacheOptions]
