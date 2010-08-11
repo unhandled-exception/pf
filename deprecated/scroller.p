@@ -180,9 +180,9 @@ $page_count(^math:ceiling($self.items_count / $limit))
 		$result[$name]
 	}{
 		^if($type ne "current" && def $page_num){
-			$result[<a href="^untaint[html]{^if(def $url){$url}{./}^if($page_num != $first_page){${url_separator}$form_name=$page_num}}">$name</a>]]
+			$result[<a href="^untaint[html]{^if(def $url){$url}{./}^if($page_num != $first_page){${url_separator}$form_name=$page_num}}"><span>$name</span></a>]]
 		}{
-			$result[$name]
+			$result[<span>$name</span>]
 		}
 	}
 }{

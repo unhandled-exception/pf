@@ -51,6 +51,9 @@ pfClass
 # $lastPage 		- N последней страницы
 # $formName		- название элемента формы через который передается номер страницы (по умолчанию "page")
 
+@GET[aType]
+  $result($pagesCount > 1)
+
 @GET_itemsCount[]
   $result[$_scroller.items_count]
 
@@ -91,10 +94,10 @@ pfClass
 #----- Public -----
 
 @asHTML[aOptions]
-  ^_print[html;$aOptions]
+  $result[^_print[html;$aOptions]]
 
 @asXML[aOptions]
-  ^_print[xml;$aOptions]
+  $result[^_print[xml;$aOptions]]
 
 #----- Private -----
 

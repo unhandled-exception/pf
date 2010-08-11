@@ -40,7 +40,7 @@ pfClass
 
 @SET_uriPrefix[aUriPrefix]  
   $_uriPrefix[$aUriPrefix/]
-  $_uriPrefix[^_uriPrefix.match[(/)+][g]{$match.1}]
+  $_uriPrefix[^_uriPrefix.match[/+][g][/]]
   
 @GET_action[]
   $result[$_action]
@@ -207,7 +207,7 @@ pfClass
     }{                                                                                                   
        ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;
-         $.prefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}]
+         $.prefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}]
        ]]
      }
   }{                                                        

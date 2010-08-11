@@ -267,7 +267,7 @@ pfClass
   $_stat.queriesTime($_stat.queriesTime + ($lEnd-$lStart))
   ^_stat.queriesCount.inc[]
   ^if($_enableQueriesLog){
-    ^_stat.queries.add[$.query[^taint[$aOptions.query]] $.time($lEnd-$lStart)]
+    ^_stat.queries.add[$.query[^taint[$aOptions.query]] $.time($lEnd-$lStart) $.limit[$aOptions.limit] $.offset[$aOptions.offset]]
   }      
   
   
