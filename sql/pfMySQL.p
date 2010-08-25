@@ -83,10 +83,10 @@ pfSQL
   $result[DATE_FORMAT($sSource, '^if(def $sFormatString){$sFormatString}{%Y-%m-%d}')]
 
 @lastInsertId[sTable]
-	$result(^int{SELECT last_insert_id()}[$.limit(1) $.default{0}][$.isForce(true)])
+	$result[^string{SELECT last_insert_id()}[$.limit(1) $.default{0}][$.isForce(true)]]
 
 @setLastInsertId[sTable;sField]
-	$result(^last_insert_id[$sTable])
+	$result[^lastInsertId[$sTable]]
 	^void{UPDATE $sTable SET ^if(def $sField){$sField}{sort_order} = $result WHERE ${sTable}_id = $result}
 
 #--- STRING functions ---

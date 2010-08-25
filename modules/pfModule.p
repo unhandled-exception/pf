@@ -26,7 +26,8 @@ pfClass
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
-  $_action[]
+  $_action[]      
+  $_request[]
   $_router[^pfRouter::create[]]   
 
 @auto[]
@@ -44,6 +45,9 @@ pfClass
   
 @GET_action[]
   $result[$_action]
+
+@GET_request[]
+  $result[$_request]
   
 @GET_MODULES[]
   $result[$_MODULES]
@@ -188,6 +192,7 @@ pfClass
   }
 
   $_action[^aAction.lower[]]
+  $_request[$aRequest]
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
