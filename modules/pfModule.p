@@ -278,7 +278,7 @@ pfClass
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
 
   $result[$uriPrefix^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
-  ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){^result.trim[end;/]}
+  ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
 
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]
