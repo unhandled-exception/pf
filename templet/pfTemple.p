@@ -334,19 +334,27 @@ $aClassName
 }[$.file[$aTemplate.file]]
   
   $lClass[^reflection:create[$aClassName;__create__]]
+  ^_applyImports[$aTemplate;$lClass]  
 
-# Ищем и компилируем импорты
+# Компилируем тело шаблона в класс
+  ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
+
+@_applyImports[aTemplate;lClass][lImports;lBase;lTemplateName;lImportName;lTempl]
+## Ищем и компилируем импорты
+  $result[]
+
   $lImports[^aTemplate.body.match[^^#@import\s+(.+)^$][gmi]]
   $lBase[^file:dirname[$aTemplate.path]]
   $lTemplateName[^file:basename[$aTemplate.path]]
-  ^lImports.menu{                     
+
+  ^lImports.menu{
     $lImportName[^lImports.1.trim[both; ]]
     ^if($lImportName eq $lTemplateName){^throw[temlate.import.fail;Нельзя импортировать шаблон "$aTemplate.path" самого в себя.]}
     $lTempl[^TEMPLE.loadTemplate[$lImportName;$.base[$lBase]]]
-    ^process[$lClass.CLASS]{^taint[as-is][$lTempl.body]}[$.main[__main__] $.file[$aTemplate.path]]
+
+    ^_applyImports[$lTempl;$lClass]
   }
-  
-# Компилируем тело шаблона в класс
+
   ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
 
 
