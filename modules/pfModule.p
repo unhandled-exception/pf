@@ -27,7 +27,7 @@ pfClass
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
-  $_appendSlash(^aOptions.appendSlash.bool(false))
+  $_appendSlash(^aOptions.appendSlash.bool(true))
 
   $_action[]      
   $_request[]
@@ -62,7 +62,7 @@ pfClass
   $result($_appendSlash)
 
 @SET_appendSlash[aValue]
-  $_appendSlash(^aValue.bool(false))
+  $_appendSlash(^aValue.bool(true))
 
 #---- Public -----
 
