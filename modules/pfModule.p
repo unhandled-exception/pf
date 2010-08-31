@@ -18,6 +18,7 @@ pfClass
 ## aOptions.uriPrefix[/] - префикс для uri. Нужно передавать только в головной модуль, 
 ##                         поскольку метод assignModule будт передавать свой собственный
 ##                         префикс.
+## aOptions.appendSlash(false) - нужно ли добавлять к урлам слеш.
   ^BASE:create[]
   ^cleanMethodArgument[]
   $_throwPrefix[pfModule]
@@ -25,6 +26,8 @@ pfClass
   
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
+
+  $_appendSlash(^aOptions.appendSlash.bool(false))
 
   $_action[]      
   $_request[]
@@ -54,6 +57,12 @@ pfClass
 
 @GET_router[]
   $result[$_router]
+
+@GET_appendSlash[]
+  $result($_appendSlash)
+
+@SET_appendSlash[aValue]
+  $_appendSlash(^aValue.bool(false))
 
 #---- Public -----
 
@@ -160,7 +169,7 @@ pfClass
           ^use[$_MODULES.[$aName].file]
         }
        }
-      $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args]]
+      $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args $.appendSlash[$appendSlash]]]
       $_MODULES.[$aName].isCompiled(1)  
      }
   }{
@@ -268,9 +277,9 @@ pfClass
   ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
 
-  $result[$uriPrefix^if(def $aAction){^taint[uri][$aAction]/}]
+  $result[$uriPrefix^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
+  ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){^result.trim[end;/]}
 
-  ^if(def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
   ^if($aOptions is hash && $aOptions){
     $result[${result}?^aOptions.foreach[key;value]{$key=^taint[uri][$value]}[^taint[&]]]
   }
