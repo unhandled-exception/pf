@@ -18,11 +18,14 @@ pfClass
 ## aOptions.uriPrefix[/] - префикс для uri. Нужно передавать только в головной модуль, 
 ##                         поскольку метод assignModule будт передавать свой собственный
 ##                         префикс.
+## aOptions.parentModule - ссфлка на объект-контейнер.
 ## aOptions.appendSlash(false) - нужно ли добавлять к урлам слеш.
   ^BASE:create[]
   ^cleanMethodArgument[]
   $_throwPrefix[pfModule]
   $_name[$aOptions.name]
+
+  $_parentModule[$aOptions.parentModule]
   
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
@@ -63,6 +66,9 @@ pfClass
 
 @SET_appendSlash[aValue]
   $_appendSlash(^aValue.bool(true))
+
+@GET_PARENT[]
+  $result[$_parentModule]
 
 #---- Public -----
 
@@ -115,7 +121,7 @@ pfClass
        $.file[$aOptions.file]
        $.source[$aOptions.source]
        
-       $.args[^if(def $aOptions.args){$aOptions.args}{^hash::create[]}]
+       $.args[^if(def $aOptions.args){$aOptions.args}{^hash::create[]} $.parentModule[$self]]
        $.object[]
        
        $.isCompiled(0)

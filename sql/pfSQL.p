@@ -103,7 +103,6 @@ pfClass
 
 @GET_stat[]
 ## Возвращает статистику по запросам
-  $_stat.identityMap.size($identityMap)
   $result[$_stat]
 
 #----- Public -----
@@ -197,7 +196,8 @@ pfClass
   $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$lOptions]]
 
 @clearIdentityMap[]
-  $_identityMap[^hash::create[]]
+  $_identityMap[^hash::create[]]  
+  $_stat.identityMap.size($_identityMap)
 
 #----- Private -----
  
@@ -212,13 +212,14 @@ pfClass
   ^if($lIsIM && ^identityMap.contains[$lKey]){
     $result[$identityMap.[$lKey]]
     ^_stat.identityMap.usage.inc[]
+    $_stat.identityMap.size($_identityMap)
   }{
      $result[$aCode]
 
      ^if($lIsIM){
        $identityMap.[$lKey][$result]
      }
-   }
+   }   
 
 @_makeQueryKey[aQuery;aType;aSQLOptions]
 ## Формирует ключ для запроса
