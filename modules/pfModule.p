@@ -246,12 +246,12 @@ pfClass
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
-      $uriPrefix[^if(def $lPrefix){$lPrefix}] 
+      ^if(def $lPrefix){$uriPrefix[$lPrefix]} 
       $_action[^lAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
       $result[^self.[^_makeActionName[$lModule]][$lRequest]]
       $_action[$lAction]
     }{                                                                                                   
-       ^if($lPrefix){$uriPrefix[$lPrefix]} 
+       ^if(def $lPrefix){$uriPrefix[$lPrefix]} 
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
          $.prefix[/^if(def $lPrefix){$lPrefix}{$lModule}/]
        ]]
