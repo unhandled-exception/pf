@@ -63,37 +63,49 @@ pfModule
    }
   ^BASE:assignModule[$aName;$aOptions]
 
-@dispatch[aAction;aRequest;aOptions][lResult;lPostDispatch]
+@processAction[aAction;aRequest;aOptions]
+## aOptions.passRedirect(false) - не обрабатывать эксепшн от редиректа.
   ^cleanMethodArgument[]
-
   ^try{
-    $result[^BASE:dispatch[$aAction;$aRequest;$aOptions]]
+    $result[^BASE:processAction[$aAction;$aRequest;$aOptions]]
   }{
-    ^if($exception.type eq $_redirectExceptionName){
+    ^if(!^aOptions.passRedirect.bool(false) && $exception.type eq $_redirectExceptionName){
       $exception.handled(true)
       $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
     } 
   } 
+
   
-  ^switch(true){
-    ^case($result is hash){
-      ^if(!def $result.type){$result.type[$_responseType]}
-      ^if(!def $result.headers){$result.headers[^hash::create[]]}
-      ^if(!def $result.cookie){$result.cookie[^hash::create[]]}
-    }
-    ^case($result is string || $result is double){
-      $result[^pfHTTPResponse::create[$result;$.type[$responseType]]]
+@processResponse[aResponse;aAction;aRequest;aOptions][lPostDispatch]
+## aOptions.passWrap(false) - не формировать объект вокруг ответа из строк и чисел. 
+## aOptions.passPost(false) - не делать постобработку запроса.
+  ^cleanMethodArgument[]
+  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions]]
+
+  ^if(!^aOptions.passWrap.bool(false)){
+    ^switch(true){
+      ^case($result is hash){
+        ^if(!def $result.type){$result.type[$_responseType]}
+        ^if(!def $result.headers){$result.headers[^hash::create[]]}
+        ^if(!def $result.cookie){$result.cookie[^hash::create[]]}
+      }
+      ^case($result is string || $result is double){
+        $result[^pfHTTPResponse::create[$result;$.type[$responseType]]]
+      }
     }
   }
-
-  $lPostDispatch[post^result.type.upper[]]
-  ^if($self.[$lPostDispatch] is junction){
-    $result[^self.[$lPostDispatch][$result]]
-  }{
-     ^if($postDEFAULT is junction){
-       $result[^postDEFAULT[$result]]
+  
+  ^if(!^aOptions.passPost.bool(false)){
+    $lPostDispatch[post^result.type.upper[]]
+    ^if($self.[$lPostDispatch] is junction){
+      $result[^self.[$lPostDispatch][$result]]
+    }{
+       ^if($postDEFAULT is junction){
+         $result[^postDEFAULT[$result]]
+       }
      }
-   }
+  }
+  
   
 @render[aTemplate;aOptions][lTemplatePrefix]
 ## Вызывает шаблон с именем "путь/$aTemplate[.pt]"

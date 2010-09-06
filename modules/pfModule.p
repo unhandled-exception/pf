@@ -181,8 +181,8 @@ pfClass
   }{
      ^throw[pfModule.compile;Module "$aName" not found.]
    }
-   
-@dispatch[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRewrite;CALLER]
+
+@dispatch[aAction;aRequest;aOptions][lProcessed]
 ## Производим обработку экшна
 ## aAction    Действие, которое необходимо выполнить
 ## aRequest   Параметры экшна      
@@ -190,11 +190,21 @@ pfClass
   ^cleanMethodArgument[]
   $result[]
  
-  ^if(def $aAction){
-    $aAction[^aAction.trim[both;/.]]
-#    $aAction[^aAction.lower[]]
-  }
+  $lAction[^if(def $aAction){^aAction.trim[both;/.]}]
 
+  $lProcessed[^processRequest[$lAction;$aRequest;$aOptions]]
+  $lProcessed.action[^lProcessed.action.lower[]]
+  ^if(def $lProcessed.prefix){$aOptions.prefix[$lProcessed.prefix]}
+  
+  $_action[$lProcessed.action]
+  $_request[$lProcessed.request]
+
+  $result[^processAction[$lProcessed.action;$lProcessed.request;$aOptions]]
+  $result[^processResponse[$result;$lProcessed.action;$lProcessed.request;$aOptions]]
+
+@processRequest[aAction;aRequest;aOptions][lRewrite]
+## Производит предобработку запроса
+## $result[$.action[] $.request[] $.prefix[]] - экшн, запрос и префикс, которые будут переданы обработчикам
   $lRewrite[^rewriteAction[$aAction;$aRequest]]
   $aAction[$lRewrite.action]
   ^if($lRewrite.args){
@@ -205,45 +215,9 @@ pfClass
        ^aRequest.add[$lRewrite.args]
      }
   }
+  $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix]]
 
-  $_action[^aAction.lower[]]
-  $_request[$aRequest]
-
-# Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
-# из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
-# получить доступ к контейнеру, не городя передачу оному $self отдельным параметром.
-  $CALLER[$self]
-
-# Если у нас в первой части экшна имя модуля, то передаем управление ему
-  $lModule[^aAction.match[$_pfModuleActionPartRegex][]{$match.1}]
-  ^if(def $lModule && ^hasModule[$lModule]){  
-#   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
-#   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
-    ^if(^hasAction[$lModule]){
-      ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
-      $_action[^aAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
-      $result[^self.[^_makeActionName[$lModule]][$aRequest]]
-      $_action[$aAction]
-    }{                                                                                                   
-       ^if(def $lRewrite.prefix){$uriPrefix[$lRewrite.prefix]} 
-       $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^aAction.mid(^lModule.length[]);$aRequest;
-         $.prefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}$lModule/}]
-       ]]
-     }
-  }{                                                        
-    $uriPrefix[^if(def $lRewrite.prefix){/$lRewrite.prefix/}{^if(def $aOptions.prefix){$aOptions.prefix}{/}}] 
-#   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
-#   Если не получится, то зовем onDEFAULT, а если и это не получится,
-#   то выбрасываем эксепшн.
-     $lHandler[^_findHandler[$aAction;$aRequest]]
-     ^if(def $lHandler){
-       $result[^self.[$lHandler][$aRequest]]
-     }{
-        ^throw[module.dispatch.action.not.found;Action "$aAction" not found.]
-      }
-   }
-
-@rewriteAction[aAction;aRequest][lRewrite;it]
+@rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
 ## $result.action - новый экшн.
 ## $result.args - параметры, которые надо добавить к аргументам и передать обработчику. 
@@ -253,8 +227,52 @@ pfClass
   $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
     $result[$.action[$aAction] $.args[] $.prefix[]]
-  } 
+  }
+    
+@processAction[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
+## Производит вызов экшна.                                      
+  $lAction[$aAction]
+  $lRequest[$aRequest]
+  $lPrefix[$aOptions.prefix]
 
+# Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
+# из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
+# получить доступ к контейнеру, не городя передачу оному $self отдельным параметром.
+  $CALLER[$self]
+
+# Если у нас в первой части экшна имя модуля, то передаем управление ему
+  $lModule[^lAction.match[$_pfModuleActionPartRegex][]{$match.1}]
+  ^if(def $lModule && ^hasModule[$lModule]){  
+#   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
+#   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
+    ^if(^hasAction[$lModule]){
+      $uriPrefix[^if(def $lPrefix){$lPrefix}] 
+      $_action[^lAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
+      $result[^self.[^_makeActionName[$lModule]][$lRequest]]
+      $_action[$lAction]
+    }{                                                                                                   
+       ^if($lPrefix){$uriPrefix[$lPrefix]} 
+       $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
+         $.prefix[/^if(def $lPrefix){$lPrefix}{$lModule}/]
+       ]]
+     }
+  }{                                                        
+    $uriPrefix[^if(def $lPrefix){/$lPrefix}/] 
+#   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
+#   Если не получится, то зовем onDEFAULT, а если и это не получится,
+#   то выбрасываем эксепшн.
+     $lHandler[^_findHandler[$lAction;$lRequest]]
+     ^if(def $lHandler){
+       $result[^self.[$lHandler][$lRequest]]
+     }{
+        ^throw[module.dispatch.action.not.found;Action "$lAction" not found.]
+      }
+   }
+
+@processResponse[aResponse;aAction;aRequest;aOptions]
+## Производит постобработку результата выполнения экшна.
+  $result[$aResponse]
+     
 @linkTo[aAction;aOptions;aAnchor][lReverse]
 ## Формирует ссылку на экшн, выполняя бэкрезолв путей.
 ## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)
