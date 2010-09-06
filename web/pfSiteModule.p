@@ -63,11 +63,11 @@ pfModule
    }
   ^BASE:assignModule[$aName;$aOptions]
 
-@processAction[aAction;aRequest;aOptions]
+@processAction[aAction;aRequest;aPrefix;aOptions]
 ## aOptions.passRedirect(false) - не обрабатывать эксепшн от редиректа.
   ^cleanMethodArgument[]
   ^try{
-    $result[^BASE:processAction[$aAction;$aRequest;$aOptions]]
+    $result[^BASE:processAction[$aAction;$aRequest;$aPrefix;$aOptions]]
   }{
     ^if(!^aOptions.passRedirect.bool(false) && $exception.type eq $_redirectExceptionName){
       $exception.handled(true)
@@ -105,7 +105,6 @@ pfModule
        }
      }
   }
-  
   
 @render[aTemplate;aOptions][lTemplatePrefix]
 ## Вызывает шаблон с именем "путь/$aTemplate[.pt]"

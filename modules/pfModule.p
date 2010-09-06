@@ -39,6 +39,7 @@ pfClass
 @auto[]
   $_pfModuleActionPartRegex[^regex::create[([^^/\.]+)(.*)]] 
   $_pfModuleCheckDotRegex[^regex::create[\.[^^/]+?/+^$][n]]
+  $_pfModuleRepeatableSlashRegex[^regex::create[/+][g]]
   
 #----- Properties -----
 
@@ -47,7 +48,7 @@ pfClass
 
 @SET_uriPrefix[aUriPrefix]  
   $_uriPrefix[$aUriPrefix/]
-  $_uriPrefix[^_uriPrefix.match[/+][g][/]]
+  $_uriPrefix[^_uriPrefix.match[$_pfModuleRepeatableSlashRegex][][/]]
   
 @GET_action[]
   $result[$_action]
@@ -194,12 +195,11 @@ pfClass
 
   $lProcessed[^processRequest[$lAction;$aRequest;$aOptions]]
   $lProcessed.action[^lProcessed.action.lower[]]
-  ^if(def $lProcessed.prefix){$aOptions.prefix[$lProcessed.prefix]}
   
   $_action[$lProcessed.action]
   $_request[$lProcessed.request]
 
-  $result[^processAction[$lProcessed.action;$lProcessed.request;$aOptions]]
+  $result[^processAction[$lProcessed.action;$lProcessed.request;$lProcessed.prefix;$aOptions]]
   $result[^processResponse[$result;$lProcessed.action;$lProcessed.request;$aOptions]]
 
 @processRequest[aAction;aRequest;aOptions][lRewrite]
@@ -222,18 +222,20 @@ pfClass
 ## $result.action - новый экшн.
 ## $result.args - параметры, которые надо добавить к аргументам и передать обработчику. 
 ## $result.prefix - префикс, который необходимо передать диспетчеру
-## Стандартный обработчик проходит по карте преобразований и ищет пододящий шаблон, 
+## Стандартный обработчик проходит по карте преобразований и ищет подходящий шаблон, 
 ## иначе возвращает оригинальный экшн. 
   $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
     $result[$.action[$aAction] $.args[] $.prefix[]]
   }
     
-@processAction[aAction;aRequest;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
-## Производит вызов экшна.                                      
+@processAction[aAction;aRequest;aPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
+## Производит вызов экшна.
+## aOptions.aPrefix - префикс, сформированный в processRequest.                                    
   $lAction[$aAction]
   $lRequest[$aRequest]
-  $lPrefix[$aOptions.prefix]
+  $lPrefix[^if(def $aPrefix){$aPrefix}{$aOptions.prefix}]
+  $uriPrefix[^if(def $lPrefix){/$lPrefix}/] 
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
@@ -246,18 +248,15 @@ pfClass
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     ^if(^hasAction[$lModule]){
-      ^if(def $lPrefix){$uriPrefix[$lPrefix]} 
       $_action[^lAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
       $result[^self.[^_makeActionName[$lModule]][$lRequest]]
       $_action[$lAction]
-    }{                                                                                                   
-       ^if(def $lPrefix){$uriPrefix[$lPrefix]} 
+    }{                                         
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
-         $.prefix[/^if(def $lPrefix){$lPrefix}{$lModule}/]
-       ]]
+         $.prefix[/^if(def $aPrefix){$aPrefix/}{/^if(def $lPrefix){$lPrefix/}$lModule/}]
+       ]]                                                  
      }
-  }{                                                        
-    $uriPrefix[^if(def $lPrefix){/$lPrefix}/] 
+  }{                          
 #   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
 #   Если не получится, то зовем onDEFAULT, а если и это не получится,
 #   то выбрасываем эксепшн.
