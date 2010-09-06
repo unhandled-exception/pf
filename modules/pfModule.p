@@ -30,14 +30,14 @@ pfClass
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
+  $_router[^pfRouter::create[]]   
   $_appendSlash(^aOptions.appendSlash.bool(true))
 
   $_action[]      
+  $_activeModule[]
   $_request[]
-  $_router[^pfRouter::create[]]   
 
 @auto[]
-  $_pfModuleActionPartRegex[^regex::create[([^^/\.]+)(.*)]] 
   $_pfModuleCheckDotRegex[^regex::create[\.[^^/]+?/+^$][n]]
   $_pfModuleRepeatableSlashRegex[^regex::create[/+][g]]
   
@@ -52,6 +52,9 @@ pfClass
   
 @GET_action[]
   $result[$_action]
+
+@GET_activeModule[]
+  $result[$_activeModule]
 
 @GET_request[]
   $result[$_request]
@@ -239,19 +242,21 @@ pfClass
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
-# получить доступ к контейнеру, не городя передачу оному $self отдельным параметром.
+# получить доступ к контейнеру.
+# [На самом деле у нас теперь есть свойство PARENT].
   $CALLER[$self]
 
 # Если у нас в первой части экшна имя модуля, то передаем управление ему
-  $lModule[^lAction.match[$_pfModuleActionPartRegex][]{$match.1}]
-  ^if(def $lModule && ^hasModule[$lModule]){  
+  $lModule[^_findModule[$aAction]]
+  ^if(def $lModule){  
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
+    $_activeModule[$lModule]
     ^if(^hasAction[$lModule]){
-      $_action[^lAction.match[$_pfModuleActionPartRegex][]{^match.2.lower[]}]
+      $_action[^lAction.match[^^^taint[regex][$lModule] (.*)][x]{^match.1.lower[]}]
       $result[^self.[^_makeActionName[$lModule]][$lRequest]]
       $_action[$lAction]
-    }{                                         
+    }{            
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
          $.prefix[/^if(def $aPrefix){$aPrefix/}{/^if(def $lPrefix){$lPrefix/}$lModule/}]
        ]]                                                  
@@ -324,6 +329,18 @@ pfClass
 ## Возвращает aStr в которой первая буква прописная    
   $lFirst[^aStr.left(1)]
   $result[^lFirst.upper[]^aStr.mid(1)] 
+
+@_findModule[aAction][k;v]
+## Ищет модуль по имени экшна
+  $result[]     
+  ^if(def $aAction){
+    ^_MODULES.foreach[k;v]{
+      ^if(^aAction.match[^^^taint[regex][$k] (/|^$)][ixn]){
+        $result[$k]
+        ^break[]
+      }
+    }
+  }
 
 @_findHandler[aAction;aRequest]
 ## Ищет и возвращает имя функции-обработчика для экшна.

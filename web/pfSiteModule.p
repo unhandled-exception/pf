@@ -27,6 +27,7 @@ pfModule
 ## aOptions.authOptions
 ## aOptions.templet
 ## aOptions.templetOptions
+## aOptions.templatePrefix
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
@@ -35,7 +36,7 @@ pfModule
   $_responseType[html] 
   $_createOptions[$aOptions]
 
-  $templatePath[$uriPrefix]
+  $templatePath[^if(^aOptions.contains[templatePrefix]){$aOptions.templatePrefix}{$uriPrefix}]
   
   $_sql[^if(def $aOptions.sql){$aOptions.sql}]
   $_auth[^if(def $aOptions.auth){$aOptions.auth}]
