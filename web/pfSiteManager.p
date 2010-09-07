@@ -23,7 +23,7 @@ pfSiteModule
   
 #----- Public -----  
 
-@run[aOptions][lArgs]
+@run[aOptions][lArgs;lResult]
 ## Основной процесс обработки запроса (как правило перекрывать не нужно).
   $lArgs[^getDispatchArgs[]]
   ^authenticate[$lArgs._action;$lArgs]
@@ -60,6 +60,10 @@ pfSiteModule
 @onAuthFailed[aRequest]
 ## Вызывается при неудачной авторизации
   $result[]
+
+@processResponse[aResponse;aAction;aRequest;aOptions]
+## aOptions.passProcessResponse(false)
+  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions ^if(^aOptions.passProcessResponse.bool(false)){$.passPost(true)}]]
 
 @postDEFAULT[aResponse]
   ^throw[pfSiteManager.postDEFAULT;Unknown response type "$aResponse.type".]

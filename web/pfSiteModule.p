@@ -69,6 +69,21 @@ pfModule
   ^cleanMethodArgument[]
   ^try{
     $result[^BASE:processAction[$aAction;$aRequest;$aPrefix;$aOptions]]
+
+    ^if(!^aOptions.passWrap.bool(false)){
+      ^switch(true){
+        ^case($result is hash){
+          ^if(!def $result.type){$result.type[$_responseType]}
+          ^if(!def $result.status){$result.status[200]}
+          ^if(!def $result.headers){$result.headers[^hash::create[]]}
+          ^if(!def $result.cookie){$result.cookie[^hash::create[]]}
+        }
+        ^case($result is string || $result is double){
+          $result[^pfHTTPResponse::create[$result;$.type[$responseType]]]
+        }
+      }
+    }
+
   }{
     ^if(!^aOptions.passRedirect.bool(false) && $exception.type eq $_redirectExceptionName){
       $exception.handled(true)
@@ -76,25 +91,11 @@ pfModule
     } 
   } 
 
-  
 @processResponse[aResponse;aAction;aRequest;aOptions][lPostDispatch]
 ## aOptions.passWrap(false) - не формировать объект вокруг ответа из строк и чисел. 
 ## aOptions.passPost(false) - не делать постобработку запроса.
   ^cleanMethodArgument[]
   $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions]]
-
-  ^if(!^aOptions.passWrap.bool(false)){
-    ^switch(true){
-      ^case($result is hash){
-        ^if(!def $result.type){$result.type[$_responseType]}
-        ^if(!def $result.headers){$result.headers[^hash::create[]]}
-        ^if(!def $result.cookie){$result.cookie[^hash::create[]]}
-      }
-      ^case($result is string || $result is double){
-        $result[^pfHTTPResponse::create[$result;$.type[$responseType]]]
-      }
-    }
-  }
   
   ^if(!^aOptions.passPost.bool(false)){
     $lPostDispatch[post^result.type.upper[]]

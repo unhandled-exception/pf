@@ -194,6 +194,7 @@ pfClass
 ## aAction    Действие, которое необходимо выполнить
 ## aRequest   Параметры экшна      
 ## aOptions.prefix
+  ^cleanMethodArgument[aRequest]
   ^cleanMethodArgument[]
   $result[]
  
