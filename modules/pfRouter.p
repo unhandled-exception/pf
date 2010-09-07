@@ -92,7 +92,7 @@ pfClass
      $result[^_parsePathByRoute[$aPath;$_rootRoute;$.args[$aOptions.args]]]
    }
 
-@reverse[aAction;aArgs][it;lVar;k;v;lPath]
+@reverse[aAction;aArgs][it;lVar;k;v;lPath;lInter]
 ## aAction - имя экшна или роута
 ## aArgs - хеш с параметрами для преобразования
 ## result[$.path[] $.prefix[] $.args[]] - если ничего не нашли, возвращаем пустой хеш
@@ -103,7 +103,8 @@ pfClass
 #   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
     ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){                     
 #     Проверяем все ли параметры (жесткое ограничене для резолва) _routes.vars пристутсвуют в aArgs 
-      ^if($it.vars && ^it.vars.intersection[$aArgs] != $it.vars){
+      $lInter[^it.vars.intersection[$aArgs]]
+      ^if($it.vars && $lInter != $it.vars && ($lInter + 1 == $it.vars && !^it.vars.contains[$it.trap])){
         ^continue[]
       } 
       $lPath[^_applyPath[$it.pattern;$aArgs]]
@@ -114,7 +115,6 @@ pfClass
         $result.prefix[^_applyPath[$it.prefix;$aArgs]]
         $result.args[^hash::create[$aArgs]]
         ^result.args.sub[$it.vars]
-        ^if(def $it.trap){^result.args.delete[$it.trap]}
         ^break[]
       }
     }
@@ -147,7 +147,7 @@ pfClass
   $lParts[^lPattern.match[([$_segmentSeparators])([^^$_segmentSeparators]+)][g]]
   ^lParts.menu{                                                                              
      $lHasVars(false)
-     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}{$result.vars.[$match.2](true)}$lHasVars(true)}]  
+     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}$result.vars.[$match.2](true)$lHasVars(true)}]  
      $lSegments.[^eval($lSegments + 1)][
        $.prefix[$lParts.1]
        $.regexp[$lRegexp]
@@ -183,5 +183,5 @@ pfClass
 ## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
-  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if($match.1 eq "*" || ^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
+  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2] || $match.1 eq "*"){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
 
