@@ -16,7 +16,7 @@ pfClass
   $_routes[^hash::create[]]
   $_segmentSeparators[\./] 
   $_varRegexp[[^^$_segmentSeparators]+] 
-  $_trapRegexp[(.+)]
+  $_trapRegexp[(.*)]
   
   $_rootRoute[]
   ^root[]
@@ -44,10 +44,10 @@ pfClass
   $lCompiledPattern[^_compilePattern[$aPattern;$aOptions]]
   $_routes.[^eval($_routes + 1)][
     $.pattern[$lCompiledPattern.pattern]
-#    $.regexp[$lCompiledPattern.regexp]
     $.regexp[^regex::create[$lCompiledPattern.regexp][^if(^aOptions.ignoreCase.bool(true)){i}]]
     $.ignoreCase(^aOptions.ignoreCase.bool(true))
     $.vars[$lCompiledPattern.vars]
+    $.trap[$lCompiledPattern.trap]
     
     $.routeTo[^_trimPath[$aRouteTo]]
     $.prefix[$aOptions.prefix]
@@ -114,6 +114,7 @@ pfClass
         $result.prefix[^_applyPath[$it.prefix;$aArgs]]
         $result.args[^hash::create[$aArgs]]
         ^result.args.sub[$it.vars]
+        ^if(def $it.trap){^result.args.delete[$it.trap]}
         ^break[]
       }
     }
@@ -133,10 +134,11 @@ pfClass
   $result[^if(def $aPath){^aPath.trim[both;/. ^#0A]}]
 
 @_compilePattern[aRoute;aOptions][lPattern;lSegments;lRegexp;lParts]
-## result[$.pattern[] $.regexp[] $.vars[]]
+## result[$.pattern[] $.regexp[] $.vars[] $.trap[]]
   $result[
     $.vars[^hash::create[]]
     $.pattern[^_trimPath[$aRoute]]
+    $.trap[]
   ]       
   $lPattern[^untaint[regex]{/$result.pattern}]
 
@@ -145,7 +147,7 @@ pfClass
   $lParts[^lPattern.match[([$_segmentSeparators])([^^$_segmentSeparators]+)][g]]
   ^lParts.menu{                                                                              
      $lHasVars(false)
-     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:}}{$_varRegexp})}{$_trapRegexp}$result.vars.[$match.2](true)$lHasVars(true)}]  
+     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}{$result.vars.[$match.2](true)}$lHasVars(true)}]  
      $lSegments.[^eval($lSegments + 1)][
        $.prefix[$lParts.1]
        $.regexp[$lRegexp]
@@ -181,5 +183,5 @@ pfClass
 ## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
-  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
+  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if($match.1 eq "*" || ^aArgs.contains[$match.2]){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
 

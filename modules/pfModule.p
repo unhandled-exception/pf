@@ -30,7 +30,7 @@ pfClass
   $_MODULES[^hash::create[]]  
   $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
 
-  $_router[^pfRouter::create[]]   
+  $_router[]   
   $_appendSlash(^aOptions.appendSlash.bool(true))
 
   $_action[]      
@@ -63,6 +63,9 @@ pfClass
   $result[$_MODULES]
 
 @GET_router[]
+  ^if(!def $_router){
+    $_router[^pfRouter::create[]]
+  }
   $result[$_router]
 
 @GET_appendSlash[]
