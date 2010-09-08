@@ -102,10 +102,13 @@ pfClass
   ^_routes.foreach[k;it]{
 #   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
     ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){                     
-#     Проверяем все ли параметры (жесткое ограничене для резолва) _routes.vars пристутсвуют в aArgs 
-      $lInter[^it.vars.intersection[$aArgs]]
-      ^if($it.vars && $lInter != $it.vars && ($lInter + 1 == $it.vars && !^it.vars.contains[$it.trap])){
-        ^continue[]
+      ^if($it.vars){
+        $lInter[^it.vars.intersection[$aArgs]]
+#       Проверяем все ли параметры (жесткое ограничене для резолва) _routes.vars пристутсвуют в aArgs 
+#       При этом в параматерах может отсутствовать трап
+        ^if($lInter < $it.vars && (!def $it.trap || !($lInter + 1 == $it.vars && !^aArgs.contains[$it.trap]))){
+          ^continue[]
+        }
       } 
       $lPath[^_applyPath[$it.pattern;$aArgs]]
 #     Проверяем соотвтетствует ли полученный путь шаблоу (с ограничениями requirements)
@@ -183,5 +186,5 @@ pfClass
 ## Заменяет переменные в aPath. Значения переменных ищутся в aVars и aArgs.  
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
-  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2] || $match.1 eq "*"){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable ":$match.2" in "$aPath".]}}}}]
+  $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2] || $match.1 eq "*"){$aArgs.[$match.2]}{^throw[${CLASS_NAME}.unknown.var;Unknown variable "${match.1}$match.2" in "$aPath".]}}}}]
 
