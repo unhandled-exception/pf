@@ -62,8 +62,8 @@ pfSiteModule
   $result[]
 
 @processResponse[aResponse;aAction;aRequest;aOptions]
-## aOptions.passProcessResponse(false)
-  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions ^if(^aOptions.passProcessResponse.bool(false)){$.passPost(true)}]]
+## aOptions.passManagerPost(false)
+  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions ^if(^aOptions.passManagerPost.bool(false)){$.passPost(true)}]]
 
 @postDEFAULT[aResponse]
   ^throw[pfSiteManager.postDEFAULT;Unknown response type "$aResponse.type".]
