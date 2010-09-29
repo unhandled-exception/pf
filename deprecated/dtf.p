@@ -1,13 +1,14 @@
 ###########################################################################
-# $Id: dtf.p,v 1.31 2007/10/31 13:46:23 misha Exp $
+# $Id: dtf.p,v 1.16 2005/04/12 15:55:46 misha Exp $
 #
-# @create[uDate;uDefault]	create new date object from string/date
-# @format[sFormat;uDate;hLocale]	print date using format string
-# @last-day[uDate]			return date of last day for month of specified[current] day
-# @from822[sDate]			create date object from date string in RFC822/2822 format [!!! still under construction]
-# @to822[uDate;sTZ]			print specified date in RFC822/2822 format [!!! still under construction]
-# @setLocale[hLocale]		set new locale returning old one
-# @resetLocale[]			reset locale to default
+# доступны методы:
+# @create[date]							из строки/даты конструирует объект типа date
+# @format[fmt;date;locale]				выводит полученную date, используя форматную строку
+# @last-day[date]						возвращает дату последнего дня заданного[текущего] месяца
+# @from822[string]						создает дату из переданной строки-даты в формате RFC822
+# @to822[date;timezone]					сдвигает дату из текущей TZ в указанную TZ и выводит её в виде строки в формате RFC822
+# @setLocale[locale]					задает новое значение locale, возвращая старое
+# @resetLocale[]						сбрасывает locale в default
 #
 ###########################################################################
 
@@ -18,85 +19,136 @@ dtf
 
 ###########################################################################
 @auto[][tmp]
-$sClassName[dtf]
-
 # russian locale
 $rr-locale[
 	$.month[
-		$.1[������]
-		$.2[�������]
-		$.3[�����]
-		$.4[������]
-		$.5[���]
-		$.6[����]
-		$.7[����]
-		$.8[�������]
-		$.9[��������]
-		$.10[�������]
-		$.11[������]
-		$.12[�������]
+		$.1[Января]
+		$.2[Февраля]
+		$.3[Марта]
+		$.4[Апреля]
+		$.5[Мая]
+		$.6[Июня]
+		$.7[Июля]
+		$.8[Августа]
+		$.9[Сентября]
+		$.10[Октября]
+		$.11[Ноября]
+		$.12[Декабря]
 	]
 	$.weekday[
-		$.0[�����������]
-		$.1[������������]
-		$.2[��������]
-		$.3[�����]
-		$.4[��������]
-		$.5[�������]
-		$.6[�������]
-		$.7[�����������]
+		$.0[Воскресенья]
+		$.1[Понедельника]
+		$.2[Вторника]
+		$.3[Среды]
+		$.4[Четверга]
+		$.5[Пятницы]
+		$.6[Субботы]
+		$.7[Воскресенья]
+	]
+]
+
+$rr-low-locale[
+	$.month[
+		$.1[января]
+		$.2[февраля]
+		$.3[марта]
+		$.4[апреля]
+		$.5[мая]
+		$.6[июня]
+		$.7[июля]
+		$.8[августа]
+		$.9[сентября]
+		$.10[октября]
+		$.11[ноября]
+		$.12[декабря]
+	]
+	$.weekday[
+		$.0[воскресенья]
+		$.1[понедельника]
+		$.2[вторника]
+		$.3[среды]
+		$.4[четверга]
+		$.5[пятницы]
+		$.6[субботы]
+		$.7[воскресенья]
 	]
 ]
 $ri-locale[
 	$.month[
-		$.1[������]
-		$.2[�������]
-		$.3[����]
-		$.4[������]
-		$.5[���]
-		$.6[����]
-		$.7[����]
-		$.8[������]
-		$.9[��������]
-		$.10[�������]
-		$.11[������]
-		$.12[�������]
+		$.1[Январь]
+		$.2[Февраль]
+		$.3[Март]
+		$.4[Апрель]
+		$.5[Май]
+		$.6[Июнь]
+		$.7[Июль]
+		$.8[Август]
+		$.9[Сентябрь]
+		$.10[Октябрь]
+		$.11[Ноябрь]
+		$.12[Декабрь]
 	]
 	$.weekday[
-		$.0[�����������]
-		$.1[�����������]
-		$.2[�������]
-		$.3[�����]
-		$.4[�������]
-		$.5[�������]
-		$.6[�������]
-		$.7[�����������]
+		$.0[Воскресенье]
+		$.1[Понедельник]
+		$.2[Вторник]
+		$.3[Среда]
+		$.4[Четверг]
+		$.5[Пятница]
+		$.6[Суббота]
+		$.7[Воскресенье]
+	]
+]
+$ri-low-locale[
+	$.month[
+		$.1[январь]
+		$.2[февраль]
+		$.3[март]
+		$.4[апрель]
+		$.5[май]
+		$.6[июнь]
+		$.7[июль]
+		$.8[август]
+		$.9[сентябрь]
+		$.10[октябрь]
+		$.11[ноябрь]
+		$.12[декабрь]
+	]
+	$.weekday[
+		$.0[воскресенье]
+		$.1[понедельник]
+		$.2[вторник]
+		$.3[среда]
+		$.4[четверг]
+		$.5[пятница]
+		$.6[суббота]
+		$.7[воскресенье]
 	]
 ]
 $rs-locale[
 	$.month[
-		$.1[���]
-		$.2[���]
-		$.3[���]
-		$.4[���]
-		$.5[���]
-		$.6[���]
-		$.7[���]
-		$.8[���]
-		$.9[���]
-		$.10[���]
-		$.11[���]
-		$.12[���]
+		$.1[Янв]
+		$.2[Фев]
+		$.3[Мар]
+		$.4[Апр]
+		$.5[Май]
+		$.6[Июн]
+		$.7[Июл]
+		$.8[Авг]
+		$.9[Сен]
+		$.10[Окт]
+		$.11[Ноя]
+		$.12[Дек]
 	]
 	$.weekday[
-		$.0[��]
-		$.1[��]
-		$.2[��]
-		$.3[��]
-		$.4[��]
-		$.5[��]
-		$.6[��]
-		$.7[��]
+		$.0[Вс]
+		$.1[Пн]
+		$.2[Вт]
+		$.3[Ср]
+		$.4[Чт]
+		$.5[Пт]
+		$.6[Сб]
+		$.7[Вс]
 	]
 ]
 # english locale
@@ -146,7 +198,7 @@ $ei-locale[
 		$.1[Monday]
 		$.2[Tuesday]
 		$.3[Wednesday]
-		$.4[Thursday]
+		$.4[Tuesday]
 		$.5[Friday]
 		$.6[Saturday]
 		$.7[Sunday]
@@ -155,54 +207,54 @@ $ei-locale[
 # ukrain locale
 $us-locale[
 	$.month[
-		$.1[�i�]
-		$.2[���]
-		$.3[���]
-		$.4[��i]
-		$.5[���]
-		$.6[���]
-		$.7[���]
-		$.8[���]
-		$.9[���]
-		$.10[���]
-		$.11[���]
-		$.12[���]
+		$.1[Сiч]
+		$.2[Лют]
+		$.3[Бер]
+		$.4[Квi]
+		$.5[Тра]
+		$.6[Чер]
+		$.7[Лип]
+		$.8[Сер]
+		$.9[Вер]
+		$.10[Жов]
+		$.11[Лис]
+		$.12[Гру]
 	]
 	$.weekday[
-		$.0[���]
-		$.1[���]
-		$.2[�i�]
-		$.3[���]
-		$.4[���]
-		$.5[�'�]
-		$.6[���]
-		$.7[���]
+		$.0[Нед]
+		$.1[Пон]
+		$.2[Вiв]
+		$.3[Сер]
+		$.4[Чет]
+		$.5[П'я]
+		$.6[Суб]
+		$.7[Нед]
 	]
 ]
 $ui-locale[
 	$.month[
-		$.1[�i����]
-		$.2[�����]
-		$.3[��������]
-		$.4[��i����]
-		$.5[�������]
-		$.6[�������]
-		$.7[������]
-		$.8[�������]
-		$.9[��������]
-		$.10[�������]
-		$.11[��������]
-		$.12[�������]
+		$.1[Сiчень]
+		$.2[Лютий]
+		$.3[Березень]
+		$.4[Квiтень]
+		$.5[Травень]
+		$.6[Червень]
+		$.7[Липень]
+		$.8[Серпень]
+		$.9[Вересень]
+		$.10[Жовтень]
+		$.11[Листопад]
+		$.12[Грудень]
 	]
 	$.weekday[
-		$.0[���i��]
-		$.1[�����i���]
-		$.2[�i������]
-		$.3[������]
-		$.4[������]
-		$.5[�'������]
-		$.6[������]
-		$.7[���i��]
+		$.0[Недiля]
+		$.1[Понедiлок]
+		$.2[Вiвторок]
+		$.3[Середа]
+		$.4[Четвер]
+		$.5[П'ятниця]
+		$.6[Субота]
+		$.7[Недiля]
 	]
 ]
 
@@ -228,7 +280,7 @@ $max_day[
 	$.7(31)
 	$.8(31)
 	$.9(30)
-	$.10(31)
+	$.11(31)
 	$.11(30)
 	$.12(31)
 ]
@@ -245,28 +297,24 @@ $tmp[^self.setLocale[$default]]
 
 
 ###########################################################################
-# create new date object from string/date
-# accept sql-like strings (%Y[-%m[-%d[ %H:%M[:%S]]]])
-@create[uDate;uDefault]
-^if(def $uDate){
-	^if($uDate is "date"){
-		$result[^date::create($uDate)]
+# принимает строку в виде %Y-%m-%d %H:%M:%S до какого-либо уровня и конструирует объект типа date
+# метод в состоянии переварить форматы: 2001-02-13, 2001-02-13 15:55[:55], 20:30
+# если указано только время, то будет установлена текущая дата
+# примеры использования: ^dtf:parse[2001-02-13], ^dtf:parse[2001-02-13 15:55] или ^dtf:parse[15:55]
+# если запущен без параметров или дата имеет неверный формат, то сконструирует текущую дату.
+@create[date]
+^try{
+	^if(!def $date || ($date is "string" && ^date.length[] < 4)){
+		^throw[dtf.create;Wrong date format]
+	}
+	^if($date is "date"){
+		$result[^date::create($date)]
 	}{
-		^if($uDate is "string" && ^uDate.length[] >= 4){
-			^try{
-				$result[^date::create[$uDate]]
-			}{
-				$exception.handled(1)
-			}
-		}
+		$result[^date::create[$date]]
 	}
 }{
-	^if(def $uDefault){
-		$result[^self.create[$uDefault]]
-	}
-}
-^if(!def $result){
-	^throw[$sClassName;create;Can't create date.]
+	$exception.handled(1)
+	$result[^date::now[]]
 }
 #end @create[]
 
@@ -274,71 +322,77 @@ $tmp[^self.setLocale[$default]]
 
 
 ###########################################################################
-# print date using format string (posix/mysql mix)
-# example: ^dtf:format[%Y-%m-%d], ^dtf:format[%d.%m.%Y;$date], ^dtf:format[%d %h %Y;$date;$dtf:rr-locale]
-@format[sFormat;uDate;hLocale][dtDate]
-$dtDate[^self.create[$uDate;^date::now[]]]
+# выводит полученную в виде string или date дату используя форматную строку
+# format - форматная строка в виде posix (точнее некий микс из posix/mysql)
+# date - дата, которую нужно вывести, по умолчанию - текущая дата
+# locale - если задан - то locale (по умолчанию используется русский locale)
+# Использовать: ^dtf:format[%Y-%m-%d] или ^dtf:format[%Y-%m-%d;$date]
+#	возможно еще и так: ^dtf:format[%Y-%m-%d;$date;$dtf:ui-locale]
+# $date можеты быть как строка, так и переменная типа date
+@format[fmt;date;locale]
+$date[^self.create[$date]]
 
-^if(!def $hLocale){$hLocale[$self.locale]}
+^if(!def $locale){$locale[$self.locale]}
 
-$result[^sFormat.match[%(.)][g]{^switch[$match.1]{
+$result[^fmt.match[%(.)][g]{^switch[$match.1]{
 	^case[%]{%}
 	^case[n]{^#0A}
 	^case[t]{^#09}
 
-	^case[e]{$dtDate.day}
-	^case[d]{^dtDate.day.format[%02d]}
+	^case[e]{$date.day}
+	^case[d]{^date.day.format[%02d]}
 
-	^case[c]{$dtDate.month}
-	^case[m]{^dtDate.month.format[%02d]}
-	^case[h;B]{$hLocale.month.[$dtDate.month]}
-	^case[b]{^hLocale.month.[$dtDate.month].left(3)}
+	^case[c]{$date.month}
+	^case[m]{^date.month.format[%02d]}
+	^case[h;B]{$locale.month.[$date.month]}
+	^case[b]{^locale.month.[$date.month].left(3)}
 
-	^case[Y]{$dtDate.year}
-	^case[y]{^eval($dtDate.year % 100)[%02d]}
-	^case[j]{$dtDate.yearday}
+	^case[Y]{$date.year}
+	^case[y]{^eval($date.year % 100)[%02d]}
+	^case[j]{$date.yearday}
 
-	^case[w]{$dtDate.weekday}
-	^case[A]{$hLocale.weekday.[$dtDate.weekday]}
-	^case[a]{^hLocale.weekday.[$dtDate.weekday].left(3)}
+	^case[w]{$date.weekday}
+	^case[A]{$locale.weekday.[$date.weekday]}
+	^case[a]{^locale.weekday.[$date.weekday].left(3)}
 
-	^case[D]{^dtDate.month.format[%02d]/^dtDate.day.format[%02d]/$dtDate.year}
-	^case[F]{$dtDate.year/^dtDate.month.format[%02d]/^dtDate.day.format[%02d]}
+	^case[D]{^date.month.format[%02d]/^date.day.format[%02d]/$date.year}
+	^case[F]{$date.year/^date.month.format[%02d]/^date.day.format[%02d]}
 
-	^case[H]{^dtDate.hour.format[%02d]}
-	^case[k]{$dtDate.hour}
-	^case[i;M]{^dtDate.minute.format[%02d]}
-	^case[S]{^dtDate.second.format[%02d]}
-	^case[s]{^dtDate.unix-timestamp[]}
+	^case[H]{^date.hour.format[%02d]}
+	^case[k]{$date.hour}
+	^case[i;M]{^date.minute.format[%02d]}
+	^case[S]{^date.second.format[%02d]}
+	^case[s]{^date.unix-timestamp[]}
 
-	^case[T]{^dtDate.hour.format[%02d]:^dtDate.minute.format[%02d]:^dtDate.second.format[%02d]}
-	^case[R]{^dtDate.hour.format[%02d]:^dtDate.minute.format[%02d]}
-	^case[r]{^if($dtDate.hour > 0 && $dtDate.hour < 13){$dtDate.hour}{^if($dtDate.hour < 1)($dtDate.hour + 12)($dtDate.hour - 12)}:^dtDate.minute.format[%02d]:^dtDate.second.format[%02d]}
-	^case[p]{^if($dtDate.hour > 11){PM}{AM}}
-	^case[P]{^if($dtDate.hour > 11){pm}{am}}
+	^case[T]{^date.hour.format[%02d]:^date.minute.format[%02d]:^date.second.format[%02d]}
+	^case[R]{^date.hour.format[%02d]:^date.minute.format[%02d]}
+	^case[r]{^if($date.hour > 0 && $date.hour < 13){$date.hour}{^if($date.hour < 1){^eval($date.hour + 12)}{^eval($date.hour - 12)}}:^date.minute.format[%02d]:^date.second.format[%02d]}
+	^case[p]{^if($date.hour > 11){PM}{AM}}
+	^case[P]{^if($date.hour > 11){pm}{am}}
 	
-	^case[_]{$es-locale.weekday.[$dtDate.weekday], ^dtDate.day.format[%02d] $es-locale.month.[$dtDate.month] $dtDate.year ^dtDate.hour.format[%02d]:^dtDate.minute.format[%02d]:^dtDate.second.format[%02d]}
+	^case[_]{$es-locale.weekday.[$date.weekday], ^date.day.format[%02d] $es-locale.month.[$date.month] $date.year ^date.hour.format[%02d]:^date.minute.format[%02d]:^date.second.format[%02d]}
 }}]
 #end @format[]
 
 
 
 ###########################################################################
-# return last day for specified[current] month
-@last-day[uDate]
-$result[^self.create[$uDate;^date::now[]]]
-^result.roll[month](+1)
-^result.roll[day](-$result.day)
+# возвращает дату последего дня месяца заданной[текущей] даты
+@last-day[date][_date]
+$_date[^self.create[$date]]
+^_date.roll[month](+1)
+$result[^date::create($_date.year;$_date.month;01)]
+^result.roll[day](-1)
 #end @last-day[]
 
 
 
 ###########################################################################
-# set new locale returning old one
-@setLocale[hLocale]
+# задает новое значение locale и при этом возвращает старое значение, которое сохранить (если захочется восстановить)
+@setLocale[locale]
 $result[$self.locale]
-^if(def $hLocale){
-	$self.locale[$hLocale]
+^if(def $locale){
+	$self.locale[$locale]
 	^self._init[]
 }
 #end @setLocale[]
@@ -346,7 +400,7 @@ $result[$self.locale]
 
 
 ###########################################################################
-# reset locale to default
+# сбрасывает locale в default
 @resetLocale[]
 $self.locale[$default]
 #end @resetLocale[]
@@ -354,84 +408,87 @@ $self.locale[$default]
 
 
 ###########################################################################
-# create date object from date string in RFC822/2822 format ( http://www.faqs.org/rfcs/rfc2822.html, http://www.faqs.org/rfcs/rfc822.html )
-# WARNING: still under construction
-@from822[sDate][sMethodName;tPart;hDate;sMonthName;sKey;sValue;dtDate;iDiff]
-$sMethodName[from822]
+# принимает в строку-дату в формате RFC822 и создает из неё объект типа date
+# still under construction/testing.
+@from822[string][_tmp;_fields;_name;_k;_v;_d2;_diff]
 ^try{
-	^if(!def $sDate){
-		^throw[$sClassName;$sMethodName;Input date is empty]
+	^if(!def $string){
+		^throw[dtf.from822;Empty date]
 	}
-	$tPart[^sDate.match[(?:([a-z]{3}),\s+)?(\d{1,2})\s+([a-z]{3})\s+(\d{4}|\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?\s+(\w{3,5})?(?:\s*([-+]?\d{1,2})(\d{2})?)?][i]]
-	^if($tPart){
-		$hDate[
-			$.weekday_name[$tPart.1]
-			$.day($tPart.2)
-			$.month(0)
-			$.month_name[$tPart.3]
-			$.year($tPart.4)
-			$.hour($tPart.5)
-			$.min($tPart.6)
-			$.sec(^tPart.7.int(0))
-			$.tz[$tPart.8]
-			$.offset_hour(^tPart.9.int(0))
-			$.offset_min(^tPart.10.int(0))
-		]
-
-		^rem{ *** fix 2-digit year *** }
-		^if($hDate.year < 100){
-			^hDate.year.inc(2000)
+	$_tmp[^string.match[(?:([a-z]{3}),\s+)?(\d{1,2})\s+([a-z]{3})\s+(\d{4}|\d{2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})\s+(\w{3,5})?(?:\s*([-+]?\d{1,2}(\d{2})?))?][i]]
+	^if($_tmp){
+		^if(^_tmp.1.match[\D]){
+			$_fields[
+				$.weekday_name[$_tmp.1]
+				$.day($_tmp.2)
+				$.month(0)
+				$.month_name[$_tmp.3]
+				$.year($_tmp.4)
+				$.hour($_tmp.5)
+				$.min($_tmp.6)
+				$.sec($_tmp.7)
+				$.tz[$_tmp.8]
+				$.offset_hour[$_tmp.9]
+				$.offset_min[$_tmp.10]
+			]
+		}{
+			$_fields[
+				$.weekday_name[]
+				$.day($_tmp.1)
+				$.month(0)
+				$.month_name[$_tmp.2]
+				$.year($_tmp.3)
+				$.hour($_tmp.4)
+				$.min($_tmp.5)
+				$.sec($_tmp.6)
+				$.tz[$_tmp.7]
+				$.offset_hour[$_tmp.8]
+				$.offset_min[$_tmp.9]
+			]
 		}
-
 		^rem{ *** check month abbr *** }
-		$sMonthName[^hDate.month_name.lower[]]
-		^es-locale.month.foreach[sKey;sValue]{
-			^if(^sValue.lower[] eq $sMonthName){
-				$hDate.month($sKey)
+		$_name[^_fields.month_name.lower[]]
+		^es-locale.month.foreach[_k;_v]{
+			^if(^_v.lower[] eq $_name){
+				$_fields.month($_k)
 			}
 		}
-		^if(!$hDate.month){
-			^throw[$sClassName;$sMethodName;Unknown month '$hDate.month_name']
+		^if(!$_fields.month){
+			^throw[dtf.from822;Unknown month '$_fields.month_name']
 		}
 
-		^if(def $hDate.offset_hour && !def $hDate.tz){
-			$hDate.tz[GMT]
+		^if(def $_fields.offset_hour && !def $_fields.tz){
+			$_fields.tz[GMT]
 		}
 		
-		$result[^date::create($hDate.year;$hDate.month;$hDate.day;$hDate.hour;$hDate.min;$hDate.sec)]
+		$result[^date::create($_fields.year;$_fields.month;$_fields.day;$_fields.hour;$_fields.min;$_fields.sec)]
 
 		^rem{ *** check weekday abbr *** }
-		^if(
-			def $hDate.weekday_name
-			&& ^hDate.weekday_name.lower[] ne ^es-locale.weekday.[$result.weekday].lower[]
-		){
-			^throw[$sClassName;$sMethodName;Incorrect day of week '$hDate.weekday_name' (must be '$es-locale.weekday.[$result.weekday]')]
+		^if(def $_fields.weekday_name){
+			^if(^_fields.weekday_name.lower[] ne ^es-locale.weekday.[$result.weekday].lower[]){
+				^throw[dtf.from822;Incorrect day of week '$_fields.weekday_name' in RFC822 date (must be '$es-locale.weekday.[$result.weekday]')]
+			}
 		}
 		
 		^rem{ *** roll time to timezone *** }
-		^if(def $tz.[$hDate.tz]){
-			$dtDate[^date::create($result)]
-			^dtDate.roll[TZ;$tz.[$hDate.tz]]
-			$iDiff(^date::create($dtDate.year;$dtDate.month;$dtDate.day;$dtDate.hour;$dtDate.minute;$dtDate.second) - $result)
-			$result[^date::create($dtDate - $iDiff)]
+		^if(def $tz.[$_fields.tz]){
+			$_d2[^date::create($result)]
+			^_d2.roll[TZ;$tz.[$_fields.tz]]
+			$_diff(^date::create($_d2.year;$_d2.month;$_d2.day;$_d2.hour;$_d2.minute;$_d2.second) - $result)
+			$result[^date::create($_d2 - $_diff)]
 		}
 		
 		^rem{ *** apply timezone offset *** }
-		^if($hDate.offset_hour || $hDate.offset_min){
-			$result[^date::create($result - ($hDate.offset_hour + $hDate.offset_min / 60) / 24)]
-		}
-
-		^rem{ *** apply DST offset *** }
-		^if($result.daylightsaving){
-			$result[^date::create($result + $result.daylightsaving / 24)]
+		^if(def $_fields.offset_hour){
+			$result[^date::create($result - ($_fields.offset_hour + ^_fields.offset_min.int(0) / 60) / 24)]
 		}
 	}{
-		^throw[$sClassName;$sMethodName;Wrong RFC2822 date format]
+		^throw[dtf.from822;Wrong RFC822 date format]
 	}
 }{
-	^if($exception.type ne $sClassName){
+	^if($exception.type ne "dtf.from822"){
 		$exception.handled(1)
-		^throw[$sClassName;$sMethodName;Can't create date^if($hDate){ (${hDate.year}-${hDate.month}-$hDate.day ${hDate.hour}:${hDate.min}:${hDate.sec})}. ${exception.comment}.]
+		^throw[dtf.from822;Can't create date (${_fields.year}-${_fields.month}-$_fields.day ${_fields.hour}:${_fields.min}:${_fields.sec}).]
 	}
 }
 #end @from822[]
@@ -439,40 +496,20 @@ $sMethodName[from822]
 
 
 ###########################################################################
-# print specified date in RFC822/2822 format
-# WARNING: still under construction
-@to822[uDate;sTZ][dtDate]
-$dtDate[^self.create[$uDate]]
-$dtDate[^date::create($dtDate-^dtDate.daylightsaving.int(0)/24)]
-^if(!def $sTZ){$sTZ[GMT]}
-^if(def $tz.$sTZ){
-	^dtDate.roll[TZ;$tz.$sTZ]
+# сдвигает дату из текущей TZ в указанную TZ и выводит её в виде строки в формате RFC822
+@to822[date;timezone]
+$_date[^create[$date]]
+^if(!def $timezone){$timezone[GMT]}
+^if(def $tz.$timezone){
+	^_date.roll[TZ;$tz.$timezone]
 }
-$result[^self.format[%_ $sTZ;^date::create($dtDate.year;$dtDate.month;$dtDate.day;$dtDate.hour;$dtDate.minute;$dtDate.second)]]
+$result[^self.format[%_ $timezone;^date::create($_date.year;$_date.month;$_date.day;$_date.hour;$_date.minute;$_date.second)]]
 #end @to822[]
 
 
 
 ###########################################################################
-# set response headers Last-Modified/Expires for prevent caching by browsers/proxies
-@setExpireHeaders[uDate][result;dtDate]
-^if(def $uDate){
-	$dtDate[^self.create[$uDate]]
-}
-^if($dtDate && $dtDate < ^date::now(-7)){
-	$response:Last-Modified[$dtDate]
-}{
-	$response:expires[Fri, 23 Mar 2001 09:32:23 GMT]
-	$response:cache-control[no-store, no-cache, must-revalidate, proxy-revalidate]
-	$response:pragma[no-cache]
-}
-$result[]
-#end @setExpireHeaders[]
-
-
-
-###########################################################################
-# create and return months table
+# возвращает таблицу номер месяца (number) - его название (name)
 @_months[locale;is_lowercase][i]
 ^if(!def $locale){$locale[$self.locale]}
 $result[^table::create{number	name
@@ -482,7 +519,7 @@ $result[^table::create{number	name
 
 
 ###########################################################################
-# create tables for day/month/year based on current locale
+# создает таблицы с датами основываясь на текущей locale
 @_init[][i;_now]
 $_now[^date::now[]]
 
@@ -499,12 +536,16 @@ $mm-r[^self._months[$rr-locale]]
 
 
 ###########################################################################
-# backward for a while
+###########################################################################
 
+# методы оставленные пока для обратной совместимости
 @parse[date]
 $result[^self.create[$date]]
+#end @parse[]
+
 
 @last-modifyed[date]
 $result[^self.to822[$date]]
+#end @last-modifyed[date]
 
 
