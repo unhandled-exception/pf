@@ -69,7 +69,7 @@ pfClass
              }
              ^if(def $aOptions.title){
                ^if($aOptions.title is hash){
-                 and t.title in (^aOptions.title.foreach[k;v]{'$k'}[, ], '')
+                 and t.title in (^aOptions.title.foreach[k;v]{'$k',} -1)
                }{
                  and t.title = '$aOptions.title'
                }
@@ -115,10 +115,10 @@ pfClass
                ^case[DEFAULT;string;int]{and ti.content_id = '$aContent'}
                ^case[table]{
                  $lContentTableColumn[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
-                 and ti.content_id in (^aContent.menu{'$aContent.[$lContentTableColumn]'}[,], -1)
+                 and ti.content_id in (^aContent.menu{'$aContent.[$lContentTableColumn]',} -1)
                }
                ^case[hash]{
-                 and ti.content_id in (^aContent.foreach[ck;cv]{'$ck'}[,], -1)
+                 and ti.content_id in (^aContent.foreach[ck;cv]{'$ck',} -1)
                }
              }
              ^if(^aOptions.onlyVisible.bool(false)){
@@ -204,7 +204,9 @@ pfClass
     ^if($lTags){
       ^lTags.menu{
         $lTitle[^normalizeTagTitle[$lTags.piece]]
-        $result.[$lTitle][$.title[$lTitle]]
+        ^if(def $lTitle){
+          $result.[$lTitle][$.title[$lTitle]]
+        }
       }
     }
   }
@@ -224,14 +226,16 @@ pfClass
   ^pfAssert:isTrue(def $aTags)[На задано имя тега.]
 
   $lTags[^splitTags[$aTags;$.separator[$aOptions.separator]]]
-  ^CSQL.void{
-    insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
-    values
-    ^lTags.foreach[tag;v]{
-        ('$tag', '^if(def $aOptions.slug){$aOptions.slug}{^transliter.toURL[$tag]}', '$aOptions.description',
-                '^aOptions.parentID.int(0)', '^aOptions.threadID.int(0)', '^aOptions.sortOrder.int(0)', '^aOptions.isVisible.int(1)')
-    }[, ]
-  }                  
+  ^if($lTags){
+    ^CSQL.void{
+      insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
+      values
+      ^lTags.foreach[tag;v]{
+          ('$tag', '^if(def $aOptions.slug){$aOptions.slug}{^transliter.toURL[$tag]}', '$aOptions.description',
+                  '^aOptions.parentID.int(0)', '^aOptions.threadID.int(0)', '^aOptions.sortOrder.int(0)', '^aOptions.isVisible.int(1)')
+      }[, ]
+    }                  
+  }
   $result[^tags[$.title[$lTags]]]
 
 @deleteTag[aTagID]
@@ -253,7 +257,7 @@ pfClass
   ^CSQL.transaction{
 #   В MySQL'е можено все сделать сильно проще (за счет поддержки replace-select), 
 #   но для джененрик-класса привязка к одной базе не канает. 
-    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], -1}]
+    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ],} -1]
     $lWhere[1=1
       ^if(def $lTagsList){
         and tag_id in ($lTagsList)
@@ -303,8 +307,8 @@ pfClass
         where 
         ^switch[$aContent.CLASS_NAME]{
           ^case[string;int;double]{content_id = '$aContent'}
-          ^case[hash]{content_id in (^aContent.foreach[ck;cv]{'$ck'}[, ])}
-          ^case[table]{content_id in (^aContent.menu{'$aContent.[$lContentColumnName]'}[, ])}
+          ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{'$ck'}[, ],} -1)}
+          ^case[table]{content_id in (^if($aContent){^aContent.menu{'$aContent.[$lContentColumnName]'}[, ],} -1)}
           }
         }
         ^if(def $aOptions.contentType){and content_type_id = '$aOptions.contentType'}
