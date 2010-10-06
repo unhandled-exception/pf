@@ -26,12 +26,22 @@ pfClass
   $_countersTable[${_tablesPrefix}tags_counters]
 
   $_defaultFields[t.tag_id as tagID, t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.is_visible as isVisible]
-  $_extraFields[description]
+  $_extraFields[t.description]
+  
+  $_transliter[]
                                       
 @GET_CSQL[]
   $result[$_CSQL]
+  
+@GET_tranlister[]
+  ^if(!def $_transliter){
+    ^use[pf/wiki/pfURLTranslit.p] 
+    $_transliter[^pfURLTranslit::create[]]
+  } 
+  $result[$_transliter]
 
-@tags[aOptions]
+@tags[aOptions]             
+## aOptions.tagID[] - выбрать только дин тап с tagID
 ## aOptions.threadID[] - выбрать только ветки с заданным threadID
 ## aOptions.onlyVisible(false)
 ## aOptions.withExtraFields(false)
@@ -46,11 +56,14 @@ pfClass
                join $_itemsTable on (t.tag_id = ${_itemsTable}.tag_id and ${_itemsTable}.content_id = '$aOptions.contentID')
              }
        where 1=1
-             ^if(^aOptions.onlyVisible.bool(false)){
-               and is_visible = 1
+             ^if(def $aOptions.tagID){
+               and t.tag_id = '^aOptions.tagID.int(0)'
              }
              ^if(def $aOptions.threadID){
-               and (tag_id = '^aOptions.threadID.int(0)' or thread_id = '^aOptions.threadID.int(0)')
+               and (t.tag_id = '^aOptions.threadID.int(0)' or t.thread_id = '^aOptions.threadID.int(0)')
+             }
+             ^if(^aOptions.onlyVisible.bool(false)){
+               and is_visible = 1
              }
   }]
 
@@ -83,34 +96,27 @@ pfClass
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{^math:uid64[]}]
   $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '$aOptions.contentType'} and $aJoinName = ${lAlias}.content_id)]
 
-
-
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
 ## aOptions.contentType[]
   ^cleanMethodArgument[]
   ^if(def $aTagID){
-    $result[^CSQL.int{
+    $result(^CSQL.int{
      select sum(`count`) as count
        from $_countersTable
       where tag_id = '$aTagID'
       ^if(def $aOptions.contentType){
         and content_type_id = '$aOptions.contentType'
       }
-    }]
+    })
   }{
-     $result[^CSQL.int{
+     $result(^CSQL.int{
       select count(distinct content_id) as count
         from $_itemsTable
        where 1=1
        ^if(def $aOptions.contentType){
          and content_type_id = '$aOptions.contentType'
        }
-     }]
+     })
    }
-
-  
-  
-  
-  
 
