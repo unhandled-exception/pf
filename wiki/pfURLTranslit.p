@@ -49,17 +49,17 @@ pfClass
   $result[^aString.trim[both]]
   $result[^result.match[[_\s\.,?!\[\](){}]+][g]{_}]
   $result[^result.match[(?:-{2,}|_-+_)][g]{--}]
-  $result[^result.match[[_\-]+^$][g]{}]
+  $result[^result.match[[_\-]+^$][g][]]
 
   $result[^result.lower[]]
 
   $result[^result.match[(?:ь|ъ)([$_vowel])][g]{j$match.1}]
-  $result[^result.match[(?:ь|ъ)][g]{}]
+  $result[^result.match[(?:ь|ъ)][g][]]
 
   $result[^result.replace[$_letters]]
 
   $result[^result.match[j{2,}][g]{}]
-  $result[^result.match[[^^${lSlash}0-9a-z_\-]+][g]{}]
+  $result[^result.match[[^^${lSlash}0-9a-z_\-]+][g][]]
 
 @toSupertag[aString;aOptions][lSlash]
 ## Преобразовать строку в "супертаг" -- короткий простой 
@@ -70,12 +70,9 @@ pfClass
   $lSlash[^if(^aOptions.allowSlashes.int(0)){/}]
 
   $result[^toURL[$aString;$aOptions]]
-  $result[^result.match[[^^${lSlash}0-9a-zA-Z\-]+][g]{}]
+  $result[^result.match[[^^${lSlash}0-9a-zA-Z\-]+][g][]]
   $result[^result.match[[\-_]+][g]{-}]
-  $result[^result.match[-+^$][g]{}]
-
-@toSlug[aString;aOptions]
-  $result[^toSupertag[$aString;$aOptions]]
+  $result[^result.match[-+^$][g][]]
 
 @toWiki[aString;aOptions][lStrings;lSlash]
 ## Преобразовать произвольную строку в вики-адрес
@@ -85,7 +82,7 @@ pfClass
   ^cleanMethodArgument[]
   $lSlash[^if(^aOptions.allowSlashes.int(0)){/}]
 
-  $result[^aString.match[[^^\- 0-9a-zA-Zа-яА-ЯёЁ${lSlash}]+][g]{ }]
+  $result[^aString.match[[^^\- 0-9a-zA-Zа-яА-ЯёЁ${lSlash}]+][g][ ]]
 
   $lStrings[^result.split[ ]]
   $result[]
@@ -123,7 +120,7 @@ pfClass
   $lSlash[^if(^aOptions.allowSlashes.int(0)){/}]
 
   ^if($aDirection eq "encode"){
-    $result[^aString.match[[^^\- \'_0-9a-zA-Zа-яА-ЯёЁ${lSlash}]][g]{}]
+    $result[^aString.match[[^^\- \'_0-9a-zA-Zа-яА-ЯёЁ${lSlash}]][g][]]
     $result[^result.match[([а-яА-ЯёЁ ]+)][g]{+^match.1.replace[$_tran]+}]
   }{
      $result[$aString]

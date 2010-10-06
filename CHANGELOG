@@ -13,7 +13,8 @@ CHANGELOG
 -----    
 
 06.10.2010
-  1. Класс pfURLTranslit переконвертирован в UTF-8. Добавли алиас toSlug на toSupertag.
+  1. Класс pfURLTranslit переконвертирован в UTF-8.
+  2. Первый адекватный вариант класса sql/generics/tags/pfSQLTags.p - система тегирования контента в SQL-базах.
        
 23.09.2010
   1. Закомитил в основное дерево начальную версию класса sql/generics/tags/pfSQLTags.
