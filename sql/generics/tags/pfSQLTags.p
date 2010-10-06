@@ -124,7 +124,7 @@ pfClass
              ^if(^aOptions.onlyVisible.bool(false)){
                and t.is_visible = 1
              } 
-       group by t.tag_id
+       group by ti.content_id
        order by
          ^switch[$aOptions.order]{
            ^case[DEFAULT;order_title]{t.sort_order asc, t.title asc}
