@@ -80,7 +80,7 @@ pfClass
              }
              ^if(^aOptions.onlyVisible.bool(false)){
                and is_visible = 1
-             } 
+             }
        group by t.tag_id
        order by
          ^switch[$aOptions.order]{
@@ -256,7 +256,7 @@ pfClass
 #   но для джененрик-класса привязка к одной базе не канает. 
     $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], } -1]
     $lWhere[1=1
-      ^if(def $lTagsList){
+      ^if(def $aTags){
         and tag_id in ($lTagsList)
       }
       ^if(def $aOptions.contentType){ and content_type_id = '$aOptions.contentType'}
