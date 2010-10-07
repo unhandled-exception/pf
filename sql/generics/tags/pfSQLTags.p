@@ -115,7 +115,7 @@ pfClass
                ^case[DEFAULT;string;int]{and ti.content_id = '$aContent'}
                ^case[table]{
                  $lContentTableColumn[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
-                 and ti.content_id in (^aContent.menu{'$aContent.[$lContentTableColumn]',} -1)
+                 and ti.content_id in (^aContent.menu{'$aContent.[$lContentTableColumn]', } -1)
                }
                ^case[hash]{
                  and ti.content_id in (^aContent.foreach[ck;cv]{'$ck',} -1)
@@ -158,8 +158,8 @@ pfClass
 ## aOptions.type[left|right|...] - тип джоина (дописывается перед ключевым словом "join")
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
-  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{^math:uid64[]}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '$aOptions.contentType'} and $aJoinName = ${lAlias}.content_id)]
+  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
+  $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int(0)'} and $aJoinName = ${lAlias}.content_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
@@ -256,7 +256,7 @@ pfClass
   ^CSQL.transaction{
 #   В MySQL'е можено все сделать сильно проще (за счет поддержки replace-select), 
 #   но для джененрик-класса привязка к одной базе не канает. 
-    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ],} -1]
+    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], } -1]
     $lWhere[1=1
       ^if(def $lTagsList){
         and tag_id in ($lTagsList)
@@ -276,7 +276,7 @@ pfClass
     ^if($lCounters){
       ^CSQL.void{
         insert into $_countersTable (content_type_id, tag_id, `count`) 
-        values ^lCounters.menu{('$lCounters.contentType', '$lCounters.tagID', '$lCounters.cnt')}[,]
+        values ^lCounters.menu{('$lCounters.contentType', '$lCounters.tagID', '$lCounters.cnt')}[, ]
       }
     }
   } 
