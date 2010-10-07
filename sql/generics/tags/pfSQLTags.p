@@ -16,13 +16,13 @@ pfClass
 ## aOptions.sql - ссылка на sql-класс.
 ## aOptions.tablesPrefix[] - префикс для таблиц в sql-базе.
 ## aOptions.tagsSeparator[] - регулярное выражение для разделителя тегов
+## aOptions.contentType(0) - стандартный content_type_id
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
   ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL. ($aOptions.sql.CLASS_NAME)]
   $_CSQL[$aOptions.sql]
   $_tablesPrefix[$aOptions.tablesPrefix]
-
   $_tagsTable[${_tablesPrefix}tags]
   $_itemsTable[${_tablesPrefix}tags_items]
   $_countersTable[${_tablesPrefix}tags_counters]
@@ -30,6 +30,7 @@ pfClass
   $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
   $_extraFields[t.description]
 
+  $_defaultContentType(^aOptions.contentType.int(0))
   $_tagsSeparator[^if(def $aOptions.tagsSeparator){$aOptions.tagsSeparator}{[,|/\\]}]
   
   $_transliter[]
@@ -60,9 +61,6 @@ pfClass
              ^if(^aOptions.withExtraFields.bool(false) && def $_extraFields){, $_extraFields}
         from $_tagsTable as t
              left join $_countersTable as tc using (tag_id)
-#             ^if(def $aOptions.contentID){
-#               join $_itemsTable as ti on (t.tag_id = ti.tag_id ^if(def $aOptions.contentType){and ti.content_type_id = '^aOptions.contentType.int(0)'})
-#             }
        where 1=1
              ^if(def $aOptions.tagID){
                and t.tag_id = '^aOptions.tagID.int(0)'
@@ -109,7 +107,7 @@ pfClass
              ^if(^aOptions.withStandartFields.bool(false)){, $_defaultFields} 
              ^if(^aOptions.withExtraFields.bool(false) && def $_extraFields){, $_extraFields}
         from $_tagsTable as t
-             join $_itemsTable as ti on (t.tag_id = ti.tag_id and ti.content_type_id = '^aOptions.contentType.int(0)')
+             join $_itemsTable as ti on (t.tag_id = ti.tag_id and ti.content_type_id = '^aOptions.contentType.int($_defaultContentType)')
        where 1=1
              ^switch[$aContent.CLASS_NAME]{
                ^case[DEFAULT;string;int]{and ti.content_id = '$aContent'}
@@ -159,7 +157,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int(0)'} and $aJoinName = ${lAlias}.content_id)]
+  $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'} and $aJoinName = ${lAlias}.content_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
@@ -294,7 +292,7 @@ pfClass
   $result[]
 
   ^CSQL.transaction{
-    $lContentType[^aOptions.contentType.int(0)]
+    $lContentType[^aOptions.contentType.int($_defaultContentType)]
     $lContentColumnName[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
     $lTagsColumnName[^if(def $aOptions.tagsTableColumn){$aOptions.tagsTableColumn}{tagID}]
 
