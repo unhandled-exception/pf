@@ -72,7 +72,7 @@ pfClass
 
 @GET_isSECURE[]
 ## Проверяет пришел ли нам запрос по протоколу HTTPS.
-  $result(^META.HTTPS.lower[] eq "on" || ^META.SERVER_PORT.int(80) == 443)
+  $result((def $META.HTTPS && ^META.HTTPS.lower[] eq "on") || ^META.SERVER_PORT.int(80) == 443)
 
 
 @GET_METHOD[]
