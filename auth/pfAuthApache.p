@@ -26,15 +26,14 @@ pfAuthBase
 
 @identify[aOptions]
 ## Пытаемся определить пользователя сами, или зовем логин
+  $result(false)
   ^if(def $env:REMOTE_USER || def $env:REDIRECT_REMOTE_USER){
     $_user[
       $.id[^if(def $env:REMOTE_USER){$env:REMOTE_USER}{$env:REDIRECT_REMOTE_USER}]
       $.ip[$env:REMOTE_ADDR]
     ]         
     $result(true)
-  }{
-    $result(false)
-   }
+  }
   $_isUserLogin($result)
   
 @login[aOptions]
