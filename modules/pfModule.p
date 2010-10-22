@@ -233,8 +233,9 @@ pfClass
 ## иначе возвращает оригинальный экшн. 
   $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
-    $result[$.action[$aAction] $.args[^hash::create[]] $.prefix[]]
-  }
+    $result[$.action[$aAction] $.args[] $.prefix[]]
+  }                                 
+  ^if(!def $result.args){$result.args[^hash::create[]]}
     
 @processAction[aAction;aRequest;aPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
 ## Производит вызов экшна.
