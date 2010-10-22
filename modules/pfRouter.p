@@ -180,6 +180,8 @@ pfClass
     }        
     $result.action[^_applyPath[$aRoute.routeTo;$result.args;$aOptions.args]]
     $result.prefix[^_applyPath[$aRoute.prefix;$result.args;$aOptions.args]]
+  }{
+     $result.args[^hash::create[]]
   }                                                           
 
 @_applyPath[aPath;aVars;aArgs]

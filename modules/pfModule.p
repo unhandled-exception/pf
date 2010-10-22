@@ -233,7 +233,7 @@ pfClass
 ## иначе возвращает оригинальный экшн. 
   $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
-    $result[$.action[$aAction] $.args[] $.prefix[]]
+    $result[$.action[$aAction] $.args[^hash::create[]] $.prefix[]]
   }
     
 @processAction[aAction;aRequest;aPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
