@@ -254,7 +254,7 @@ pfClass
   ^CSQL.transaction{
 #   В MySQL'е можено все сделать сильно проще (за счет поддержки replace-select), 
 #   но для джененрик-класса привязка к одной базе не канает. 
-    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], } -1]
+    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], -1}]
     $lWhere[1=1
       ^if(def $aTags){
         and tag_id in ($lTagsList)

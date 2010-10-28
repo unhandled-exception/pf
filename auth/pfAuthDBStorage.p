@@ -19,7 +19,7 @@ pfAuthStorage
 ## aOptions.sql - объект для доступа к БД
 ## aOptions.usersTable[sessions] - имя таблицы с пользователем
 ## aOptions.sessionsTable[sessions] - имя таблицы сессий  
-## aOptions.cryptType[crypt|mysql|old_mysql] - тип хеширования пароля
+## aOptions.cryptType[crypt|md5|mysql|old_mysql] - тип хеширования пароля (default: crypt)
   ^cleanMethodArgument[]
   ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL.]
 
@@ -124,12 +124,13 @@ pfAuthStorage
 ## aOptions.salt[$apr1$] - salt для метода crypt    
   ^cleanMethodArgument[]
   ^switch[^if(def $aOptions.type){$aOptions.type}{^_cryptType.lower[]}]{
-    ^case[mysql]{$result[^CSQL.string{select PASSWORD('$aPassword')}]}
-    ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD('$aPassword')}]}
     ^case[crypt;DEFAULT]{
       $lSalt[^if(def $aOptions.salt){$aOptions.salt}{^$apr1^$}]
       $result[^math:crypt[$aPassword;$lSalt]]
     }
+    ^case[md5]{$result[^math:md5[$aPassword]]}
+    ^case[mysql]{$result[^CSQL.string{select PASSWORD('$aPassword')}]}
+    ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD('$aPassword')}]}
   }
 
 @clearSessionsForLogin[aLogin]
