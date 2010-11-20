@@ -14,18 +14,21 @@ pfClass
 
 @create[aOptions]       
 ## aOptions.sql - ссылка на sql-класс.
-## aOptions.tablesPrefix[] - префикс для таблиц в sql-базе.
 ## aOptions.tagsSeparator[] - регулярное выражение для разделителя тегов
 ## aOptions.contentType(0) - стандартный content_type_id
+## aOptions.tagsTable[tags] - имя таблицы с тегами
+## aOptions.itemsTable[{tagsTable}_items] - имя таблицы с тегированным контентом
+## aOptions.countersTable[{tagsTable}_counters] - имя таблицы со счетчиками
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
   ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL. ($aOptions.sql.CLASS_NAME)]
   $_CSQL[$aOptions.sql]
   $_tablesPrefix[$aOptions.tablesPrefix]
-  $_tagsTable[${_tablesPrefix}tags]
-  $_itemsTable[${_tablesPrefix}tags_items]
-  $_countersTable[${_tablesPrefix}tags_counters]
+
+  $_tagsTable[^if(def $aOptions.tagsTable){$aOptions.tagsTable}{tags}]
+  $_itemsTable[^if(def $aOptions.itemsTable){$aOptions.itemsTable}{${_tagsTable}_items}]
+  $_countersTable[^if(def $aOptions.countersTable){$aOptions.countersTable}{${_tagsTable}_counters}]
 
   $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
   $_extraFields[t.description]
@@ -157,7 +160,19 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (${lAlias}.tag_id = '$aTagID' ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'} and $aJoinName = ${lAlias}.content_id)]
+  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = '$aTagID'}{1=1} ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'} and $aJoinName = ${lAlias}.content_id)]
+
+@sqlJoinForTags[aJoinName;aOptions][lAlias]
+## Возвращает sql для секции join, который позволяет получить теги для контента
+## (Не забывайте группировать результат по content_id, иначе получите "лишние" строки в ответе).
+## aJoinName - имя колонки, которое содержит content_id в запросе
+## aOptions.contentType
+## aOptions.alias - алиас для таблицы tags
+## aOptions.type[left|right|...] - тип джоина (дописывается перед ключевым словом "join")
+  ^cleanMethodArgument[]
+  ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с tag_id для join.]
+  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_alias}]
+  $result[$aOptions.type join $_itemsTable on ($aJoinName = properties_items.content_id ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'}) left join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
