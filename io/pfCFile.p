@@ -66,7 +66,7 @@ pfCFile
   ^if(def ${aOptions.proxy-type}){$result.proxytype($aOptions.proxy-type)}
 
 # Auth (Basic)
-  ^if(def $aOptions.user){
+  ^if(def $aOptions.user){          
     $result.httpauth(1)
     $result.userpwd[${aOptions.user}:$aOptions.password]
   }
