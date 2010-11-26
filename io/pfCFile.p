@@ -6,8 +6,7 @@ pfCFile
 @auto[]
   $_curlSessionsCnt(0)
 
-@load[aMode;aURL;aOptions]
-  ^if(^reflection:dynamical[]){^throw[dynamic.call;Динамический вызов статического метода.]}
+@static:load[aMode;aURL;aOptions]
   ^if(!def $aOptions || $aOptions is string){$aOptions[^hash::create[]]}
   ^session{
     ^try{
@@ -22,17 +21,15 @@ pfCFile
      }
   }
 
-@session[aCode]
+@static:session[aCode]
 ## Организует сессию для запроса   
-  ^if(^reflection:dynamical[]){^throw[dynamic.call;Динамический вызов статического метода.]}
   ^_curlSessionsCnt.inc[]
   $result[^if($_curlSessionsCnt > 1){$aCode}{^curl:session{$aCode}}]
   ^_curlSessionsCnt.dec[]
 
-@options[aOptions]
+@static:options[aOptions]
 ## Задает опции для libcurl (вызов curl:options)
 ## Можно вызывать только внутри сессии
-  ^if(^reflection:dynamical[]){^throw[dynamic.call;Динамический вызов статического метода.]}
   ^if(!$_curlSessionsCnt){^throw[cfile.options;Вызов вне session.]}
   $result[]
   ^curl:options[$aOptions]
