@@ -12,6 +12,9 @@ CHANGELOG
 0.9.4
 -----       
 
+30.11.2010
+  1. Теперь pfRouter поддерживает опережающие и негативные проверки в requirements.
+
 20.11.2010
   1. В конструктор pfSQLTags::create теперь можно передать имена таблиц (раньше только префиксы).
   2. Новый метод = pfSQLTags.sqlJoinForTags (sqlJoinForContent наоборот).

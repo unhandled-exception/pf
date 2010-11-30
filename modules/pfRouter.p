@@ -150,7 +150,7 @@ pfClass
   $lParts[^lPattern.match[([$_segmentSeparators])([^^$_segmentSeparators]+)][g]]
   ^lParts.menu{                                                                              
      $lHasVars(false)
-     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\(][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}$result.vars.[$match.2](true)$lHasVars(true)}]  
+     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\((?!\?[=!<>])][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}$result.vars.[$match.2](true)$lHasVars(true)}]  
      $lSegments.[^eval($lSegments + 1)][
        $.prefix[$lParts.1]
        $.regexp[$lRegexp]
