@@ -197,7 +197,7 @@ pfClass
 
 @clearIdentityMap[]
   $_identityMap[^hash::create[]]  
-  $_stat.identityMap.size($_identityMap)
+  $_stat.identityMap.size($_identityMap)     
 
 #----- Private -----
  
@@ -212,14 +212,13 @@ pfClass
   ^if($lIsIM && ^identityMap.contains[$lKey]){
     $result[$identityMap.[$lKey]]
     ^_stat.identityMap.usage.inc[]
-    $_stat.identityMap.size($_identityMap)
   }{
      $result[$aCode]
-
      ^if($lIsIM){
        $identityMap.[$lKey][$result]
      }
    }   
+   $_stat.identityMap.size($_identityMap)
 
 @_makeQueryKey[aQuery;aType;aSQLOptions]
 ## Формирует ключ для запроса
@@ -254,23 +253,36 @@ pfClass
       && !^aOptions.isForce.bool(false)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
-    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec{$aCode}[$aOptions]}] 
+    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec[$aType]{$aCode}[$aOptions]}] 
   }{
-     $result[^if($isTransaction){^_exec{$aCode}[$aOptions]}{^transaction{^_exec{$aCode}[$aOptions]}}]
+     $result[^if($isTransaction){^_exec[$aType]{$aCode}[$aOptions]}{^transaction{^_exec[$aType]{$aCode}[$aOptions]}}]
    }
 
-@_exec[aCode;aOptions][lStart;lEnd]
+@_exec[aType;aCode;aOptions][lStart;lEnd;lMemStart;lMemEnd]
 ## Выполняет sql-запрос. 
+  $lMemStart($status:memory.used)
   $lStart($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
   $result[$aCode]
   $lEnd($status:rusage.tv_sec + $status:rusage.tv_usec/1000000.0)
+  $lMemEnd($status:memory.used)
   
   $_stat.queriesTime($_stat.queriesTime + ($lEnd-$lStart))
   ^_stat.queriesCount.inc[]
   ^if($_enableQueriesLog){
-    ^_stat.queries.add[$.query[^taint[$aOptions.query]] $.time($lEnd-$lStart) $.limit[$aOptions.limit] $.offset[$aOptions.offset]]
+    ^_stat.queries.add[                
+      $.type[$aType]
+      $.query[^taint[$aOptions.query]] 
+      $.time($lEnd-$lStart) 
+      $.limit[$aOptions.limit] 
+      $.offset[$aOptions.offset] 
+      $.memory($lMemEnd - $lMemStart)
+      $.results(^switch[$aType]{
+        ^case[DEFAULT;void]{0}
+        ^case[int;double;string;file]{1}
+        ^case[table;hash]{^eval($result)}
+      })
+    ]
   }      
-  
   
 #----- DATE functions -----
 
