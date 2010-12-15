@@ -85,5 +85,22 @@ pfClass
        where id = '$result'
     }
   }
-  
+
+@users[aOptions]
+## Возвращает всех пользователей редмайна
+## aOptions.login
+  ^cleanMethodArgument[]
+  $result[^CSQL.table{
+    select id, login, firstname as firstName, lastname as lastName, 
+           mail, admin as isAdmin, language, type, identity_url as identityURL
+      from ${_database}.users
+     where 1=1   
+           ^if(^aOptions.contains[login]){
+             and login = "$aOptions.login"
+           }
+  }] 
+
+@findUser[aUserName]
+## Возвращает данные пользователя
+  $result[^users[$.login[$aUserName]]]
   
