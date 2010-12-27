@@ -31,13 +31,15 @@ pfClass
   $_countersTable[^if(def $aOptions.countersTable){$aOptions.countersTable}{${_tagsTable}_counters}]
 
   $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
+  ^defReadProperty[defaultFields]
   $_extraFields[t.description]
+  ^defReadProperty[extraFields]
 
   $_defaultContentType(^aOptions.contentType.int(0))
   $_tagsSeparator[^if(def $aOptions.tagsSeparator){$aOptions.tagsSeparator}{[,|/\\]}]
   
   $_transliter[]
-                                      
+
 @GET_CSQL[]
   $result[$_CSQL]
   
@@ -57,7 +59,7 @@ pfClass
 ## aOptions.contentType[] 
 ## aOptions.onlyVisible(false)
 ## aOptions.withExtraFields(false)
-## aOptions.orderBy[order_title|title|order|count]
+## aOptions.order[order_title|title|order|count]
   ^cleanMethodArgument[]
   $result[^CSQL.table{
       select t.tag_id as tagID, $_defaultFields, sum(case when tc.count is not null then tc.count else 0 end) as cnt
@@ -103,7 +105,7 @@ pfClass
 ## aOptions.onlyVisible(false)
 ## aOptions.withStandartFields(false) - возвращать стандартные поля. По-умолчанию возвращаем только id тега.
 ## aOptions.withExtraFields(false)
-## aOptions.orderBy[title|title_order|order]
+## aOptions.order[title|title_order|order]
   ^cleanMethodArgument[]
   $result[^CSQL.hash{
       select ti.content_id, t.tag_id as tagID
@@ -172,7 +174,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с tag_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_alias}]
-  $result[$aOptions.type join $_itemsTable on ($aJoinName = properties_items.content_id ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'}) left join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
+  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'}) $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
@@ -352,6 +354,6 @@ pfClass
     }
   }
 
-# Это плохой способ (пересчитываем все теги), но при перетегировании ничего не сделаешь.
+# Пересчитывать все теги не лучшая идея, но при перетегировании ничего другого не сделаешь.
   ^recountTags[;$.contentType[$lContentType]]
 #  ^recountTags[$lTags;$.contentType[$lContentType]]
