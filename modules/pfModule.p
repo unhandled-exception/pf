@@ -288,7 +288,7 @@ pfClass
   ^cleanMethodArgument[]
   $lReverse[^router.reverse[$aAction;$aOptions.fields]]
   ^if($lReverse){
-    $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor]]
+    $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor;$lReverse.reversePrefix]]
   }{
      $result[^_makeLinkURI[$aAction;$aOptions.fields;$aAnchor]]
    }
@@ -304,13 +304,14 @@ pfClass
   
 #----- Private -----
    
-@_makeLinkURI[aAction;aOptions;aAnchor]
+@_makeLinkURI[aAction;aOptions;aAnchor;aPrefix]
 ## Формирует url для экшна
 ## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
   ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
+  ^if(def $aPrefix){$aPrefix[/^aPrefix.trim[both;/.]/]} 
 
-  $result[$uriPrefix^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
+  $result[^if(def $aPrefix){$aPrefix}{$uriPrefix}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
   ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
 
   ^if($aOptions is hash && $aOptions){

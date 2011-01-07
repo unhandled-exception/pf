@@ -33,6 +33,7 @@ pfClass
 ## aOptions.defaults[] - хеш со значениями переменных шаблона "по-умолчанию" 
 ## aOptions.requirements[] - хеш с регулярными выражениями для проверки переменных шаблона
 ## aOptions.prefix[] - дополнительный, вычисляемый префикс для путей (может содержать переменные)
+## aOptions.reversePrefix[] - префикс маршрута при бэкрезолве
 ## aOptions.name[] - имя шаблона (используется в reverse, нечувствительно к регистру)
 ## aOptions.ignoreCase(true) - игнорироавть регистр букв при обработке шаблона
   ^cleanMethodArgument[]
@@ -51,6 +52,7 @@ pfClass
     
     $.routeTo[^_trimPath[$aRouteTo]]
     $.prefix[$aOptions.prefix]
+    $.reversePrefix[$aOptions.reversePrefix]
 
     $.defaults[$aOptions.defaults]
     $.requirements[$aOptions.requirements]
@@ -95,7 +97,7 @@ pfClass
 @reverse[aAction;aArgs][it;lVar;k;v;lPath;lInter]
 ## aAction - имя экшна или роута
 ## aArgs - хеш с параметрами для преобразования
-## result[$.path[] $.prefix[] $.args[]] - если ничего не нашли, возвращаем пустой хеш
+## result[$.path[] $.prefix[] $.reversePrefix[] $.args[]] - если ничего не нашли, возвращаем пустой хеш
   ^cleanMethodArgument[aArgs]
   $result[^hash::create[]]
   $aAction[^_trimPath[$aAction]]
@@ -116,6 +118,7 @@ pfClass
 #       Добавляем оставшиеся параметры из aArgs в result.args
         $result.path[$lPath]
         $result.prefix[^_applyPath[$it.prefix;$aArgs]]
+        $result.reversePrefix[^_applyPath[$it.reversePrefix;$aArgs]]
         $result.args[^hash::create[$aArgs]]
         ^result.args.sub[$it.vars]
         ^break[]
