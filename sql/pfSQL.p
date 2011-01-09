@@ -253,7 +253,7 @@ pfClass
       && !^aOptions.isForce.bool(false)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
-    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^_exec[$aType]{$aCode}[$aOptions]}] 
+    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^if($isTransaction){^_exec[$aType]{$aCode}[$aOptions]}{^transaction{^_exec[$aType]{$aCode}[$aOptions]}}}] 
   }{
      $result[^if($isTransaction){^_exec[$aType]{$aCode}[$aOptions]}{^transaction{^_exec[$aType]{$aCode}[$aOptions]}}]
    }
