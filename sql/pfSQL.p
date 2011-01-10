@@ -193,7 +193,7 @@ pfClass
 @void[aQuery;aSQLOptions;aOptions][lQuery;lOptions]
   $lQuery[$aQuery]
   $lOptions[^_getOptions[$lQuery;int;$aSQLOptions;$aOptions]]
-  $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[$lOptions]]
+  $result[^_sql[void]{^void:sql{$lQuery}[$aSQLOptions]}[^hash::create[$lOptions] $.isForce(true)]]
 
 @clearIdentityMap[]
   $_identityMap[^hash::create[]]  
