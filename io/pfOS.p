@@ -60,7 +60,7 @@ pf/tests/pfAssert.p
       $list[^file:list[$path]]
       ^if($list){
         ^rem{ *** Рекурсивно вызываем оператор удаления *** }
-        ^list.menu{^delete_all[${path}${list.name}/;$mask;1]}
+        ^list.menu{^rm[${path}${list.name}/;$mask;1]}
       }
     }
     $result(0)
