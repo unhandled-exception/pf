@@ -17,10 +17,12 @@ pfClass
 ## aOptions.storage[pfAntiFloodStorage] - хранилище данных
 ## aOptions.path - путь к файлам для дефолтного хранилища
 ## aOptions.fieldName[form_uid] - имя поля формы
+## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение [для дефолтного хранилища]
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
-  $_storage[^if(def $aOptions.storage){$aOptions.storage}{^pfAntiFloodStorage::create[$.path[$aOptions.path]]}]
+  $_expires(^aOptions.expires.int(15*60))
+  $_storage[^if(def $aOptions.storage){$aOptions.storage}{^pfAntiFloodStorage::create[$.path[$aOptions.path] $.expires($_expires)]}]
   ^defReadProperty[storage]
 
   $_fieldName[^if(def $aOptions.fieldName){$aOptions.fieldName}{form_uid}]
@@ -28,7 +30,7 @@ pfClass
   
   $_safeValue[0]
   $_doneValue[1]
-  
+
 #----- Methods -----
 
 @protect[aUIDVarName;aCode][lUID]
