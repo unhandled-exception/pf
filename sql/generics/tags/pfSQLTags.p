@@ -39,7 +39,17 @@ pfClass
   $_tagsSeparator[^if(def $aOptions.tagsSeparator){$aOptions.tagsSeparator}{[,|/\\]}]
   
   $_transliter[]
-
+  
+  $_tagsFields[
+    $.title[tag_id]
+    $.slug[slug]
+    $.description[description]
+    $.threadID[thread_id]
+    $.parentID[parent_id]
+    $.sortOrder[sortOrder]
+    $.isVisible[is_visible]
+  ]
+  
 @GET_CSQL[]
   $result[$_CSQL]
   
@@ -226,7 +236,7 @@ pfClass
   }
      
 @newTags[aTags;aOptions][lTags;tag;v]
-## Создает новый таг в системе, если он не существует.
+## Создает новые теги в системе, если они не существует.
 ## aTag - string
 ## aOptions.slug
 ## aOptions.description
@@ -234,7 +244,7 @@ pfClass
 ## aOptions.threadID
 ## aOptions.sortOrder
 ## aOptions.isVisible    
-## aOptions.separator
+## aOptions.separator - разделитель тегов в строке
 ## result[tag]
   ^cleanMethodArgument[]   
   ^pfAssert:isTrue(def $aTags)[На задано имя тега.]
@@ -253,13 +263,33 @@ pfClass
   $result[^tags[$.title[$lTags]]]
 
 @deleteTag[aTagID]
-## Удаляет таг и все, что им протегировано.
+## Удаляет тег и все, что им протегировано.
   ^pfAssert:isTrue(^aTagID.int(0))[Не задан ID тега.]
   $result[]          
   ^CSQL.transaction{
     ^CSQL.void{delete from $_countersTable where tag_id = '$aTagID'}
     ^CSQL.void{delete from $_itemsTable where tag_id = '$aTagID'}
     ^CSQL.void{delete from $_tagsTable where tag_id = '$aTagID'}
+  }
+
+@modifyTag[aTagID;aOptions][k;v]
+## Редактирует запись о теге в БД
+## aOptions.slug
+## aOptions.description
+## aOptions.parentID
+## aOptions.threadID
+## aOptions.sortOrder
+## aOptions.isVisible
+  ^cleanMethodArgument[]
+  ^CSQL.void{
+    update $_tagsTable
+       set ^_tagsFields.foreach[k;v]{
+             ^if(^aOptions.contains[$k]){
+               $v = '$aOptions.[$k]',
+             }
+           }
+           tag_id = tag_id
+     where tag_id = '^aTagID.int(0)'
   }
   
 @recountTags[aTags;aOptions][lTagsList;lWhere;lCounters]
@@ -299,7 +329,7 @@ pfClass
 @tagging[aContent;aTags;aOptions][lTags;k;v;ck;cv;lContentType;lContentColumnName;lTagsColumnName]
 ## Тегирует контент (можно протегировать сразу много объектов по куче тегов)  
 ## aTags - string|table
-## aOptions.tagsTableColumn[tagID] - имя колонки в таблице с тагами, содержащее tagID
+## aOptions.tagsTableColumn[tagID] - имя колонки в таблице с тегами, содержащее tagID
 ## aContent - string|int|hash|table. Для хеша id беерем из ключа, для таблицы из колонки.
 ## aOptions.contentTableColumn[contentID] - имя колонки в таблице с контентом, содержащее ID
 ## aOptions.mode[new|append] - заново протегировать контент или добавить теги к уже существующим
@@ -355,5 +385,7 @@ pfClass
   }
 
 # Пересчитывать все теги не лучшая идея, но при перетегировании ничего другого не сделаешь.
+# В принципе можно сначала достать старые теги, сложить их с новыми и пересчитывать только сумму:
+# это "потоконебезопасно", но для больших деревьев тегов может быть оправдано.
   ^recountTags[;$.contentType[$lContentType]]
 #  ^recountTags[$lTags;$.contentType[$lContentType]]
