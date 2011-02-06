@@ -128,10 +128,16 @@ pfModule
 
 @assignVar[aVarName;aValue]
 ## Задает переменную для шаблона
-#  ^TEMPLET.assign[$aVarName;$aValue]
   $_templateVars.[$aVarName][$aValue]
   $result[]
 
+@multiAssignVar[aVars]
+## Задает сразу несколько переменных в шаблон.
+  ^pfAssert:isTrue($aVars.foreach is junction)[aVars не поддерживает foreach.]
+  ^aVars.foreach[k;v]{
+    ^assignVar[$k;$v]
+  }
+  
 @redirectTo[aAction;aOptions;aAnchor]  
   ^throw[$_redirectExceptionName;$action;^linkTo[$aAction;$aOptions;$aAnchor]]
 

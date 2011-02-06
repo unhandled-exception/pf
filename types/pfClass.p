@@ -12,7 +12,7 @@ pf/tests/pfAssert.p
 
 @create[aOptions]
 ## Empty constructor
-
+  $result[]
 
 #----- Properties -----
 
@@ -24,7 +24,6 @@ pf/tests/pfAssert.p
 ## Возвращает true, если класс создан статически
   $result(!^reflection:dynamical[])
 
-
 #----- Public -----
 
 @cleanMethodArgument[aName]
@@ -34,7 +33,6 @@ pf/tests/pfAssert.p
   ^if(!def $aName){$aName[aOptions]}
   ^if(!def $caller.[$aName] || ($caller.[$aName] is string && !def ^caller.[$aName].trim[])){$caller.[$aName][^hash::create[]]}
   $result[]
-
 
 @defProperty[aPropertyName;aVarName;aType][lVarName]
 ## Добавляет в объект свойство с именем aPropertyName
@@ -61,12 +59,12 @@ pf/tests/pfAssert.p
   $result[]
 
 @defReadProperty[aPropertyName;aVarName]
-# Добавляет свойтво только для чтения.
+# Добавляет свойство только для чтения.
   ^defProperty[$aPropertyName;$aVarName]
   $result[]
 
 @defReadWriteProperty[aPropertyName;aVarName]
-# Добавляет свойтво для чтения/записи.
+# Добавляет свойство для чтения/записи.
   ^defProperty[$aPropertyName;$aVarName;full]
   $result[]
 
@@ -100,6 +98,34 @@ pf/tests/pfAssert.p
     }]
   }
 
+@int[aDefault]
+## Перобразует объект в int.
+  $result(^unsafe{^GET[int]}{^if(def $aDefault){$aDefault}{^throw[$CLASS_NAME;Невозможно преобразовать объект класса $CLASS_NAME в int.]}})
+
+@double[aDefault]
+## Перобразует объект в double.
+  $result(^unsafe{^GET[double]}{^if(def $aDefault){$aDefault}{^throw[$CLASS_NAME;Невозможно преобразовать объект класса $CLASS_NAME в double.]}})
+
+@bool[aDefault]
+## Перобразует объект в bool.
+  $result(^unsafe{^GET[bool]}{^if(def $aDefault){$aDefault}{^throw[$CLASS_NAME;Невозможно преобразовать объект класса $CLASS_NAME в bool.]}})
+
+@contains[aName][lFields]
+## Проверяет есть ли у объекта поле с именем aName.
+  $lFields[^reflection:fields[^if(^reflection:dynamical[]){$self}{$CLASS}]]
+  $result(^lFields.contains[$aName])
+
+@foreach[aKeyName;aValueName;aCode;aSeparator][lFields;lKey;lValue]
+## Обходит все поля объекта.
+  $lFields[^reflection:fields[^if(^reflection:dynamical[]){$self}{$CLASS}]]
+  $result[^lFields.foreach[lKey;lValue]{$caller.[$aKeyName][$lKey]$caller.[$aValueName][$lValue]$aCode}[$aSeparator]] 
+
+@alias[aName;aMethod]
+## Создает алиас для метода.
+  ^pfAssert:isTrue($aMethod is junction)[Переменная aMethod должна содержать ссылку на функцию.]
+  $self.[$aName][$aMethod]
+  $result[]
+
 @try-finally[aCode;aCatchCode;aFinallyCode][lFinallyProcessed]
 ## Оператор try-catch-finally. Гарантированно выполняет блок 
 ## finally даже если в коде или обработчике ошибок произошло исключение.
@@ -111,7 +137,11 @@ pf/tests/pfAssert.p
 ## Выполняет код и принудительно обрабатывает все exceptions.
 ## В случае ошибки может дополнительно выполнить aCatchCode.
   $result[^try{$aCode}{$exception.handled(true)$aCatchCode}]  
-  
+
+@unless[aCond;aFalseCode;aTrueCode]
+## if наоборот.
+  $result[^if(!$aCond){$aFalseCode}{$aTrueCode}]
+
 #----- Private -----
 
 @_abstractMethod[]
@@ -125,5 +155,4 @@ pf/tests/pfAssert.p
 #@__fromString[aString]
 #@__asXML[aOptions]
 #@__fromXML[aXML;aOptions]
-
-
+ 

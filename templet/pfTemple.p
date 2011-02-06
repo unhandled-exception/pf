@@ -82,7 +82,8 @@ pfClass
     $.file[$aOptions.file]
     $.args[$aOptions.args]
     $.object[]  
-  ]
+  ]     
+  $result[]
 
 @registerEngine[aEngineName;aPattern;aClassName;aOptions]
 ## aPattern[] - регулярное выражение для определения типа движка по имени шаблона, если не задано, то опеределяем движок
@@ -98,6 +99,7 @@ pfClass
     $.args[$aOptions.args]
     $.object[]  
   ]
+  $result[]
 
 @loadTemplate[aTemplateName;aOptions][lParsed;lStorage]
 ## Загружает шаблон                      
@@ -109,10 +111,21 @@ pfClass
   $result[^lStorage.load[$aTemplateName;$aOptions]]
 
 @assign[aVarName;aValue]
+## Добавляет переменную в шаблон.
   $_globalVars.[$aVarName][$aValue]
+  $result[]
+
+@multiAssign[aVars][k;v]
+## Добавляет сразу несколько переменных в шаблон.
+  ^pfAssert:isTrue($aVars.foreach is junction)[aVars не поддерживает foreach.]
+  ^aVars.foreach[k;v]{
+    ^assign[$k;$v]
+  }
+  $result[]
 
 @clearAllAssigned[]
   $_globalVars[^hash::create[]]
+  $result[]
 
 @render[aTemplateName;aOptions][lEngine;lTemplate]
 ## Рендрит шаблон
