@@ -12,6 +12,10 @@ CHANGELOG
 0.9.4
 -----       
 
+11.02.2011
+  1. Новый метод pfSQL.safeInsert.
+  2. Новый дженерик - sql/generics/settings/pfSQLSettings.p.
+
 06.02.2011
   1. Новые методы pfTemple.multiAssign[aVars], pfSiteModule.multiAssignVar[aVars], которые позволяют задать 
      сразу несколько переменных. Параметр aVars должен поддерживать интерфейс foreach. 

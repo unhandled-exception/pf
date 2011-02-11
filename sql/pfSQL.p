@@ -71,7 +71,10 @@ pfClass
     ]           
     $.queries[^pfList::create[]]
     $.queriesTime(0)
-  ]                    
+  ]           
+
+# Регулярное вражение, которое проверят эксепшн при дублировании записейв safeInsert.  
+  $_duplicateKeyExceptionRegex[^regex::create[duplicate entry][i]]         
   
 #----- Properties -----
 @GET_connectString[]
@@ -198,6 +201,11 @@ pfClass
 @clearIdentityMap[]
   $_identityMap[^hash::create[]]  
   $_stat.identityMap.size($_identityMap)     
+
+@safeInsert[aInsertCode;aExistsCode]
+## Выполняет aInsertCode, если в нем произошел exception on duplicate, то выполняет aExistsCode.
+## Реализует абстракцию insert ... on duplicate key update, которая нативно реализована не во всех СУБД.
+  $result[^try{$aInsertCode}{^if($exception.type eq "sql.execute" && ^exception.comment.match[$_duplicateKeyExceptionRegex][]){$exception.handled(true)$aExistsCode}}]
 
 #----- Private -----
  
