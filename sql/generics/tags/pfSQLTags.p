@@ -66,7 +66,6 @@ pfClass
 ##                    title может быть строкой или хешем строк, содержащим в ключах title (то, что приходит от splitTags).
 ## aOptions.slug[] - выбрать тег с заданным slug
 ## aOptions.threadID[] - выбрать только ветки с заданным threadID
-## aOptions.contentType[] 
 ## aOptions.onlyVisible(false)
 ## aOptions.withExtraFields(false)
 ## aOptions.order[order_title|title|order|count]
@@ -145,15 +144,29 @@ pfClass
          }
   }[$.type[table] $.distinct(true)]]
 
-@content[aTagID;aOptions]
+@content[aTag;aOptions][k;v]
 ## aOptions.contentType[] 
 ## aOptions.limit
 ## aOptions.offset
+## aOptions.tagTableColumn[tagID]
+## aOptions.contentColumn[contentID]
   ^cleanMethodArgument[]
   $result[^CSQL.table{
-    select content_id as contentID 
+    select content_id as ^if(def $aOptions.contentColumn){$aOptions.contentColumn}{contentID}
       from $_itemsTable
-     where tag_id = '$aTagID'
+     where 1=1
+     ^switch[$aTag.CLASS_NAME]{
+       ^case[DEFAULT;string;int]{
+         ^if(def $aTag){and tag_id = '$aTag'}
+       }
+       ^case[table]{                       
+         $lTagTableColumn[^if(def $aOptions.tagTableColumn){$aOptions.tagTableColumn}{tagID}]
+         and tag_id in (^aTag.menu{'$aTag.[$lTagTableColumn]', } -1)
+       }
+       ^case[hash]{
+         and tag_id in (^aTag.foreach[k;v]{'$k',} -1)
+       }
+     }
      ^if(def $aOptions.contentType){
        and content_type_id = '$aOptions.contentType'
      }
