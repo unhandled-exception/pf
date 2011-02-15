@@ -41,7 +41,7 @@ pfClass
   $_transliter[]
   
   $_tagsFields[
-    $.title[tag_id]
+    $.title[title]
     $.slug[slug]
     $.description[description]
     $.threadID[thread_id]
