@@ -167,9 +167,7 @@ pfClass
          and tag_id in (^aTag.foreach[k;v]{'$k',} -1)
        }
      }
-     ^if(def $aOptions.contentType){
-       and content_type_id = '$aOptions.contentType'
-     }
+     and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
   }[
     ^if(def $aOptions.limit){$.limit($aOptions.limit)}
     ^if(def $aOptions.offset){$.offset($aOptions.offset)}
@@ -185,7 +183,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = '$aTagID'}{1=1} ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'} and $aJoinName = ${lAlias}.content_id)]
+  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = '$aTagID'}{1=1} and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)' and $aJoinName = ${lAlias}.content_id)]
 
 @sqlJoinForTags[aJoinName;aOptions][lAlias]
 ## Возвращает sql для секции join, который позволяет получить теги для контента
@@ -197,7 +195,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с tag_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_alias}]
-  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id ^if(def $aOptions.contentType){and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)'}) $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
+  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id and ${_itemsTable}.content_type_id = '^aOptions.contentType.int($_defaultContentType)') $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
@@ -208,18 +206,14 @@ pfClass
      select sum(`count`) as count
        from $_countersTable
       where tag_id = '$aTagID'
-      ^if(def $aOptions.contentType){
-        and content_type_id = '$aOptions.contentType'
-      }
+        and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
     })
   }{
      $result(^CSQL.int{
       select count(distinct content_id) as count
         from $_itemsTable
        where 1=1
-       ^if(def $aOptions.contentType){
-         and content_type_id = '$aOptions.contentType'
-       }
+         and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
      })
    }
 
@@ -368,7 +362,7 @@ pfClass
           ^case[table]{content_id in (^if($aContent){^aContent.menu{'$aContent.[$lContentColumnName]'}[, ],} -1)}
           }
         }
-        ^if(def $aOptions.contentType){and content_type_id = '$aOptions.contentType'}
+        and content_type_id = '$lContentType'
       }
     }
 
