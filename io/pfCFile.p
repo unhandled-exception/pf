@@ -4,7 +4,48 @@
 pfCFile
 
 @auto[]
-  $_curlSessionsCnt(0)
+  $_curlSessionsCnt(0) 
+  
+  $_baseVars[
+    $.name[]
+    $.content-type[]
+    $.charset[]
+    $.response-charset[]
+
+#   Connection
+    $.follow-location[$.option[followlocation] $.type[int] $.default(0)]
+    $.max-redirs[$.option[maxredirs] $.type[int] $.default(-1)]
+    $.post-redir[$.option[postredir]]
+    $.autoreferer[$.option[autoreferer] $.type[int] $.default(0)]
+    $.urestricted-auth[$.option[urestricted_auth] $.type[int] $.default(0)]
+
+#   Proxies
+    $.proxy-host[$.option[proxy]]
+    $.proxy-port[$.option[proxyport]]
+    $.proxy-type[$.option[proxytype] $.type[int] $.default(0)]
+
+#   Headers  
+    $.headers[$.option[httpheader]]
+    $.cookiesession[$.option[cookiesession] $.type[int] $.default(1)]
+    $.user-agent[$.option[useragent]]
+    $.referer[$.option[referer]]
+
+#   POST body
+    $.body[$.option[postfields]]
+
+#   SSL options
+    $.ssl-cert[$.option[sslcert]]
+    $.ssl-certtype[$.option[sslcerttype]]
+    $.ssl-key[$.option[sslkey]]
+    $.ssl-keytype[$.option[sslkeytype]]
+    $.ssl-keypasswd[$.option[keypasswd]]
+    $.ssl-issuercert[$.option[issuercert]]
+    $.ssl-crlfile[$.option[crlfile]]
+    $.ssl-cainfo[$.option[cainfo]]
+    $.ssl-capath[$.option[capath]]
+    $.ssl-cipher-list[$.option[ssl_cipher_list]]
+    $.ssl-sessionid-cache[$.option[ssl_sessionid_cache] $.type[int] $.default(0)]
+  ]
 
 @static:load[aMode;aURL;aOptions]
   ^if(!def $aOptions || $aOptions is string){$aOptions[^hash::create[]]}
@@ -28,39 +69,45 @@ pfCFile
   ^_curlSessionsCnt.dec[]
 
 @static:options[aOptions]
-## Задает опции для libcurl (вызов curl:options)
+## Задает опции для libcurl, но в формате, поддерживаемом функцией load (вызов curl:options)
 ## Можно вызывать только внутри сессии
   ^if(!$_curlSessionsCnt){^throw[cfile.options;Вызов вне session.]}
   $result[]
-  ^curl:options[$aOptions]
+  ^curl:options[^_makeCurlOptions[;;$aOptions]]
 
 @_makeCurlOptions[aMode;aURL;aOptions][k;v;lMethod]
 ## Формирует параметры для curl:load (curl:options) 
   $result[^hash::create[]]
-  ^if(!($aMode eq "text" || $aMode eq "binary")){^throw[cfile.mode;Mode must be "text" or "binary".]}
 
-  $result.url[$aURL]
-  $result.mode[$aMode]
-  ^if(def $aOptions.name){$result.name[$aOptions.name]}
-  ^if(def ${aOptions.content-type}){$result.content-type[$aOptions.content-type]}
-  ^if(def $aOptions.charset){$result.charset[$aOptions.charset]}
-  ^if(def ${aOptions.response-charset}){$result.response-charset[$aOptions.response-charset]}
+  ^if(def $aURL){$result.url[$aURL]}
+  ^if(def $aMode){
+    ^if(!($aMode eq "text" || $aMode eq "binary")){^throw[cfile.mode;Mode must be "text" or "binary".]}
+    $result.mode[$aMode]
+  }
+
+# Задаем "простые" опции.
+  ^_baseVars.foreach[k;v]{
+    ^if(^aOptions.contains[$k]){
+      ^if($v is hash){
+        ^switch[$v.type]{
+          ^case[DEFAULT]{
+            $result.[$v.option][^if(def $aOptions.[$k]){$aOptions.[$k]}{$v.default}]
+          }
+          ^case[int;double]{
+            $result.[$v.option](^if(def $aOptions.[$k]){$aOptions.[$k]}{$v.default})
+          }
+        }
+      }{
+         $result.[$k][$aOptions.[$k]]
+       }
+    }
+  }
 
 # Connection
   $result.timeout(^aOptions.timeout.int(2))
   ^if(!^result.compressed.bool(true)){$result.encoding[identity]}{$result.encoding[]}
 
   $result.failonerror(!^aOptions.any-status.int(0))
-  ^if(def ${aOptions.follow-location}){$result.followlocation(^aOptions.follow-location.int(0))}
-  ^if(def ${aOptions.max-redirs}){$result.maxredirs(^aOptions.max-redirs.int(-1))}
-  ^if(def ${aOptions.post-redir}){$result.postredir(${aOptions.post-redir})}
-  ^if(def ${aOptions.autoreferer}){$result.autoreferer(^aOptions.autoreferer.int(0))}
-  ^if(def ${aOptions.urestricted-auth}){$result.urestricted_auth(^aOptions.urestricted-auth.int(0))}
-  
-# Proxies
-  ^if(def ${aOptions.proxy-host}){$result.proxy[$aOptions.proxy-host]}
-  ^if(def ${aOptions.proxy-port}){$result.proxyport($aOptions.proxy-port)}
-  ^if(def ${aOptions.proxy-type}){$result.proxytype($aOptions.proxy-type)}
 
 # Auth (Basic)
   ^if(def $aOptions.user){          
@@ -78,13 +125,9 @@ pfCFile
   }
 
 # Headers  
-  ^if(def $aOptions.headers){$result.httpheader[$aOptions.headers]}
   ^if(def $aOptions.cookies && $aOptions.cookies is hash){
     $result.cookie[^aOptions.cookies.foreach[k;v]{$k=$v^;}]
   }                           
-  ^if(def $aOptions.cookiesession){$result.cookiesession(^aOptions.cookiesession.int(1))}
-  ^if(def ${aOptions.user-agent}){$result.useragent[$aOptions.user-agent]}
-  ^if(def $aOptions.referer){$result.referer[$aOptions.referer]}
 
 # Form's
   ^if(def $aOptions.form){
@@ -109,28 +152,16 @@ pfCFile
     }
   }  
   
-# POST body
-  ^if(def $aOptions.body){$result.postfields[$aOptions.body]}
-
 # Ranges
   ^if(def $aOptions.limit || def $aOptions.offset){
     $result.range[^aOptions.offset.int(0)-^if(def $aOptions.limit){^eval(^aOptions.offset.int(0) + ^aOptions.limit.int[] - 1)}]
-  }
-  
+  }                
+
 # SSL options
   $result.ssl_verifypeer(^aOptions.ssl-verifypeer.int(0))
   $result.ssl_verifyhost(^aOptions.ssl-verifyhost.int(0))
-  ^if(def ${aOptions.ssl-cert}){$result.sslcert[$aOptions.ssl-cert]}
-  ^if(def ${aOptions.ssl-certtype}){$result.sslcerttype[$aOptions.ssl-certtype]}
-  ^if(def ${aOptions.ssl-key}){$result.sslkey[$aOptions.ssl-key]}
-  ^if(def ${aOptions.ssl-keytype}){$result.sslkeytype[$aOptions.ssl-keytype]}
-  ^if(def ${aOptions.ssl-keypasswd}){$result.keypasswd[$aOptions.ssl-keypasswd]}
-  ^if(def ${aOptions.ssl-issuercert}){$result.issuercert[$aOptions.ssl-issuercert]}
-  ^if(def ${aOptions.ssl-crlfile}){$result.crlfile[$aOptions.ssl-crlfile]}
-  ^if(def ${aOptions.ssl-cainfo}){$result.cainfo[$aOptions.ssl-cainfo]}
-  ^if(def ${aOptions.ssl-capath}){$result.capath[$aOptions.ssl-capath]}
-  ^if(def ${aOptions.ssl-cipher-list}){$result.ssl_cipher_list[$aOptions.ssl-cipher-list]}
-  ^if(def ${aOptions.ssl-sessionid-cache}){$result.ssl_sessionid_cache(^aOptions.ssl-sessionid-cache.int(0))}
+
+#  ^pfAssert:fail[^result.foreach[k;v]{$k}[, ]]
 
 @_formUrlencode[aForm][k;v]
   $result[^aForm.foreach[k;v]{^if($v is table){^_tableUrlencode[^taint[uri][$k];$v]}{^taint[uri][$k]=^taint[uri][$v]}}[&]]
