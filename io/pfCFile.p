@@ -47,9 +47,11 @@ pfCFile
     $.ssl-sessionid-cache[$.option[ssl_sessionid_cache] $.type[int] $.default(0)]
   ]
 
+@GET_version[]
+  $result[^curl:version[]]
+
 @static:load[aMode;aURL;aOptions]
   ^if(!def $aOptions || $aOptions is string){$aOptions[^hash::create[]]}
-  ^session{
     ^try{
       $result[^curl:load[^_makeCurlOptions[$aMode;$aURL;$aOptions]]]
     }{
@@ -60,24 +62,24 @@ pfCFile
          ^case[curl.status]{$exception.handled(true) ^throw[http.status;$exception.source;$exception.comment]}
        } 
      }
-  }
 
 @static:session[aCode]
 ## Организует сессию для запроса   
   ^_curlSessionsCnt.inc[]
-  $result[^if($_curlSessionsCnt > 1){$aCode}{^curl:session{$aCode}}]
+  $result[^curl:session{$aCode}]
   ^_curlSessionsCnt.dec[]
 
 @static:options[aOptions]
 ## Задает опции для libcurl, но в формате, поддерживаемом функцией load (вызов curl:options)
 ## Можно вызывать только внутри сессии
-  ^if(!$_curlSessionsCnt){^throw[cfile.options;Вызов вне session.]}
-  $result[]
+  ^if(!$_curlSessionsCnt){^throw[cfile.options;Вызов метода options вне session.]}
   ^curl:options[^_makeCurlOptions[;;$aOptions]]
+  $result[]
 
-@_makeCurlOptions[aMode;aURL;aOptions][k;v;lMethod]
+@_makeCurlOptions[aMode;aURL;aOptions][k;v;lForm]
 ## Формирует параметры для curl:load (curl:options) 
   $result[^hash::create[]]
+  ^if(!def $aOptions || $aOptions is string){$aOptions[^hash::create[]]}
 
   ^if(def $aURL){$result.url[$aURL]}
   ^if(def $aMode){
@@ -94,7 +96,7 @@ pfCFile
             $result.[$v.option][^if(def $aOptions.[$k]){$aOptions.[$k]}{$v.default}]
           }
           ^case[int;double]{
-            $result.[$v.option](^if(def $aOptions.[$k]){$aOptions.[$k]}{$v.default})
+            $result.[$v.option](^if(def $aOptions.[$k])($aOptions.[$k])($v.default))
           }
         }
       }{
@@ -107,7 +109,9 @@ pfCFile
   $result.timeout(^aOptions.timeout.int(2))
   ^if(!^result.compressed.bool(true)){$result.encoding[identity]}{$result.encoding[]}
 
-  $result.failonerror(!^aOptions.any-status.int(0))
+  ^if(^aOptions.contains[any-status]){
+    $result.failonerror(!^aOptions.any-status.int(0))
+  }
 
 # Auth (Basic)
   ^if(def $aOptions.user){          
@@ -116,40 +120,46 @@ pfCFile
   }
 
 # Method                  
-  $lMethod[^if(def $aOptions.method){^aOptions.method.upper[]}{GET}]
-  ^switch[$lMethod]{
-    ^case[GET]{$result.httpget(1)}
-    ^case[POST]{$result.post(1)}
-    ^case[HEAD]{$result.nobody(1)}
-    ^case[DEFAULT]{$result.customrequest[^aOptions.method.upper[]]}
+  ^if(^aOptions.contains[method]){
+    ^switch[^aOptions.method.upper[]]{
+      ^case[;GET]{$result.httpget(1)}
+      ^case[POST]{$result.post(1)}
+      ^case[HEAD]{$result.nobody(1)}
+      ^case[DEFAULT]{$result.customrequest[^aOptions.method.upper[]]}
+    }
   }
-
+  
 # Headers  
   ^if(def $aOptions.cookies && $aOptions.cookies is hash){
-    $result.cookie[^aOptions.cookies.foreach[k;v]{$k=$v^;}]
+    $result.cookie[^aOptions.cookies.foreach[k;v]{^taint[uri][$k]=^taint[uri][$v]^;}]
   }                           
 
 # Form's
-  ^if(def $aOptions.form){
-    ^if(!($aOptions.form is hash)){^throw[cfile.options;Параметр form должен быть хешем.]}
-    ^switch[$aOptions.enctype]{
-      ^case[;application/x-www-form-urlencoded]{
-        ^switch[$lMethod]{
-          ^case[GET;HEAD;DELETE]{
-            $result.url[$result.url^if(^result.url.pos[?] >= 0){&}{?}^_formUrlencode[$aOptions.form]]
-          } 
-          ^case[DEFAULT]{
-            $result.postfields[^_formUrlencode[$aOptions.form]]
+  ^if(^aOptions.contains[form]){
+    $lForm[^hash::create[$aOptions.form]]
+    ^if($lForm){
+      ^switch[$aOptions.enctype]{
+        ^case[;application/x-www-form-urlencoded]{
+          ^switch[^aOptions.method.upper[]]{
+            ^case[;GET;HEAD;DELETE]{
+              $result.url[$result.url^if(^result.url.pos[?] >= 0){&}{?}^_formUrlencode[$lForm]]
+            } 
+            ^case[POST]{
+              $result.postfields[^_formUrlencode[$lForm]]
+            }
           }
+        } 
+        ^case[multipart/form-data]{
+          $result.httppost[$lForm]
         }
-      } 
-      ^case[multipart/form-data]{
-        $result.httppost[$aOptions.form]
+        ^case[DEFAULT]{
+          ^throw[cfile.options;Неизвестный enctype: "$aOptions.enctype".]
+        }
       }
-      ^case[DEFAULT]{
-        ^throw[cfile.options;Неизвестный enctype: "$aOptions.enctype".]
-      }
-    }
+    }{
+       $result.postfields[]
+       $result.httppost[]
+     }
   }  
   
 # Ranges
@@ -163,11 +173,18 @@ pfCFile
 
 #  ^pfAssert:fail[^result.foreach[k;v]{$k}[, ]]
 
-@_formUrlencode[aForm][k;v]
-  $result[^aForm.foreach[k;v]{^if($v is table){^_tableUrlencode[^taint[uri][$k];$v]}{^taint[uri][$k]=^taint[uri][$v]}}[&]]
+@_formUrlencode[aForm;aSeparator][k;v]                                                        
+  $result[^aForm.foreach[k;v]{^switch[$v.CLASS_NAME]{
+      ^case[table]{^_tableUrlencode[^taint[uri][$k];$v;$aSeparator]}
+      ^case[file]{^taint[uri][$k]=^taint[uri][$v.text]}
+      ^case[string;int;double]{^taint[uri][$k]=^taint[uri][$v]}                                      
+      ^case[bool]{^taint[uri][$k]=^v.int[]}                                      
+      ^case[date]{^taint[uri][$k]=^taint[uri][^v.sql-string[]]}                                      
+      ^case[DEFAULT]{^throw[cfile.options;Невозможно закодировать параметр $k типа ${v.CLASS_NAME}.]}
+    }}[^if(def $aSeparator){$aSeparator}{&}]]
 
-@_tableUrlencode[aName;aTable][lFieldName;lFields]
+@_tableUrlencode[aName;aTable;aSeparator][lFieldName;lFields]
   $lFields[^aTable.columns[]]
   $lFieldName[^if($lFields){$lFields.column}{0}]
-  $result[^aTable.menu{$aName=^taint[uri][$aTable.[$lFieldName]]}[&]]
+  $result[^aTable.menu{$aName=^taint[uri][$aTable.[$lFieldName]]}[^if(def $aSeparator){$aSeparator}{&}]]
 
