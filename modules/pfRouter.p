@@ -36,6 +36,7 @@ pfClass
 ## aOptions.reversePrefix[] - префикс маршрута при бэкрезолве
 ## aOptions.name[] - имя шаблона (используется в reverse, нечувствительно к регистру)
 ## aOptions.ignoreCase(true) - игнорироавть регистр букв при обработке шаблона
+## aOptions.strict(false) - включает "строгий" режим проверки шаблона.
   ^cleanMethodArgument[]
   $result[]
   
@@ -57,6 +58,7 @@ pfClass
     $.defaults[$aOptions.defaults]
     $.requirements[$aOptions.requirements]
     $.name[^if(def $aOptions.name){^aOptions.name.lower[]}]
+    $.strict(^aOptions.strict.bool(false))
   ]
 
 @root[aRouteTo;aOptions]
@@ -162,7 +164,7 @@ pfClass
   } 
   
 # Собираем регулярное выражение для всего шаблона
-  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^lSegments.foreach[k;it]{^if($it.hasVars){)?}}^$]
+  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^lSegments.foreach[k;it]{^if($it.hasVars){)^if(!^aOptions.strict.bool(false)){?}}}^$]
 
 @_parsePathByRoute[aPath;aRoute;aOptions][lVars;i;k;v]
 ## Преобразует aPath по правилу aOptions.
