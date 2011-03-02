@@ -108,19 +108,23 @@ pfModule
      }
   }
   
-@render[aTemplate;aOptions][lTemplatePrefix]
+@render[aTemplate;aOptions][lTemplatePrefix;lVars]
 ## Вызывает шаблон с именем "путь/$aTemplate[.pt]"
 ## Если aTemplate начинается со "/", то не подставляем текущий перфикс.
 ## Если переменная aTemplate не задана, то зовем шаблон default. 
+## aOptions.vars
   ^cleanMethodArgument[]
   ^if(!def $aTemplate || ^aTemplate.left(1) ne "/"){
      $lTemplatePrefix[$templatePath]
   }
+
+  $lVars[^hash::create[^if(def $aOptions.vars){$aOptions.vars}{$_templateVars}]]
+  ^if(!^lVars.contains[REQUEST]){$lVars.REQUEST[$request]}
+  ^if(!^lVars.contains[ACTION]){$lVars.ACTION[$action]}
+  ^if(!^lVars.contains[linkTo]){$lVars.linkTo[$linkTo]}
+
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
-    $.vars[
-      ^if(def $aOptions.vars){$aOptions.vars}{$_templateVars} 
-      $.REQUEST[$request]
-    ]
+    $.vars[$lVars]
     $.force($aOptions.force)
     $.engine[$aOptions.engine]
   ]]
