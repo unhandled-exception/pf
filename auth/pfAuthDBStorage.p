@@ -52,8 +52,8 @@ pfAuthStorage
                                , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[,]
                              }
                         from $_usersTable
-                       where login = '$aID'
-                             and is_active = '1'
+                       where login = "$aID"
+                             and is_active = "1"
                    }[][$.isForce(true)]]
   $result[^if($result){$result.fields}{^hash::create[]}]
                    
@@ -66,9 +66,9 @@ pfAuthStorage
   ^if(def $aOptions.uid && def $aOptions.sid){
     $result[^CSQL.table{select uid, sid, login, is_persistent, dt_create, dt_access, dt_close
                           from $_sessionsTable
-                         where uid = '$aOptions.uid'
-                               and sid = '$aOptions.sid'
-                               and is_active = '1'
+                         where uid = "$aOptions.uid"
+                               and sid = "$aOptions.sid"
+                               and is_active = "1"
     }[][$.isForce(true)]]
     $result[^if($result){$result.fields}{^hash::create[]}]
   }{
@@ -78,11 +78,11 @@ pfAuthStorage
 @addSession[aSession]
 ## Добавляем сессию в хранилище
   ^CSQL.void{insert into $_sessionsTable (uid, sid, login, dt_access, dt_create, is_persistent, ip)
-             values ('$aSession.uid', '$aSession.sid', '$aSession.login',
-                      ^if(def $aSession.dt_access){'$aSession.dt_create'}{^CSQL.now[]},  
-                      ^if(def $aSession.dt_login){'$aSession.dt_login'}{^CSQL.now[]},  
-                      ^if(def $aSession.is_persistent && $aSession.is_persistent){'1'}{'0'},
-                      inet_aton('$env:REMOTE_ADDR')                    
+             values ("$aSession.uid", "$aSession.sid", "$aSession.login",
+                      ^if(def $aSession.dt_access){"$aSession.dt_create"}{^CSQL.now[]},  
+                      ^if(def $aSession.dt_login){"$aSession.dt_login"}{^CSQL.now[]},  
+                      ^if(def $aSession.is_persistent && $aSession.is_persistent){"1"}{"0"},
+                      inet_aton("$env:REMOTE_ADDR")                    
                      )
   }     
   $result(true)
@@ -90,22 +90,22 @@ pfAuthStorage
 @updateSession[aSession;aNewSession]
 ## Обновить данные о сессии в хранилище
   ^CSQL.void{update $_sessionsTable
-                set uid = '$aNewSession.uid',
-                    sid = '$aNewSession.sid',
-                    ^if(def $aNewSession.is_persistent){is_persistent = '$aNewSession.is_persistent',}
-                    dt_access = ^if(def $aNewSession.dt_access){'$aNewSession.dt_access'}{^CSQL.now[]}
-              where uid = '$aSession.uid'
-                    and sid = '$aSession.sid'
+                set uid = "$aNewSession.uid",
+                    sid = "$aNewSession.sid",
+                    ^if(def $aNewSession.is_persistent){is_persistent = "$aNewSession.is_persistent",}
+                    dt_access = ^if(def $aNewSession.dt_access){"$aNewSession.dt_access"}{^CSQL.now[]}
+              where uid = "$aSession.uid"
+                    and sid = "$aSession.sid"
   }     
   $result(true)
 
 @deleteSession[aSession]
 ## Удалить сессию из хранилища
   ^CSQL.void{update $_sessionsTable
-             set is_active = '0',
+             set is_active = "0",
                  dt_close = ^CSQL.now[]
-           where uid = '$aSession.uid'
-                 and sid = '$aSession.sid'
+           where uid = "$aSession.uid"
+                 and sid = "$aSession.sid"
   }     
   $result(true)
 
@@ -113,8 +113,8 @@ pfAuthStorage
   $result(false)
   ^if(def $aPassword && def $aCrypted){
     ^switch[^_cryptType.lower[]]{
-      ^case[mysql]{$result(^CSQL.int{select '$aCrypted' = PASSWORD('$aPassword')})}
-      ^case[old_mysql]{$result(^CSQL.int{select '$aCrypted' = OLD_PASSWORD('$aPassword')})}
+      ^case[mysql]{$result(^CSQL.int{select "$aCrypted" = PASSWORD("$aPassword")})}
+      ^case[old_mysql]{$result(^CSQL.int{select "$aCrypted" = OLD_PASSWORD("$aPassword")})}
       ^case[crypt;DEFAULT]{$result(^math:crypt[$aPassword;$aCrypted] eq $aCrypted)}
     }
   }
@@ -129,13 +129,13 @@ pfAuthStorage
       $result[^math:crypt[$aPassword;$lSalt]]
     }
     ^case[md5]{$result[^math:md5[$aPassword]]}
-    ^case[mysql]{$result[^CSQL.string{select PASSWORD('$aPassword')}]}
-    ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD('$aPassword')}]}
+    ^case[mysql]{$result[^CSQL.string{select PASSWORD("$aPassword")}]}
+    ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
   }
 
 @clearSessionsForLogin[aLogin]
   ^CSQL.void{
      delete from $_sessionsTable
-      where login = '$aLogin'
+      where login = "$aLogin"
   }
   

@@ -51,9 +51,9 @@ pfClass
   $result[]  
   $lKey[^if($_ignoreKeyCase){^aKey.upper[]}{$aKey}]            
   ^_CSQL.safeInsert{
-    ^_CSQL.void{insert into $_tableName (`$_keyColumn`, `$_valueColumn`) values ('$lKey', '$aValue')}
+    ^_CSQL.void{insert into $_tableName (`$_keyColumn`, `$_valueColumn`) values ("$lKey", "$aValue")}
   }{
-    ^_CSQL.void{update $_tableName set `$_valueColumn` = '$aValue' where `$_keyColumn` = '$lKey'}
+    ^_CSQL.void{update $_tableName set `$_valueColumn` = "$aValue" where `$_keyColumn` = "$lKey"}
    }
   $_vars.[$lKey][$aValue]
   

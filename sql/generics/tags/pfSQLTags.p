@@ -77,20 +77,20 @@ pfClass
              left join $_countersTable as tc using (tag_id)
        where 1=1
              ^if(def $aOptions.tagID){
-               and t.tag_id = '^aOptions.tagID.int(0)'
+               and t.tag_id = "^aOptions.tagID.int(0)"
              }
              ^if(def $aOptions.title){
                ^if($aOptions.title is hash){
-                 and t.title in (^aOptions.title.foreach[k;v]{'$k',} -1)
+                 and t.title in (^aOptions.title.foreach[k;v]{"$k",} -1)
                }{
-                 and t.title = '$aOptions.title'
+                 and t.title = "$aOptions.title"
                }
              }
              ^if(def $aOptions.slug){
-               and t.slug = '$aOptions.slug'
+               and t.slug = "$aOptions.slug"
              }
              ^if(def $aOptions.threadID){
-               and (t.tag_id = '^aOptions.threadID.int(0)' or t.thread_id = '^aOptions.threadID.int(0)')
+               and (t.tag_id = "^aOptions.threadID.int(0)" or t.thread_id = "^aOptions.threadID.int(0)")
              }
              ^if(^aOptions.onlyVisible.bool(false)){
                and is_visible = 1
@@ -121,16 +121,16 @@ pfClass
              ^if(^aOptions.withStandartFields.bool(false)){, $_defaultFields} 
              ^if(^aOptions.withExtraFields.bool(false) && def $_extraFields){, $_extraFields}
         from $_tagsTable as t
-             join $_itemsTable as ti on (t.tag_id = ti.tag_id and ti.content_type_id = '^aOptions.contentType.int($_defaultContentType)')
+             join $_itemsTable as ti on (t.tag_id = ti.tag_id and ti.content_type_id = "^aOptions.contentType.int($_defaultContentType)")
        where 1=1
              ^switch[$aContent.CLASS_NAME]{
-               ^case[DEFAULT;string;int]{and ti.content_id = '$aContent'}
+               ^case[DEFAULT;string;int]{and ti.content_id = "$aContent"}
                ^case[table]{
                  $lContentTableColumn[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
-                 and ti.content_id in (^aContent.menu{'$aContent.[$lContentTableColumn]', } -1)
+                 and ti.content_id in (^aContent.menu{"$aContent.[$lContentTableColumn]", } -1)
                }
                ^case[hash]{
-                 and ti.content_id in (^aContent.foreach[ck;cv]{'$ck',} -1)
+                 and ti.content_id in (^aContent.foreach[ck;cv]{"$ck",} -1)
                }
              }
              ^if(^aOptions.onlyVisible.bool(false)){
@@ -157,17 +157,17 @@ pfClass
      where 1=1
      ^switch[$aTag.CLASS_NAME]{
        ^case[DEFAULT;string;int]{
-         ^if(def $aTag){and tag_id = '$aTag'}
+         ^if(def $aTag){and tag_id = "$aTag"}
        }
        ^case[table]{                       
          $lTagTableColumn[^if(def $aOptions.tagTableColumn){$aOptions.tagTableColumn}{tagID}]
-         and tag_id in (^aTag.menu{'$aTag.[$lTagTableColumn]', } -1)
+         and tag_id in (^aTag.menu{"$aTag.[$lTagTableColumn]", } -1)
        }
        ^case[hash]{
-         and tag_id in (^aTag.foreach[k;v]{'$k',} -1)
+         and tag_id in (^aTag.foreach[k;v]{"$k",} -1)
        }
      }
-     and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
+     and content_type_id = "^aOptions.contentType.int($_defaultContentType)"
   }[
     ^if(def $aOptions.limit){$.limit($aOptions.limit)}
     ^if(def $aOptions.offset){$.offset($aOptions.offset)}
@@ -183,7 +183,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = '$aTagID'}{1=1} and ${lAlias}.content_type_id = '^aOptions.contentType.int($_defaultContentType)' and $aJoinName = ${lAlias}.content_id)]
+  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = "$aTagID"}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id)]
 
 @sqlJoinForTags[aJoinName;aOptions][lAlias]
 ## Возвращает sql для секции join, который позволяет получить теги для контента
@@ -195,7 +195,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с tag_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_alias}]
-  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id and ${_itemsTable}.content_type_id = '^aOptions.contentType.int($_defaultContentType)') $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
+  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id and ${_itemsTable}.content_type_id = "^aOptions.contentType.int($_defaultContentType)") $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
@@ -205,15 +205,15 @@ pfClass
     $result(^CSQL.int{
      select sum(`count`) as count
        from $_countersTable
-      where tag_id = '$aTagID'
-        and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
+      where tag_id = "$aTagID"
+        and content_type_id = "^aOptions.contentType.int($_defaultContentType)"
     })
   }{
      $result(^CSQL.int{
       select count(distinct content_id) as count
         from $_itemsTable
        where 1=1
-         and content_type_id = '^aOptions.contentType.int($_defaultContentType)'
+         and content_type_id = "^aOptions.contentType.int($_defaultContentType)"
      })
    }
 
@@ -262,8 +262,8 @@ pfClass
       insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
       values
       ^lTags.foreach[tag;v]{
-          ('$tag', '^if(def $aOptions.slug){$aOptions.slug}{^transliter.toURL[$tag]}', '$aOptions.description',
-                  '^aOptions.parentID.int(0)', '^aOptions.threadID.int(0)', '^aOptions.sortOrder.int(0)', '^aOptions.isVisible.int(1)')
+          ("$tag", "^if(def $aOptions.slug){$aOptions.slug}{^transliter.toURL[$tag]}", "$aOptions.description",
+                  "^aOptions.parentID.int(0)", "^aOptions.threadID.int(0)", "^aOptions.sortOrder.int(0)", "^aOptions.isVisible.int(1)")
       }[, ]
     }                  
   }
@@ -274,9 +274,9 @@ pfClass
   ^pfAssert:isTrue(^aTagID.int(0))[Не задан ID тега.]
   $result[]          
   ^CSQL.transaction{
-    ^CSQL.void{delete from $_countersTable where tag_id = '$aTagID'}
-    ^CSQL.void{delete from $_itemsTable where tag_id = '$aTagID'}
-    ^CSQL.void{delete from $_tagsTable where tag_id = '$aTagID'}
+    ^CSQL.void{delete from $_countersTable where tag_id = "$aTagID"}
+    ^CSQL.void{delete from $_itemsTable where tag_id = "$aTagID"}
+    ^CSQL.void{delete from $_tagsTable where tag_id = "$aTagID"}
   }
 
 @modifyTag[aTagID;aOptions][k;v]
@@ -292,11 +292,11 @@ pfClass
     update $_tagsTable
        set ^_tagsFields.foreach[k;v]{
              ^if(^aOptions.contains[$k]){
-               $v = '$aOptions.[$k]',
+               $v = "$aOptions.[$k]",
              }
            }
            tag_id = tag_id
-     where tag_id = '^aTagID.int(0)'
+     where tag_id = "^aTagID.int(0)"
   }
   
 @recountTags[aTags;aOptions][lTagsList;lWhere;lCounters]
@@ -306,14 +306,14 @@ pfClass
   ^cleanMethodArgument[]
   $result[]    
   ^CSQL.transaction{
-#   В MySQL'е можено все сделать сильно проще (за счет поддержки replace-select), 
+#   В MySQL'е можно все сделать сильно проще (за счет поддержки replace-select), 
 #   но для джененрик-класса привязка к одной базе не канает. 
-    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{'$aTags.tagID'}[, ], -1}]
+    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{"$aTags.tagID"}[, ], -1}]
     $lWhere[1=1
       ^if(def $aTags){
         and tag_id in ($lTagsList)
       }
-      ^if(def $aOptions.contentType){ and content_type_id = '$aOptions.contentType'}
+      ^if(def $aOptions.contentType){ and content_type_id = "$aOptions.contentType"}
     ]
     ^CSQL.void{
       delete from $_countersTable 
@@ -328,7 +328,7 @@ pfClass
     ^if($lCounters){
       ^CSQL.void{
         insert into $_countersTable (content_type_id, tag_id, `count`) 
-        values ^lCounters.menu{('$lCounters.contentType', '$lCounters.tagID', '$lCounters.cnt')}[, ]
+        values ^lCounters.menu{("$lCounters.contentType", "$lCounters.tagID", "$lCounters.cnt")}[, ]
       }
     }
   } 
@@ -357,12 +357,12 @@ pfClass
         delete from $_itemsTable 
         where 
         ^switch[$aContent.CLASS_NAME]{
-          ^case[string;int;double]{content_id = '$aContent'}
-          ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{'$ck'}[, ],} -1)}
-          ^case[table]{content_id in (^if($aContent){^aContent.menu{'$aContent.[$lContentColumnName]'}[, ],} -1)}
+          ^case[string;int;double]{content_id = "$aContent"}
+          ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{"$ck"}[, ],} -1)}
+          ^case[table]{content_id in (^if($aContent){^aContent.menu{"$aContent.[$lContentColumnName]"}[, ],} -1)}
           }
         }
-        and content_type_id = '$lContentType'
+        and content_type_id = "$lContentType"
       }
     }
 
@@ -373,16 +373,16 @@ pfClass
         ^lTags.menu{
           ^switch[$aContent.CLASS_NAME]{
             ^case[string;int;double]{
-              ('$lContentType', '$lTags.[$lTagsColumnName]', '$aContent')
+              ("$lContentType", "$lTags.[$lTagsColumnName]", "$aContent")
             }
             ^case[hash]{       
               ^aContent.foreach[ck;cv]{
-                ('$lContentType', '$lTags.[$lTagsColumnName]', '$ck')
+                ("$lContentType", "$lTags.[$lTagsColumnName]", "$ck")
               }[, ]
             }
             ^case[table]{                                 
               ^aContent.menu{
-                ('$lContentType', '$lTags.[$lTagsColumnName]', '$aContent.[$lContentColumnName]')
+                ("$lContentType", "$lTags.[$lTagsColumnName]", "$aContent.[$lContentColumnName]")
               }[, ]
             }
           }
