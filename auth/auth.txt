@@ -1,0 +1,150 @@
+Неструктурированные заметки о классах авторизации...
+====================================================
+                       
+
+pfAuthCookie
+------------       
+
+  Простейшая схема работы
+  ~~~~~~~~~~~~~~~~~~~~~~~
+
+  - Создаем в базе таблички (auth.cookie.sql)
+  - Инициализируем менеджер в _ind.html (в примере siteManager наследник от pfSiteManager):
+
+    $csql[^pfMySQL::create[$SQL.connect-string]]
+    
+    $authStorage[^pfAuthDBStorage[$.sql[$csql]]]
+    ^authStorage.addExtraField[isAdmin;is_admin]
+    
+    $manager[^siteManager::create[
+        $.sql[$csql] 
+        $.auth[^pfAuthCookie::create[$.storage[$authStorage]]] 
+    ]]
+    ^manager.run[]    
+    
+  - Добавляем пользователя (это надо сделать один раз):
+    ^authStorage.userAdd[$.login[admin] $.password[12345] $.isAdmin(1)]
+
+  - Делаем в менеджере форму для логина:
+
+    @onLogin[aRequest]
+      ^if(!$AUTH.isUserLogin){
+        ^assignVar[f-login;$aRequest.[auth.login]]
+        ^render[/login.pt]
+      }{
+         ^redirectTo[/]
+       }
+
+    login.pt:
+    ...
+     <form method="post" action="">
+      <input type="hidden" name="auth.dologin" value="do" />
+      <label for="auth-lf-name">Логин:</label> <input id="auth-lf-name" name="auth.login" type="input" class="f-i-text" value="$f-login" /><br />
+      <label for="auth-lf-password">Пароль:</label> <input id="auth-lf-password" name="auth.password" type="password" class="f-i-text" /><br />
+      <input id="auth-lf-persistent" type="checkbox" name="auth.persistent" value="true" checked="true" /> <label for="auth-lf-persistent">Запомнить на две недели</label><br />
+      <input type="submit" value="Войти" />
+    </form>
+    ...
+
+  - В тех обработчиках, где нам надо дать доступ только админам редиректим всех незалогиненых:
+  
+    @onAction[aRequest]
+      ^if(!$AUTH.user.isAdmin){^redirectTo[/]}
+      ...
+      
+      
+  Права доступа
+  ~~~~~~~~~~~~~
+  
+  Классы не определяют какую-то конкретную схему работы с правами, но вы можете реализовать ее сами, сделав наследник класса pfAuthSecurity.
+               
+  Простой пример:
+  
+    @CLASS
+    myAuthSecurity
+
+    @USE
+    pf/auth/pfAuthSecurity.p
+
+    @BASE
+    pfAuthSecurity
+
+    @create[aOptions]
+      ^BASE:create[$aOptions]
+
+    @can[aWho;aWhat]
+    # aWho - объект с данными пользователя
+       $result($aWho.isAdmin)
+  
+
+  Инициализируем менеджер:
+    $manager[^siteManager::create[
+        $.sql[$csql] 
+        $.auth[^pfAuthCookie::create[
+           $.storage[$authStorage]
+           $.security[^myAuthSecurity::create[]]
+        ]] 
+    ]]  
+
+  И используем в обработчике:
+  
+    @onAction[aRequest]
+      ^if(!^AUTH.can[edit news]){^redirectTo[/]}
+      ...
+    
+  Если потом мы сделаем более сложную логику работы с правами в myAuthSecurity (например, будем хранить их в БД) нам не прийдется менять код обработчиков.
+
+  
+  Сложная реализация процесса логина
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   
+  
+  Иногда возникает необходимость сделать так, чтобы незалогиненые пользователи не имели доступа к сайту. Для этого лучше сделать следующее:
+  
+  - Вынести всю логику работы в модули, а в менеджере оставить только вывод основной страницы и форму логина. Причем сразу сделаем так, чтобы пользователь попал на ту страницу, которую запрашивал перед логином.
+  
+  @onINDEX[aRequest]
+    ^if(!$AUTH.isUserLogin){
+      ^onLogin[$aRequest]
+    }{
+       ^render[index.pt]
+     }                                       
+  
+  @onLogin[aRequest]
+    ^if(!$AUTH.isUserLogin){
+      ^assignVar[f-login;$aRequest.[auth.login]]
+      $result[^pfHTTPResponse::create[^render[/login.pt];$.type[as-is]]]
+    }{                    
+      ^if(^aRequest.HEADERS.Referer.match[^^^aRequest.buildAbsoluteUri[/]]
+          && !^aRequest.HEADERS.Referer.match[/login]
+        ){
+        $result[^pfHTTPResponseRedirect::create[$aRequest.HEADERS.Referer]]
+      }{
+         $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[/]]]
+       }
+     }
+  
+  - Инициализацию модулей вынесем в метод onAuthSuccess, что нам позволит избавиться от лишних проверок "залогиненности" (если модуль не инициализирован, то будет вызван onINDEX).
+   
+     @onAuthSuccess[aRequest]
+     ## Вызывается при удачной авторизации.
+       ^assignModule[blog;
+         ...
+       ]  
+
+
+pfAuthApache
+------------
+  Простой класс, который берет даные о имени пользователя из переменных окружения для basic http-авторизации.
+  
+  $manager[^siteManager::create[
+      $.sql[$csql] 
+      $.auth[^pfAuthApache::create[]] 
+  ]]                               
+  
+  ...
+  
+  @onAction[aRequest]
+    Имя пользователя - $AUTH.user.login
+  
+         
+       

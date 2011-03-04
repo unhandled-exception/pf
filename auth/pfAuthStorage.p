@@ -44,4 +44,17 @@ pfClass
 @isValidPassword[aID;aPassword]
 ## Возвращает true, если пароль для пользователя с aID правильный.
   $result(false)
-  
+
+@userAdd[aOptions]
+## Добавляет пользователя
+## result[id пользователя] 
+  $result[]
+
+@userModify[aUserID;aOptions]
+## Изменяет данные пользователя
+  $result[]
+
+@userDelete[aUserID;aOptions]
+## Удаляет пользователя
+  $result[]
+

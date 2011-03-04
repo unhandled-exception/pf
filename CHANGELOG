@@ -12,6 +12,14 @@ CHANGELOG
 0.9.4
 -----       
 
+04.03.2011
+  1. Класс pfAuthDBStorage:
+     - добавлены методы userAdd, userModify, userDelete, allUsers;
+     - в методе getUser добавлен параметр aOptions.active;
+     - в конструктор добавлен параметр aOptions.salt.     
+  2. В классе pfAuthApache лоигн доступен и через user.login (раньше только черещ user.id).
+  3. Написал небольшое описание для классов авторизации (auth/auth.txt).
+
 02.03.2011
   1. pfSiteModule.render автоматически предает в шаблон не только REQUEST, но и текущие ACTION и метод linkTo модуля.
 
