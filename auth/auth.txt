@@ -13,7 +13,7 @@ pfAuthCookie
 
     $csql[^pfMySQL::create[$SQL.connect-string]]
     
-    $authStorage[^pfAuthDBStorage[$.sql[$csql]]]
+    $authStorage[^pfAuthDBStorage::create[$.sql[$csql]]]
     ^authStorage.addExtraField[isAdmin;is_admin]
     
     $manager[^siteManager::create[
@@ -41,7 +41,7 @@ pfAuthCookie
       <input type="hidden" name="auth.dologin" value="do" />
       <label for="auth-lf-name">Логин:</label> <input id="auth-lf-name" name="auth.login" type="input" class="f-i-text" value="$f-login" /><br />
       <label for="auth-lf-password">Пароль:</label> <input id="auth-lf-password" name="auth.password" type="password" class="f-i-text" /><br />
-      <input id="auth-lf-persistent" type="checkbox" name="auth.persistent" value="true" checked="true" /> <label for="auth-lf-persistent">Запомнить на две недели</label><br />
+      <input id="auth-lf-persistent" type="checkbox" name="auth.persistent" value="true" checked="true" /> <label for="auth-lf-persistent">Запомнить на две недели</label><br />
       <input type="submit" value="Войти" />
     </form>
     ...
