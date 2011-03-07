@@ -14,7 +14,7 @@ pfAuthCookie
     $csql[^pfMySQL::create[$SQL.connect-string]]
     
     $authStorage[^pfAuthDBStorage::create[$.sql[$csql]]]
-    ^authStorage.addExtraField[isAdmin;is_admin]
+    ^authStorage.addUserExtraField[isAdmin;is_admin]
     
     $manager[^siteManager::create[
         $.sql[$csql] 
