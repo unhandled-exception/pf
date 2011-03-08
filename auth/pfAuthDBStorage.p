@@ -19,7 +19,7 @@ pfAuthStorage
 ## aOptions.sql - объект для доступа к БД
 ## aOptions.usersTable[sessions] - имя таблицы с пользователем
 ## aOptions.sessionsTable[sessions] - имя таблицы сессий  
-## aOptions.cryptType[crypt|md5|mysql|old_mysql] - тип хеширования пароля (default: crypt)
+## aOptions.cryptType[crypt|md5|sha1|mysql|old_mysql] - тип хеширования пароля (default: crypt)
 ## aOptions.salt
   ^cleanMethodArgument[]
   ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL.]
@@ -120,9 +120,11 @@ pfAuthStorage
   $result(false)
   ^if(def $aPassword && def $aCrypted){
     ^switch[^_cryptType.lower[]]{
+      ^case[crypt;DEFAULT]{$result(^math:crypt[$aPassword;$aCrypted] eq $aCrypted)}
+      ^case[md5]{$result(^math:md5[$aPassword] eq $aCrypted)}
+      ^case[sha1]]{$result(^math:sha1[$aPassword] eq $aCrypted)}
       ^case[mysql]{$result(^CSQL.int{select "$aCrypted" = PASSWORD("$aPassword")})}
       ^case[old_mysql]{$result(^CSQL.int{select "$aCrypted" = OLD_PASSWORD("$aPassword")})}
-      ^case[crypt;DEFAULT]{$result(^math:crypt[$aPassword;$aCrypted] eq $aCrypted)}
     }
   }
 
@@ -135,6 +137,7 @@ pfAuthStorage
       $result[^math:crypt[$aPassword;^if(def $aOptions.salt){$aOptions.salt}{$_salt}]]
     }
     ^case[md5]{$result[^math:md5[$aPassword]]}
+    ^case[sha1]{$result[^math:sha1[$aPassword]]}
     ^case[mysql]{$result[^CSQL.string{select PASSWORD("$aPassword")}]}
     ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
   }

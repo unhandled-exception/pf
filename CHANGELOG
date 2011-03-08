@@ -12,6 +12,9 @@ CHANGELOG
 0.9.4
 -----       
 
+08.03.2011
+  1. В классе pfAuthDBStorage поправлена работа с md5-хешированными паролями и добавлен алгоритм хеширования sha1.
+
 04.03.2011
   1. Класс pfAuthDBStorage:
      - добавлены методы userAdd, userModify, userDelete, allUsers;
