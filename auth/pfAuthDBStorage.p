@@ -122,7 +122,7 @@ pfAuthStorage
     ^switch[^_cryptType.lower[]]{
       ^case[crypt;DEFAULT]{$result(^math:crypt[$aPassword;$aCrypted] eq $aCrypted)}
       ^case[md5]{$result(^math:md5[$aPassword] eq $aCrypted)}
-      ^case[sha1]]{$result(^math:sha1[$aPassword] eq $aCrypted)}
+      ^case[sha1]{$result(^math:sha1[$aPassword] eq $aCrypted)}
       ^case[mysql]{$result(^CSQL.int{select "$aCrypted" = PASSWORD("$aPassword")})}
       ^case[old_mysql]{$result(^CSQL.int{select "$aCrypted" = OLD_PASSWORD("$aPassword")})}
     }
