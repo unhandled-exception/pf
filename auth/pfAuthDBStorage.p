@@ -50,13 +50,17 @@ pfAuthStorage
 @getUser[aID;aOptions][k;v]
 ## Загрузить данные о пользователе по ID (по-умолчанию логину)
 ## aOptions.active[active|inactive|any]
+## aOptions.idType[login|id] 
   ^cleanMethodArgument[]
   $result[^CSQL.table{select id, login, password
                              ^if($_extraFields){
-                               , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[,]
+                               , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[, ]
                              }
                         from $_usersTable
-                       where login = "$aID"
+                       where ^switch[$aOptions.idType]{
+                               ^case[login;DEFAULT]{login = "$aID"}
+                               ^case[id]{id = "$aID"}
+                             }
                              ^switch[$aOptions.active]{
                                ^case[DEFAULT;active]{and is_active = "1"}
                                ^case[inactive]{and is_active = "0"}
@@ -159,11 +163,15 @@ pfAuthStorage
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aOptions.login)[Не задан login.]
-  ^CSQL.void{
-    insert into $_usersTable (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){`^if(def $v){$v}{$k}`, }} login, password, is_active)
-    values (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){"$aOptions.[$k]", }} "$aOptions.login", "^passwordHash[$aOptions.password]", "^aOptions.isActive.int(1)")
-  }
-  $result[^CSQL.lastInsertId[]]
+  ^CSQL.safeInsert{
+    ^CSQL.void{
+      insert into $_usersTable (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){`^if(def $v){$v}{$k}`, }} login, password, is_active)
+      values (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){"$aOptions.[$k]", }} "$aOptions.login", "^passwordHash[$aOptions.password]", "^aOptions.isActive.int(1)")
+    }
+    $result[^CSQL.lastInsertId[]]
+  }{
+     ^throw[pfAuth.user.exists;Пользователь "$aOptions.login" уже есть в системе.] 
+   }
 
 @userModify[aUserID;aOptions]
 ## Изменяет данные пользователя
@@ -179,7 +187,7 @@ pfAuthStorage
        set ^if(^aOptions.contains[login]){login = "",}
            ^if(^aOptions.contains[password]){password = "^passwordHash[$aOptions.password]",}
            ^if(^aOptions.contains[isActive]){is_active = "^aOptions.isActive.int(1)",}
-           ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = "$aOptions.[$k]",}}
+           ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = ^if(def $aOptions.[$k]){"$aOptions.[$k]"}{null}, }}
            id = id
      where id = "^aUserID.int(0)"
   }
@@ -217,7 +225,7 @@ pfAuthStorage
   ^cleanMethodArgument[]
   $result[^CSQL.table{select id, login, password, is_active as isActive
                              ^if($_extraFields){
-                               , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[,]
+                               , ^_extraFields.foreach[k;v]{^if(def $v){$v}{$k} as $k}[, ]
                              }
                         from $_usersTable
                        where 1=1

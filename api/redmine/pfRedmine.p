@@ -103,4 +103,52 @@ pfClass
 @findUser[aUserName]
 ## Возвращает данные пользователя
   $result[^users[$.login[$aUserName]]]
+
+@activateUser[aUserID]
+  $result[]
+  ^CSQL.void{update ${_database}.users set status = 1 where id = "^aUserID.int(-1)"}
+
+@deactivateUser[aUserID]
+  $result[]
+  ^CSQL.void{update ${_database}.users set status = 3 where id = "^aUserID.int(-1)"}
+
+@createUser[aOptions]      
+  ^cleanMethodArgument[]
+  ^pfAssert:isTrue(def $aOptions.login)[На задан логин.]
+  ^pfAssert:isTrue(def $aOptions.password)[На задан пароль.]
+  ^CSQL.void{
+    insert into ${_database}.users
+       set login = "$aOptions.login",
+           hashed_password = "^math:sha1[$aOptions.password]",
+           firstname = "$aOptions.firstname", 
+           lastname = "$aOptions.lastname", 
+           mail = "$aOptions.mail", 
+           mail_notification = "only_my_events",
+           type = "User",
+           language = "ru",
+           status = 1,
+           created_on = ^CSQL.now[]
+  }
+  $result[^CSQL.lastInsertId[]]
+  ^if($result && ^aOptions.group.int(0)){
+    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("$aOptions.group", "$result")}
+  }
+
+@updateUser[aUserID;aOptions]      
+  ^cleanMethodArgument[]
+  ^pfAssert:isTrue(def ^aUserID.int(0))[На задан id пользователя.]
+  ^CSQL.void{
+    update ${_database}.users
+       set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
+           ^if(def $aOptions.password){hashed_password = "^math:sha1[$aOptions.password]",}
+           ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
+           ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
+           ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
+           updated_on = ^CSQL.now[]
+     where id = "^aUserID.int(-1)"       
+  }
+  ^if(^aUserID.int(0) && ^aOptions.group.int(0)){
+    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("$aOptions.group", "^aUserID.int(0)")}
+  }
+  $result[]
   
