@@ -4,9 +4,6 @@ CREATE TABLE  `users` (
   `password` varchar(100) DEFAULT NULL,
   `is_active` enum('0','1') NOT NULL DEFAULT '1',
   `is_admin` enum('0','1') NOT NULL DEFAULT '0',
-  `dt_last_login` datetime DEFAULT NULL,
-  `dt_last_visit` datetime DEFAULT NULL,
-  `dt_last_logoff` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `login_unique` (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
