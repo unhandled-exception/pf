@@ -154,7 +154,7 @@ pfClass
 ы	y
 э	e
 й	j
-х	x
+х	h
 ё	e
 ж	zh
 ц	ts
@@ -189,7 +189,7 @@ pfClass
 Т	T
 У	U
 Ф	F
-Х	KH
+Х	H
 Ц	C
 Ч	CH
 Ш	SH
@@ -222,7 +222,7 @@ pfClass
 т	t
 у	u
 ф	f
-х	kh
+х	h
 ц	c
 ч	ch
 ш	sh
@@ -247,6 +247,7 @@ SH	Ш
 EH	Э
 JU	Ю
 JA	Я
+H	Х
 A	А
 B	Б
 V	В
