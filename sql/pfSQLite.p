@@ -22,27 +22,16 @@ pfSQL
   ^BASE:create[$aConnectString;$aOptions]
   $_serverType[SQLite]
 
-#----- Public -----
-@setServerEnvironment[]
-  ^if($isNaturalTransaction){
-    ^void:sql{SET AUTOCOMMIT=0}
-  }
+#--- Public ---
 
 @startTransaction[aOptions]
-## Открывает транзакцию. 
   ^void{begin transaction}
 
 @commit[aOptions]
-## Комитит транзакцию. 
   ^void{commit transaction}
 
 @rollback[]
-## Откатывает текущую транзакцию.
-  ^if($isTransaction && $isNaturalTransactions){
-  	^void{rollback transaction}
-  }{
-  	 ^BASE:rollback[]
-   }
+  ^void{rollback transaction}
     
 #--- DATE functions ---
 
@@ -83,11 +72,7 @@ pfSQL
   $result[strftime('^if(def $sFormatString){$sFormatString}{%Y-%m-%d}',$sSource)]
 
 @lastInsertId[sTable]
-	$result(^int{select last_insert_rowid()}[$.limit(1) $.default{0}])
-
-# @set_last_insert_id[sTable;sField]
-# 	$result(^last_insert_id[$sTable])
-# 	^void{UPDATE $sTable SET ^if(def $sField){$sField}{sort_order} = $result WHERE ${sTable}_id = $result}
+  $result(^int{select last_insert_rowid()}[$.limit(1) $.default{0}])
 
 #--- STRING functions ---
 
@@ -100,25 +85,22 @@ pfSQL
 @lower[sField]
   $result[lower($sField)]
 
-# @concat[sSource]
-#   $result[CONCAT($sSource)]
-
 #--- MISC functions ---
 
 @password[sPassword]
    $result['^math:md5[$sPassword]']
 
 @leftJoin[sType;sTable;sJoinConditions;last]
-	^switch[^sType.lower[]]{
-		^case[from]{
-			$result[LEFT JOIN $sTable ON ($sJoinConditions)]
-		}
-		^case[where]{
-			$result[1 = 1 ^if(!def $last){ AND}]
-		}
-		^case[DEFAULT]{
-			^throw[pfSQLite;Unknown join type '$sType']
-		}
-	}
+  ^switch[^sType.lower[]]{
+    ^case[from]{
+      $result[LEFT JOIN $sTable ON ($sJoinConditions)]
+    }
+    ^case[where]{
+      $result[1 = 1 ^if(!def $last){ AND}]
+    }
+    ^case[DEFAULT]{
+      ^throw[pfSQLite;Unknown join type '$sType']
+    }
+  }
   
   

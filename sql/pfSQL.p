@@ -31,7 +31,8 @@ pfClass
 ## aOptions.isCaching(false) - включено ли кэширование?
 ## aOptions.cacheLifetime(3600) - время кеширования в секундах
 ## aOptions.cacheKeyPrefix[sql/] - префикс для ключа кеширования
-## aOptions.isNaturalTransactions(false) - выполнять транзакции средствами SQL-сервера.
+## aOptions.isNatural(false) - выполнять транзакции средствами SQL-сервера (режим "натуральной транзакции").
+## aOptions.isNaturalTransactions(false) - deprecated (аливас для isNatural).
 ## aOptions.enableIdentityMap(false) - включить добавление результатов запросов в коллекцию объектов.    
 ## aOptions.enableQueriesLog(false) - включить логирование sql-запросов.
 
@@ -41,7 +42,7 @@ pfClass
   ^BASE:create[]
 
   $_connectString[$aConnectString]
-  $_transactionCount(0)
+  $_transactionsCount(0)
 
   $_serverType[SQL Generic]
 
@@ -50,14 +51,14 @@ pfClass
     ^if($aOptions.cache is pfCache){
       $_CACHE[$aOptions.cache]
     }{
-    	 ^throw[pfSQL.create;Cache must be child of pfCache.]
+       ^throw[pfSQL.create;Cache must be child of pfCache.]
      }
   }
 
   $_cacheLifetime(^aOptions.cacheLifetime.int(3600))
   $_cacheKeyPrefix[^if(def $aOptions.cacheKeyPrefix){$aOptions.cacheKeyPrefix}{sql/}]
 
-  $_isNaturalTransactions[^aOptions.isNaturalTransactions.bool(false)]
+  $_isNaturalTransactions[^if(^aOptions.contains[isNatural]){^aOptions.isNatural.bool(false)}{^aOptions.isNaturalTransactions.bool(false)}]
 
   $_enableIdentityMap[^aOptions.enableIdentityMap.bool(false)]  
   $_identityMap[]
@@ -93,15 +94,18 @@ pfClass
   }
   $result[$_CACHE]
 
+@GET_transactionsCount[]
+  $result($_transactionsCount)
+
 @GET_isTransaction[]
 ## Возвращает true, если идет  транзакция.
-  $result($_transactionCount > 0)
+  $result($_transactionsCount > 0)
 
 @GET_serverType[]
   $result[$_severType]
 
 @GET_isNaturalTransactions[]
-## Возвращает true, если идет  транзакция.
+## Возвращает true, если включен резим "натуральной транзакции".
   $result($_isNaturalTransactions)
 
 @GET_stat[]
@@ -111,51 +115,44 @@ pfClass
 #----- Public -----
 
 @transaction[aCode;aOptions]
-## Организует транзакцию (вместо Мишиного server), обеспечивая возможность отката.
-## aOptions.isNatural
+## Организует транзакцию, обеспечивая возможность отката.
+## aOptions.isNatural - принудительно устанавливает режим "натуральной транзакции".
   ^cleanMethodArgument[]
+  $result[]
   ^connect[$connectString]{
     ^try{
-     	^_transactionCount.inc(1)
-  		^setServerEnvironment[]
-  		^if($isTransaction == 1 && ($isNaturalTransactions || $aOptions.isNatural)){
-  			^startTransaction[]
-    		$result[$aCode]
-  			^commit[]
- 	    }{
-     	   $result[$aCode]
- 	     }
-    	^_transactionCount.dec(1)
+      ^_transactionsCount.inc(1)
+      ^setServerEnvironment[]
+      ^if($_transactionsCount == 1 && ($isNaturalTransactions || $aOptions.isNatural)){
+        ^startTransaction[]
+        $result[$aCode]
+        ^commit[]
+      }{ 
+         $result[$aCode]
+       }
     }{
-  	   ^switch(true){
-  	     ^case($exception.type eq "sql.transaction.roll"){
-  	 	     $exception.handled(1)
-  	     }
-  	     ^case(!$exception.handled && $exception.type ne "sql.connect" && $isNaturalTransactions){
-  	        ^rollback[]
-  	     }
-  	   }
-   	   ^_transactionCount.dec(1)
-  	   $result[]
+       ^rollback[]
+    }{
+       ^_transactionsCount.dec(1)
      }
   }
 
 @rollback[]
-## Откатывает текущую транзакцию средствами парсера.
-## Если запущено не в transaction, то выкидывает sql.transaction.failed
-  ^if($isTransaction){
-  	^throw[sql.transaction.roll;Roll current transaction.]
-  }{
-  	 ^throw[sql.transaction.failed;Call roll method from transaction.]
-   }
-
-@startTransaction[aOptions]
-## Открывает транзакцию. Необходимо перекрыть для конкретного сервера.
+## Откатывает текущую транзакцию.
   $result[]
+  ^if($isTransaction && $isNaturalTransactions){
+    ^void{rollback}
+  }
+   
+@startTransaction[aOptions]
+## Открывает транзакцию.
+  $result[]
+  ^void{start transaction}
 
 @commit[aOptions]
-## Комитит транзакцию. Необходимо перекрыть для конкретного сервера.
+## Комитит транзакцию.
   $result[]
+  ^void{commit}
 
 @setServerEnvironment[]
 ## Устанавливает переменные окружения сервера. 
@@ -214,6 +211,7 @@ pfClass
 ## Если объект не найден, то запускает запрос и добавляет его результат в коллекцию.
 ## aOptions.isForce(false) - принудительно отменяет кеширование
 ## aOptions.identityMapKey[] - ключ для коллекции (по-умолчанию MD5 на aQuery).    
+  $result[]
   $lIsIM($_enableIdentityMap && !^aOptions.isForce.bool(false))
   $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
 

@@ -22,28 +22,6 @@ pfSQL
   ^BASE:create[$aConnectString;$aOptions]
   $_serverType[MySQL]
 
-#----- Public -----
-@setServerEnvironment[]
-  ^if($isNaturalTransaction){
-    ^void:sql{SET AUTOCOMMIT=0}
-  }
-
-@startTransaction[aOptions]
-## Открывает транзакцию. Необходимо перекрыть для конкретного сервера.
-  ^void{start transaction}
-
-@commit[aOptions]
-## Комитит транзакцию. Необходимо перекрыть для конкретного сервера.
-  ^void{commit}
-
-@rollback[]
-## Откатывает текущую транзакцию.
-  ^if($isTransaction && $isNaturalTransactions){
-  	^void{rollback}
-  }{
-  	 ^BASE:rollback[]
-   }
-    
 #--- DATE functions ---
 
 @today[]
@@ -71,10 +49,10 @@ pfSQL
   $result[^if(def $sDateTo){TO_DAYS($sDateTo)}{^now[]} - TO_DAYS($sDateFrom)]
 
 @dateSub[sDate;iDays]
-  $result[DATE_SUB(^if(def $sDate){$sDate}{^today[]},INTERVAL $iDays DAY)]
+  $result[DATE_SUB(^if(def $sDate){$sDate}{^today[]}, INTERVAL $iDays DAY)]
 
 @dateAdd[sDate;iDays]
-  $result[DATE_ADD(^if(def $sDate){$sDate}{^today[]},INTERVAL $iDays DAY)]
+  $result[DATE_ADD(^if(def $sDate){$sDate}{^today[]}, INTERVAL $iDays DAY)]
 
 
 #---- functions available not for all sql servers ----
@@ -83,11 +61,11 @@ pfSQL
   $result[DATE_FORMAT($sSource, '^if(def $sFormatString){$sFormatString}{%Y-%m-%d}')]
 
 @lastInsertId[sTable]
-	$result[^string{SELECT last_insert_id()}[$.limit(1) $.default{0}][$.isForce(true)]]
+  $result[^string{SELECT last_insert_id()}[$.limit(1) $.default{0}][$.isForce(true)]]
 
 @setLastInsertId[sTable;sField]
-	$result[^lastInsertId[$sTable]]
-	^void{UPDATE $sTable SET ^if(def $sField){$sField}{sort_order} = $result WHERE ${sTable}_id = $result}
+  $result[^lastInsertId[$sTable]]
+  ^void{UPDATE $sTable SET ^if(def $sField){$sField}{sort_order} = $result WHERE ${sTable}_id = $result}
 
 #--- STRING functions ---
 
@@ -109,16 +87,16 @@ pfSQL
   $result[PASSWORD($sPassword)]
 
 @leftJoin[sType;sTable;sJoinConditions;last]
-	^switch[^sType.lower[]]{
-		^case[from]{
-			$result[LEFT JOIN $sTable ON ($sJoinConditions)]
-		}
-		^case[where]{
-			$result[1 = 1 ^if(!def $last){ AND}]
-		}
-		^case[DEFAULT]{
-			^throw[pfMySQL;Unknown join type '$sType']
-		}
-	}
+  ^switch[^sType.lower[]]{
+    ^case[from]{
+      $result[LEFT JOIN $sTable ON ($sJoinConditions)]
+    }
+    ^case[where]{
+      $result[1 = 1 ^if(!def $last){ AND}]
+    }
+    ^case[DEFAULT]{
+      ^throw[pfMySQL;Unknown join type '$sType']
+    }
+  }
   
   
