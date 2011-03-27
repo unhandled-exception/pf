@@ -32,6 +32,7 @@ pfModule
   ^BASE:create[$aOptions]
   
   $_redirectExceptionName[pf.site.module.redirect]
+  $_permanentRedirectExceptionName[pf.site.module.permanent_redirect]
 
   $_responseType[html] 
   $_createOptions[$aOptions]
@@ -44,6 +45,10 @@ pfModule
   $_templet[^if(def $aOptions.templet){$aOptions.templet}] 
   
   $_templateVars[^hash::create[]]
+  
+# Метод display лучше не использовать (deprecated).
+  ^alias[display;$render]
+
   
 #----- Public -----  
 
@@ -85,9 +90,17 @@ pfModule
     }
 
   }{
-    ^if(!^aOptions.passRedirect.bool(false) && $exception.type eq $_redirectExceptionName){
-      $exception.handled(true)
-      $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
+    ^if(!^aOptions.passRedirect.bool(false)){
+      ^switch[$exception.type]{
+        ^case[$_redirectExceptionName]{
+          $exception.handled(true)
+          $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
+        }
+        ^case[$_permanentRedirectExceptionName]{
+          $exception.handled(true)
+          $result[^pfHTTPResponsePermanentRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
+        }
+      }
     } 
   } 
 
@@ -129,10 +142,6 @@ pfModule
     $.engine[$aOptions.engine]
   ]]
 
-@display[aTemplate;aOptions]
-## DEPRECATED!
-  $result[^render[$aTemplate;$aOptions]]
-
 @assignVar[aVarName;aValue]
 ## Задает переменную для шаблона
   $_templateVars.[$aVarName][$aValue]
@@ -145,8 +154,8 @@ pfModule
     ^assignVar[$k;$v]
   }
   
-@redirectTo[aAction;aOptions;aAnchor]  
-  ^throw[$_redirectExceptionName;$action;^linkTo[$aAction;$aOptions;$aAnchor]]
+@redirectTo[aAction;aOptions;aAnchor;aIsPermanent]  
+  ^throw[^if(^aIsPermanent.bool(false)){$_permanentRedirectExceptionName}{$_redirectExceptionName};$action;^linkTo[$aAction;$aOptions;$aAnchor]]
 
 #----- Properties -----
 
