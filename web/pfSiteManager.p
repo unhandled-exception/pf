@@ -13,10 +13,11 @@ pfSiteModule
 #----- Constructor -----
 
 @create[aOptions]
+## aOptions.request
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
-  $_REQUEST[^pfHTTPRequest::create[]]
+  $_REQUEST[^if(def $aOptions.request){$aOptions.request}{^pfHTTPRequest::create[]}]
   
   $_uriProtocol[^if(def $aOptions.uriProtocol){$aOptions.uriProtocol}{^if($REQUEST.isSECURE){https}{http}}]
   $_uriServerName[^if(def $aOptions.uriServerName){$aOptions.uriServerName}{$REQUEST.META.SERVER_NAME}]

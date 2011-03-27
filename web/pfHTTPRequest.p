@@ -21,7 +21,7 @@ pfClass
   $_TABLES[^if(def $aOptions.tables){$aOptions.tables}{$form:tables}]
   $_FILES[^if(def $aOptions.files){$aOptions.files}{$form:files}]
   $_COOKIE[^if(def $aOptions.cookie){$aOptions.cookie}{$cookie:fields}]
-  
+ 
   $_META[^if(def $aOptions.meta){$aOptions.meta}{^pfHTTPRequestMeta::create[]}]
   $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}] 
   
@@ -75,9 +75,17 @@ pfClass
   $result((def $META.HTTPS && ^META.HTTPS.lower[] eq "on") || ^META.SERVER_PORT.int(80) == 443)
 
 
-@GET_METHOD[]
+@GET_METHOD[][lMethod]
 ## Возвращает http-метод запроса в нижнем регистре
   $result[^META.REQUEST_METHOD.lower[]]
+  ^if($result eq "post"){
+    $lMethod[^_FIELDS._method.lower[]]
+    $result[^switch[]{   
+      ^case[DEFAULT]{post}
+      ^case[delete]{delete}
+      ^case[put]{put}
+    }]
+  }
 
 @GET_isGET[]
   $result($METHOD eq "get")
