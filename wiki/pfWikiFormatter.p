@@ -9,7 +9,7 @@
 pfWikiFormatter
 
 #@doc
-##  Основан на:
+##  РћСЃРЅРѕРІР°РЅ РЅР°:
 ##  --------------------
 ##  WackoFormatter.
 ##  v2.1.1.
@@ -29,8 +29,8 @@ pf/collections/pfStack.p
 pfClass
 
 @create[aOptions]
-## Создаем класс и инициализируем переменные
-## aOptions.highlighters - менеджер хайлайтеров (если не задан, то используем базовый)
+## РЎРѕР·РґР°РµРј РєР»Р°СЃСЃ Рё РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
+## aOptions.highlighters - РјРµРЅРµРґР¶РµСЂ С…Р°Р№Р»Р°Р№С‚РµСЂРѕРІ (РµСЃР»Рё РЅРµ Р·Р°РґР°РЅ, С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРј Р±Р°Р·РѕРІС‹Р№)
 ## aOptions.rawhtml
 
   ^BASE:create[]
@@ -70,7 +70,7 @@ pfClass
   ^_initializeConst[]
 
 @_initializeConst[]
-# Символьные кдассы для регулярных выражений
+# РЎРёРјРІРѕР»СЊРЅС‹Рµ РєРґР°СЃСЃС‹ РґР»СЏ СЂРµРіСѓР»СЏСЂРЅС‹С… РІС‹СЂР°Р¶РµРЅРёР№
   $UPPER[[A-Z\xc0-\xdf\xa8]]
   $UPPERNUM[[0-9A-Z\xc0-\xdf\xa8]]
   $LOWER[[a-z\xe0-\xff\xb8\/\-]]
@@ -80,7 +80,7 @@ pfClass
   $ALPHANUM_L[[0-9A-Za-z\xc0-\xff\xa8\xb8\-]]
   $ALPHANUM_P[0-9A-Za-z\xc0-\xff\xa8\xb8\_\-\/]
   
-# Регулярные выражения
+# Р РµРіСѓР»СЏСЂРЅС‹Рµ РІС‹СЂР°Р¶РµРЅРёСЏ
   $NOTLONGREGEXP[
     (
       ^if(!$_options.disable_formatters){\%\%.*?\%\%|}
@@ -158,16 +158,16 @@ pfClass
 @process[aStr;aOptions][text;wtext;texts;wtexts;i;opens;closes]
   ^cleanMethodArgument[]
 
-# Запрещаем теги для всего текста (может быть отменено с использованием rawhtml)
+# Р—Р°РїСЂРµС‰Р°РµРј С‚РµРіРё РґР»СЏ РІСЃРµРіРѕ С‚РµРєСЃС‚Р° (РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚РјРµРЅРµРЅРѕ СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј rawhtml)
   $text[^taint[xml][$aStr]]
 
-# Удаляем перевод строки (\r)
+# РЈРґР°Р»СЏРµРј РїРµСЂРµРІРѕРґ СЃС‚СЂРѕРєРё (\r)
   $text[^text.replace[^table::create[nameless]{^taint[^#0D]	}]]
 
-# Первый проход. Короткое выражение
+# РџРµСЂРІС‹Р№ РїСЂРѕС…РѕРґ. РљРѕСЂРѕС‚РєРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ
   $text[^text.match[$NOTLONGREGEXP][gxs]{^_preProcess[$match]}]
 
-# Выкусываем все, что обработано _preProcess'ом
+# Р’С‹РєСѓСЃС‹РІР°РµРј РІСЃРµ, С‡С‚Рѕ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ _preProcess'РѕРј
   $texts[^text.split[^#a5^#a5]]
   $wtext[$texts.piece]
   $i(2)
@@ -177,16 +177,16 @@ pfClass
     ^i.inc(2)
   }
   
-## Второй проход.
+## Р’С‚РѕСЂРѕР№ РїСЂРѕС…РѕРґ.
   $wtext[^wtext.match[$MOREREGEXP][gxs]{^_middleProcess[$match]}]
 
-## Третий проход
+## РўСЂРµС‚РёР№ РїСЂРѕС…РѕРґ
   $wtext[^wtext.match[$LONGREGEXP][gxs]{^_callback[$match]}]
 
-## Завершающий проход
+## Р—Р°РІРµСЂС€Р°СЋС‰РёР№ РїСЂРѕС…РѕРґ
   $text[^postFormat[$text]]
 
-# Вставляем все, что выкушено _preProcess'ом 
+# Р’СЃС‚Р°РІР»СЏРµРј РІСЃРµ, С‡С‚Рѕ РІС‹РєСѓС€РµРЅРѕ _preProcess'РѕРј 
   $wtexts[^wtext.split[^#a6]]
   $text[ ]
   ^wtexts.menu{
@@ -216,7 +216,7 @@ pfClass
 @postFormat[aStr]
   $result[^aStr.match[(\xa2\xa2(\S+?)([^^\n]*?)==([^^\n]*?)\xaf\xaf|\xa1\xa1[^^\n]+?\xa1\xa1)][gm]{^_postCallback[$match]}]
 
-#-------- Процессоры ----------
+#-------- РџСЂРѕС†РµСЃСЃРѕСЂС‹ ----------
 
 @_preProcess[aThings][isReturn;thing]
   $isReturn(0)
@@ -310,8 +310,8 @@ pfClass
 # escaped html
   ^if(!$isReturn){
     ^thing.match[^^\<\#(.*)\#\>^$][]{
-#     А здесь нам ничего дополнительно форматить не надо, поскольку Парсер 
-#     и так разберется, что у нас грязное, а что нет
+#     Рђ Р·РґРµСЃСЊ РЅР°Рј РЅРёС‡РµРіРѕ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ С„РѕСЂРјР°С‚РёС‚СЊ РЅРµ РЅР°РґРѕ, РїРѕСЃРєРѕР»СЊРєСѓ РџР°СЂСЃРµСЂ 
+#     Рё С‚Р°Рє СЂР°Р·Р±РµСЂРµС‚СЃСЏ, С‡С‚Рѕ Сѓ РЅР°СЃ РіСЂСЏР·РЅРѕРµ, Р° С‡С‚Рѕ РЅРµС‚
     	$result[<!--notypo-->^taint[as-is][$match.1]<!--/notypo-->]
       $isReturn(1)	
     }	
@@ -642,7 +642,7 @@ pfClass
     
     ^if(def $url){
 
-#    	Сноска
+#    	РЎРЅРѕСЃРєР°
     	^if(^url.mid(0;1) eq "*"){
         $sup(1)
         $aname[]
@@ -897,13 +897,13 @@ pfClass
   	$result[$thing]
   }  
   
-#-------- Обрабтчики тэгов ----------
+#-------- РћР±СЂР°Р±С‚С‡РёРєРё С‚СЌРіРѕРІ ----------
   
 @_preLink[aURL;aText]
   $result[<a href="$aURL">^if(def $aText){$aText}{$aURL}</a>]
   
   
-#-------- Заглушки для экшнов и пр. ----------
+#-------- Р—Р°РіР»СѓС€РєРё РґР»СЏ СЌРєС€РЅРѕРІ Рё РїСЂ. ----------
 @wrapAction[aStr]
   $result[{{$aStr}}]
   

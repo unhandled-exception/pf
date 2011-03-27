@@ -16,19 +16,19 @@ pfClass
 
 
 #@doc
-##  Класс для преобразования текста по правилом русской типографики. 
+##  РљР»Р°СЃСЃ РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ С‚РµРєСЃС‚Р° РїРѕ РїСЂР°РІРёР»РѕРј СЂСѓСЃСЃРєРѕР№ С‚РёРїРѕРіСЂР°С„РёРєРё. 
 ##
-##  При разработке использовался следующий код:
+##  РџСЂРё СЂР°Р·СЂР°Р±РѕС‚РєРµ РёСЃРїРѕР»СЊР·РѕРІР°Р»СЃСЏ СЃР»РµРґСѓСЋС‰РёР№ РєРѕРґ:
 ##  --------------------
 ##  1. Typografica library: typografica class. v.2.6 23 February 2005. 
 ##     http://www.pixel-apes.com/typografica
 ##     Kuso Mendokusee <mailto:mendokusee@yandex.ru>
 ##
-##  2. Исходники части проекта "Типограф"
+##  2. РСЃС…РѕРґРЅРёРєРё С‡Р°СЃС‚Рё РїСЂРѕРµРєС‚Р° "РўРёРїРѕРіСЂР°С„"
 ##     http://www.typograf.ru/download/
 ##     Eugene Spearance (mail@spearance.ru)
 ##  
-##  3. "Копилка регулярных выражений"
+##  3. "РљРѕРїРёР»РєР° СЂРµРіСѓР»СЏСЂРЅС‹С… РІС‹СЂР°Р¶РµРЅРёР№"
 ##     http://spearance.ru/parser3/regex/
 ##     Eugene Spearance (mail@spearance.ru)
 ## 
@@ -38,22 +38,22 @@ pfClass
   ^BASE:create[]
   ^cleanMethodArgument[]
   
-# Расставлять типографские кавычки
+# Р Р°СЃСЃС‚Р°РІР»СЏС‚СЊ С‚РёРїРѕРіСЂР°С„СЃРєРёРµ РєР°РІС‹С‡РєРё
   $_processQuotes[^aOptions.processQuotes.int(1)]
 
-# Обрабатывать специальные символы [(c), (R), +- и т.п.]
+# РћР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ СЃРїРµС†РёР°Р»СЊРЅС‹Рµ СЃРёРјРІРѕР»С‹ [(c), (R), +- Рё С‚.Рї.]
   $_processSpecial[^aOptions.processSpecial.int(1)]
 
   $_processSpaces[^aOptions.processSpaces.int(1)]
 
-# regex, который игнорируется.
+# regex, РєРѕС‚РѕСЂС‹Р№ РёРіРЅРѕСЂРёСЂСѓРµС‚СЃСЏ.
    $_reIgnore[(<!--notypo-->.*?<!--\/notypo-->)]
    $_ignoreMark[^math:uid64[]]  
 
-# regex, который игнорируется.
-   $_reTags[(<\/?[a-z0-9]+(?:         # имя тага
-                       \s+(?:        # повторяющая конструкция: хотя бы один разделитель и тельце
-                         [a-z]+(   # атрибут из букв, за которым может стоять знак равенства и потом
+# regex, РєРѕС‚РѕСЂС‹Р№ РёРіРЅРѕСЂРёСЂСѓРµС‚СЃСЏ.
+   $_reTags[(<\/?[a-z0-9]+(?:         # РёРјСЏ С‚Р°РіР°
+                       \s+(?:        # РїРѕРІС‚РѕСЂСЏСЋС‰Р°СЏ РєРѕРЅСЃС‚СЂСѓРєС†РёСЏ: С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ СЂР°Р·РґРµР»РёС‚РµР»СЊ Рё С‚РµР»СЊС†Рµ
+                         [a-z]+(   # Р°С‚СЂРёР±СѓС‚ РёР· Р±СѓРєРІ, Р·Р° РєРѕС‚РѕСЂС‹Рј РјРѕР¶РµС‚ СЃС‚РѕСЏС‚СЊ Р·РЅР°Рє СЂР°РІРµРЅСЃС‚РІР° Рё РїРѕС‚РѕРј
                                  =(?:(?:\'[^^\']*\')|(?:\"[^^\"]*\")|(?:[0-9@\-_a-z:\/?&=\.]+))
                           )?       # '
 
@@ -64,36 +64,36 @@ pfClass
    ^_makeVars[]
 
 @process[aText][lIgnored;lTags]
-# Выкусываем из текста все куски. которые надо проигнорировать
+# Р’С‹РєСѓСЃС‹РІР°РµРј РёР· С‚РµРєСЃС‚Р° РІСЃРµ РєСѓСЃРєРё. РєРѕС‚РѕСЂС‹Рµ РЅР°РґРѕ РїСЂРѕРёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ
   $lIgnored[^aText.match[$_reIgnore][gi]]
   $aText[^aText.match[$_reIgnore][gi]{$_ignoreMark}]
 
-# Выкусываем из текста все html-тэги.
+# Р’С‹РєСѓСЃС‹РІР°РµРј РёР· С‚РµРєСЃС‚Р° РІСЃРµ html-С‚СЌРіРё.
   $lTags[^aText.match[$_reTags][gxi]]
   $result[^aText.match[$_reTags][gxi]{$_tagsMark}]
 
-# Заменяем в тексте "типографские" символы и ентити на обычные символы.
+# Р—Р°РјРµРЅСЏРµРј РІ С‚РµРєСЃС‚Рµ "С‚РёРїРѕРіСЂР°С„СЃРєРёРµ" СЃРёРјРІРѕР»С‹ Рё РµРЅС‚РёС‚Рё РЅР° РѕР±С‹С‡РЅС‹Рµ СЃРёРјРІРѕР»С‹.
   $result[^result.replace[$_preRep]]
 
   ^if($_processSpaces){
-#   Разбираемся с запятыми и лишними пробелами.
+#   Р Р°Р·Р±РёСЂР°РµРјСЃСЏ СЃ Р·Р°РїСЏС‚С‹РјРё Рё Р»РёС€РЅРёРјРё РїСЂРѕР±РµР»Р°РјРё.
     $result[^result.match[\s{2,}][g]{ }]
     
-#   Поправляем пробелы до и после знаков препинания    
-    $result[^result.match[\b(?:\s*)([\.?!:^;]+)\s*([a-zа-я])][gi]{$match.1 $match.2}]
+#   РџРѕРїСЂР°РІР»СЏРµРј РїСЂРѕР±РµР»С‹ РґРѕ Рё РїРѕСЃР»Рµ Р·РЅР°РєРѕРІ РїСЂРµРїРёРЅР°РЅРёСЏ    
+    $result[^result.match[\b(?:\s*)([\.?!:^;]+)\s*([a-zР°-СЏ])][gi]{$match.1 $match.2}]
     $result[^result.match[\b(?:\s*)([,])][gi]{$match.1 }]
     $result[^result.match[(\w)\s+([\.:\?!^;])][g]{${match.1}$match.2}]
 
-#   Вставляем пробел между числами и следующим словом
-    $result[^result.match[(\b[\d]+)([a-zа-я])][gi]{$match.1 $match.2}]
-    $result[^result.match[(\w)([\.?!^;:]+)([A-ZА-Я])][g]{${match.1}${match.2} $match.3}]
+#   Р’СЃС‚Р°РІР»СЏРµРј РїСЂРѕР±РµР» РјРµР¶РґСѓ С‡РёСЃР»Р°РјРё Рё СЃР»РµРґСѓСЋС‰РёРј СЃР»РѕРІРѕРј
+    $result[^result.match[(\b[\d]+)([a-zР°-СЏ])][gi]{$match.1 $match.2}]
+    $result[^result.match[(\p{L})([\.?!^;:]+)([A-ZРђ-РЇ])][g]{${match.1}${match.2} $match.3}]
  
-    $result[^result.match[(§|№)\s*(.)][g]{$match.1&nbsp^;$match.2}]
+    $result[^result.match[(В§|в„–)\s*(.)][g]{${match.1}В $match.2}]
     $result[^result.match[(?:(P\.)\s*)?(P\.)\s*(S\.)][gi]{${match.1}${match.2}${match.3}}]
 
-#   Убираем лишние пробелы внутри скобок и кавычек.
-    $result[^result.match[(\s|^^)(["']+)\s*([A-ZА-Я])][g]{${match.1}${match.2}${match.3}}]
-    $result[^result.match[([a-zа-я])\s*(["']+)([\s\.,?!^;:]+)][g]{${match.1}${match.2}${match.3} }]
+#   РЈР±РёСЂР°РµРј Р»РёС€РЅРёРµ РїСЂРѕР±РµР»С‹ РІРЅСѓС‚СЂРё СЃРєРѕР±РѕРє Рё РєР°РІС‹С‡РµРє.
+    $result[^result.match[(\s|^^)(["']+)\s*([A-ZРђ-РЇ])][g]{${match.1}${match.2}${match.3}}]
+    $result[^result.match[([a-zР°-СЏ])\s*(["']+)([\s\.,?!^;:]+)][g]{${match.1}${match.2}${match.3} }]
     
     $result[^result.match[([\(])\s+][g]{$match.1}]
     $result[^result.match[(?:\s+)(\))][g]{$match.1}]
@@ -103,14 +103,14 @@ pfClass
   
   }
 
-# Кавычки
+# РљР°РІС‹С‡РєРё
   ^if($_processQuotes){
-    $laquo[^#AB]
-    $raquo[^#BB]
-    $ldquo[^#84]
-    $rdquo[^#93]
+    $laquo[В«]
+    $raquo[В»]
+    $ldquo[вЂћ]
+    $rdquo[вЂњ]
 
-    $_preQuotePattern[\w^;\.,:\)\^]\}\?!%\^$`/">-]
+    $_preQuotePattern[\p{L}^;\.,:\)\^]\}\?!%\^$`/">-]
 
     $result[^result.match[\s+"(\s+)][g]{"$match.1}]
 
@@ -121,98 +121,82 @@ pfClass
    	$result[^result.match[(?<=[${_preQuotePattern}])(\"+)][g]{^for[i](1;^match.1.length[]){$raquo}}]
     $result[^result.match[${laquo}([^^${raquo}]*)((${laquo}[^^${laquo}]+?${raquo}[^^\n]*?)+?)${raquo}][g]{${laquo}${match.1}^match.2.match[${laquo}(.+?)${raquo}][g]{${ldquo}${match.1}${rdquo}}${raquo}}]
         	
-#     $result[^result.match[($raquo|$rdquo)(\S|[:\.?^;\!])][g]{$match.1 $match.2}]    
-#     $result[^result.match[(\S|[:\.?^;\!])($laquo|$ldquo)][g]{$match.1 $match.2}]    
-         
     $result[^result.match[($raquo|$rdquo|\b)(\()][g]{$match.1 $match.2}]    
     $result[^result.match[(\))($laquo|$ldquo|\b)][g]{$match.1 $match.2}]    
-        
-    $result[^result.replace[^table::create{from	to
-$laquo	&laquo^;
-$raquo	&raquo^;
-$rdquo	&ldquo^;
-$ldquo	&bdquo^;}]]
-  }
 
-## СИВОЛЫ
-
-# Спецсимволы  
-  ^if($_processSpecial){
-  	$result[^result.match[(?:·|•)][g]{&bull^;}]
-  	$result[^result.match[\.{3,}][g]{&hellip^;}]
-  	$result[^result.match[\((?:c|с)\)][gi]{&copy^;}]
-  	$result[^result.match[\(r\)][gi]{<sup><small>&reg^;</small></sup>}]
-  	$result[^result.match[\(tm\)][gi]{<sup><small>&trade^;</small></sup>}]
-  	$result[^result.match[(\d+)\s*(x|х)\s*(\d+)][gi]{$match.1&times^;$match.3}]
-  	$result[^result.match[\b1/2\b][gi]{&frac12^;}]
-  	$result[^result.match[\b1/4\b][gi]{&frac14^;}]
-  	$result[^result.match[\b3/4\b][gi]{&frac34^;}]
-  	$result[^result.match[(\+\-|\-\+|\+/\-)][gi]{&plusmn^;}]
-	
-#   Заменяем С и F в конструкциях градусов на неразрывной пробел, °C и °F соответственно
-    $result[^result.match[([-+]?\d+(?:[.,]\d*)?)([CСF])\b][g]{${match.1}&nbsp^;&deg^;$match.2}]
   }
   
-# Заменяет двойные знаки препинания и тире на одинарные
+## РЎРРњР’РћР›Р«
+
+# РЎРїРµС†СЃРёРјРІРѕР»С‹  
+  ^if($_processSpecial){
+    $result[^result.match[\.{3,}][g]{вЂ¦}]
+    $result[^result.match[\((?:c|СЃ)\)][gi]{В©}]
+    $result[^result.match[\(r\)][gi]{<sup><small>В®</small></sup>}]
+    $result[^result.match[\(tm\)][gi]{<sup><small>в„ў</small></sup>}]
+    $result[^result.match[(\d+)\s*(x|С…)\s*(\d+)][gi]{${match.1}Г—$match.3}]
+    $result[^result.match[\b1/2\b][gi]{В№вЃ„в‚‚}]
+    $result[^result.match[\b1/4\b][gi]{В№вЃ„в‚„}]
+    $result[^result.match[\b1/3\b][gi]{В№вЃ„в‚ѓ}]
+    $result[^result.match[(\+\-|\-\+|\+/\-)][gi]{В±}]
+
+#   Р—Р°РјРµРЅСЏРµРј РЎ Рё F РІ РєРѕРЅСЃС‚СЂСѓРєС†РёСЏС… РіСЂР°РґСѓСЃРѕРІ РЅР° РЅРµСЂР°Р·СЂС‹РІРЅРѕР№ РїСЂРѕР±РµР», В°C Рё В°F СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ
+    $result[^result.match[([-+]?\d+(?:[.,]\d*)?)([CРЎF])\b][g]{${match.1}В Лљ$match.2}]
+  }
+  
+# Р—Р°РјРµРЅСЏРµС‚ РґРІРѕР№РЅС‹Рµ Р·РЅР°РєРё РїСЂРµРїРёРЅР°РЅРёСЏ Рё С‚РёСЂРµ РЅР° РѕРґРёРЅР°СЂРЅС‹Рµ
   $result[^result.match[([\.,!?-])\1+][g]{$match.1}]
 
-# Слова с тире
-  $result[^result.match[(?<!\-)(?=\b)(\w+)\-(\w+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
+# РЎР»РѕРІР° СЃ С‚РёСЂРµ
+  $result[^result.match[(?<!\-)(?=\b)(\p{L}+)\-(\p{L}+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
 
-# Заменяем знак тире между двумя римскими и арабскими числами на – (символ минус)
-# Прогоняем два раза, чтобы правильно отработать тройные сочетания (например, телефоны)
-  $result[^result.match[(\d+|[IVXL]+)-(\d+|[IVXL]+)][g]{${match.1}&ndash^;$match.2}]
-  $result[^result.match[(\d+|[IVXL]+)-(\d+|[IVXL]+)][g]{${match.1}&ndash^;$match.2}]
+# Р—Р°РјРµРЅСЏРµРј Р·РЅР°Рє С‚РёСЂРµ РјРµР¶РґСѓ РґРІСѓРјСЏ СЂРёРјСЃРєРёРјРё Рё Р°СЂР°Р±СЃРєРёРјРё С‡РёСЃР»Р°РјРё РЅР° вЂ“ (СЃРёРјРІРѕР» РјРёРЅСѓСЃ)
+# РџСЂРѕРіРѕРЅСЏРµРј РґРІР° СЂР°Р·Р°, С‡С‚РѕР±С‹ РїСЂР°РІРёР»СЊРЅРѕ РѕС‚СЂР°Р±РѕС‚Р°С‚СЊ С‚СЂРѕР№РЅС‹Рµ СЃРѕС‡РµС‚Р°РЅРёСЏ (РЅР°РїСЂРёРјРµСЂ, С‚РµР»РµС„РѕРЅС‹)
+  $result[^result.match[(\d+|[IVXL]+)-(\d+|[IVXL]+)][g]{${match.1}вЂ“$match.2}]
+  $result[^result.match[(\d+|[IVXL]+)-(\d+|[IVXL]+)][g]{${match.1}вЂ“$match.2}]
 
+# РўРёСЂРµ
+  $result[^result.match[(\s|&nbsp^;|В )\-\s+][g]{В вЂ” }]
 
-# Тире
-  $result[^result.match[(\s|&nbsp^;)\-\s+][g]{&nbsp^;&mdash^; }]
-
-
-# Инициалы
-  $result[^result.match[([A-ZА-Я])\.\s*([A-ZА-Я])\.\s*([A-ZА-Я][a-zа-я])][g]{${match.1}.${match.2}.&nbsp^;$match.3}]
-  $result[^result.match[([a-zа-я]+)\s*([A-ZА-Я])\.\s*([A-ZА-Я])\.][g]{${match.1}&nbsp^;${match.2}.${match.3}.}]
+# РРЅРёС†РёР°Р»С‹
+  $result[^result.match[([A-ZРђ-РЇ])\.\s*([A-ZРђ-РЇ])\.\s*([A-ZРђ-РЇ][a-zР°-СЏ])][g]{${match.1}.${match.2}.В $match.3}]
+  $result[^result.match[([a-zР°-СЏ]+)\s*([A-ZРђ-РЇ])\.\s*([A-ZРђ-РЇ])\.][g]{${match.1}В ${match.2}.${match.3}.}]
 
 
-## СОКРАЩЕНИЯ
+## РЎРћРљР РђР©Р•РќРРЇ
     
-# Прикрепляем сокращаения
-  $result[^result.match[(\s+|&nbsp^;)(рис|табл|см|стр|илл|млн|млрд|тыс|им|ул|пер|кв|офис|оф|г|д)(\.)(?:\s*)][gi]{${match.1}${match.2}${match.3}&nbsp^;}]
-  $result[^result.match[(?:\s+)(руб\.|коп\.|у\.е\.|мин\.)(\s+|&nbsp^;)][gi]{&nbsp^;${match.1}${match.2}}]
+# РџСЂРёРєСЂРµРїР»СЏРµРј СЃРѕРєСЂР°С‰Р°РµРЅРёСЏ
+  $result[^result.match[(\s+|&nbsp^;|В )(СЂРёСЃ|С‚Р°Р±Р»|СЃРј|СЃС‚СЂ|РёР»Р»|РјР»РЅ|РјР»СЂРґ|С‚С‹СЃ|РёРј|СѓР»|РїРµСЂ|РєРІ|РѕС„РёСЃ|РѕС„|Рі|Рґ)(\.)(?:\s*)][gi]{${match.1}${match.2}${match.3}В }]
+  $result[^result.match[(?:\s+)(СЂСѓР±\.|РєРѕРї\.|Сѓ\.Рµ\.|РјРёРЅ\.)(\s+|&nbsp^;|В )][gi]{В ${match.1}${match.2}}]
 
-# Заменяем сокращение и т.д., и т.п. на <nobr>и т.д.</nobr> <nobr>и т.п.</nobr>, убирая при этом лишние пробелы
-  $result[^result.match[(и)\s+(т)\.\s*([дп])\.][gi]{<span class="nobr">${match.1} ${match.2}.${match.3}.</span>}]
+# Р—Р°РјРµРЅСЏРµРј СЃРѕРєСЂР°С‰РµРЅРёРµ Рё С‚.Рґ., Рё С‚.Рї. РЅР° <nobr>Рё С‚.Рґ.</nobr> <nobr>Рё С‚.Рї.</nobr>, СѓР±РёСЂР°СЏ РїСЂРё СЌС‚РѕРј Р»РёС€РЅРёРµ РїСЂРѕР±РµР»С‹
+  $result[^result.match[(Рё)\s+(С‚)\.\s*([РґРї])\.][gi]{<span class="nobr">${match.1} ${match.2}.${match.3}.</span>}]
 
-# Связываем конструкцию и др. неразрывным пробелом
-  $result[^result.match[(и)\s+(др.)][gi]{${match.1}&nbsp^;$match.2}]
+# РЎРІСЏР·С‹РІР°РµРј РєРѕРЅСЃС‚СЂСѓРєС†РёСЋ Рё РґСЂ. РЅРµСЂР°Р·СЂС‹РІРЅС‹Рј РїСЂРѕР±РµР»РѕРј
+  $result[^result.match[(Рё)\s+(РґСЂ.)][gi]{${match.1}В $match.2}]
 
-# Заменяем сокращение в т.ч. на <nobr>в т.ч.</nobr> убирая при этом лишние пробелы
-  $result[^result.match[(в)\s+(т.)\s?(ч.)][gi]{<span class="nobr">$match.1 ${match.2}$match.3</span>}]
+# Р—Р°РјРµРЅСЏРµРј СЃРѕРєСЂР°С‰РµРЅРёРµ РІ С‚.С‡. РЅР° <nobr>РІ С‚.С‡.</nobr> СѓР±РёСЂР°СЏ РїСЂРё СЌС‚РѕРј Р»РёС€РЅРёРµ РїСЂРѕР±РµР»С‹
+  $result[^result.match[(РІ)\s+(С‚.)\s?(С‡.)][gi]{<span class="nobr">$match.1 ${match.2}$match.3</span>}]
 
-# Прикрепляем все одно-двух-трех-символьные слова к следующим (предыдущим) словам
-  $result[^result.match[(?<![-:])\b([a-zа-яё]{1,3}\b(?:[,:^;\.]?))(?!\n)\s][gi]{${match.1}&nbsp^;}]
-  $result[^result.match[(\s|&nbsp^;)(же|ли|ль|бы|б|ж|ка)([\.,!\?:^;])?&nbsp^;][gi]{&nbsp^;${match.2}$match.3 }]
+# РџСЂРёРєСЂРµРїР»СЏРµРј РІСЃРµ РѕРґРЅРѕ-РґРІСѓС…-С‚СЂРµС…-СЃРёРјРІРѕР»СЊРЅС‹Рµ СЃР»РѕРІР° Рє СЃР»РµРґСѓСЋС‰РёРј (РїСЂРµРґС‹РґСѓС‰РёРј) СЃР»РѕРІР°Рј
+  $result[^result.match[(?<![-:])\b([a-zР°-СЏС‘]{1,3}\b(?:[,:^;\.]?))(?!\n)\s][gi]{${match.1}В }]
+  $result[^result.match[(\s|&nbsp^;|В )(Р¶Рµ|Р»Рё|Р»СЊ|Р±С‹|Р±|Р¶|РєР°)([\.,!\?:^;])?В ][gi]{В ${match.2}$match.3 }]
 
-# Прикрепляем слово идущее за цифрой.
-  $result[^result.match[(\d)\s+([\w%^$])][gi]{$match.1&nbsp^;$match.2}]
+# РџСЂРёРєСЂРµРїР»СЏРµРј СЃР»РѕРІРѕ РёРґСѓС‰РµРµ Р·Р° С†РёС„СЂРѕР№.
+  $result[^result.match[(\d)\s+([\p{L}%^$])][gi]{${match.1}В $match.2}]
   
-# Разбираемся с кубическими и квадратными метрами/сантиметрами.
-  $result[^result.match[(?<!(?:\s|\d))(см|м)(2|3)([^^\d\w])][gi]{$match.1<sup><small>$match.2</small></sup>$match.3}]
+# Р Р°Р·Р±РёСЂР°РµРјСЃСЏ СЃ РєСѓР±РёС‡РµСЃРєРёРјРё Рё РєРІР°РґСЂР°С‚РЅС‹РјРё РјРµС‚СЂР°РјРё/СЃР°РЅС‚РёРјРµС‚СЂР°РјРё.
+  $result[^result.match[(?<!(?:\s|\d))(СЃРј|Рј)(2|3)([^^\d\w])][gi]{$match.1<sup><small>$match.2</small></sup>$match.3}]
 
-# Выделяю прямую речь
-  $result[^result.match[(>|\A|\n)\-\s][g]{^taint[^#0A^#0A]${match.1}&mdash^;&nbsp^;}]
+# Р’С‹РґРµР»СЏСЋ РїСЂСЏРјСѓСЋ СЂРµС‡СЊ
+  $result[^result.match[(>|\A|\n)\-\s][g]{^taint[^#0A^#0A]${match.1}вЂ”В }]
 
-# Заменяем <nobr></nobr> на <span class="nobr></span> при этом удалем из таких кусков &nbsp^;
-## TODO
-
-
-
-# Вставляем обратно теги
+# Р’СЃС‚Р°РІР»СЏРµРј РѕР±СЂР°С‚РЅРѕ С‚РµРіРё
   $result[^result.match[$_tagsMark][g]{${lTags.1}^lTags.offset(1)}]
   
-# Вставляем обратно куски, которые надо было игнорировать
+# Р’СЃС‚Р°РІР»СЏРµРј РѕР±СЂР°С‚РЅРѕ РєСѓСЃРєРё, РєРѕС‚РѕСЂС‹Рµ РЅР°РґРѕ Р±С‹Р»Рѕ РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ
   $result[^result.match[$_ignoreMark][g]{${lIgnored.1}^lIgnored.offset(1)}]
- 
+
 @_makeVars[]
   $_preRep[^table::create{from	to
 &thinsp^;	 
@@ -240,26 +224,26 @@ $ldquo	&bdquo^;}]]
 &trade^;	(tm)
 &reg^;	(r)
 &copy^;	(c)
-©	(c)
-®	(r)
-™	(tm)
-°	
-±	+-
+В©	(c)
+В®	(r)
+в„ў	(tm)
+В°	
+В±	+-
 --	-
-—	-
+вЂ”	-
 -	-
-–	-
-«	"
-»	"
-…	...
-„	"
-”	"
-“	"
+вЂ“	-
+В«	"
+В»	"
+вЂ¦	...
+вЂћ	"
+вЂќ	"
+вЂњ	"
 <nobr>	
 </nobr>
 <NOBR>	
 </NOBR>	
-&#8470^;	№
+&#8470^;	в„–
 &#34^;	"
 &#39^;	'
 &#38^;	&
@@ -293,6 +277,6 @@ $ldquo	&bdquo^;}]]
 &#169^;	(c)
 &#153^;	(tm)
 &#8482^;	(tm)
-&#1105^;	е
-&#1025^;	Е
-&#167^;	§}]  
+&#1105^;	Рµ
+&#1025^;	Р•
+&#167^;	В§}]  
