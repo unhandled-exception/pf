@@ -63,14 +63,24 @@ pfClass
 
    ^_makeVars[]
 
-@process[aText][lIgnored;lTags]
-# Выкусываем из текста все куски. которые надо проигнорировать
-  $lIgnored[^aText.match[$_reIgnore][gi]]
-  $aText[^aText.match[$_reIgnore][gi]{$_ignoreMark}]
+@process[aText;aOptions][lIgnored;lTags;lUseMarkup]
+## aOptions.disableMarkup(false)
+## aOptions.disableTags(false)
+  ^cleanMethodArgument[]
+  $lUseMarkup(!^aOptions.disableMarkup.bool(false))                                                
 
-# Выкусываем из текста все html-тэги.
-  $lTags[^aText.match[$_reTags][gxi]]
-  $result[^aText.match[$_reTags][gxi]{$_tagsMark}]
+  ^if(^aOptions.disableTags.bool(false)){
+    $result[^aText.match[$_reIgnore][gi][]]
+    $result[^result.match[$_reTags][gxi][]]
+  }{
+#    Выкусываем из текста все куски. которые надо проигнорировать
+     $lIgnored[^aText.match[$_reIgnore][gi]]
+     $aText[^aText.match[$_reIgnore][gi]{$_ignoreMark}]
+
+#    Выкусываем из текста все html-тэги.
+     $lTags[^aText.match[$_reTags][gxi]]
+     $result[^aText.match[$_reTags][gxi]{$_tagsMark}]
+   }
 
 # Заменяем в тексте "типографские" символы и ентити на обычные символы.
   $result[^result.replace[$_preRep]]
@@ -131,8 +141,8 @@ pfClass
   ^if($_processSpecial){
     $result[^result.match[\.{3,}][g]{…}]
     $result[^result.match[\((?:c|с)\)][gi]{©}]
-    $result[^result.match[\(r\)][gi]{<sup><small>®</small></sup>}]
-    $result[^result.match[\(tm\)][gi]{<sup><small>™</small></sup>}]
+    $result[^result.match[\(r\)][gi]{®}]
+    $result[^result.match[\(tm\)][gi]{™}]
     $result[^result.match[(\d+)[\s ]*(x|х)[\s ]*(\d+)][gi]{${match.1}×$match.3}]
     $result[^result.match[\b1/2\b][gi]{¹⁄₂}]
     $result[^result.match[\b1/4\b][gi]{¹⁄₄}]
@@ -146,8 +156,10 @@ pfClass
 # Заменяет двойные знаки препинания и тире на одинарные
   $result[^result.match[([\.,!?-—–])\1+][g]{$match.1}]
 
-# Слова с тире
-  $result[^result.match[(?<!\-)(?=\b)(\w+)\-(\w+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
+# Слова с дефисом                                     
+  ^if($lUseMarkup){
+    $result[^result.match[(?<!\-)(?=\b)(\w+)\-(\w+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
+  }
 
 # Заменяем знак тире между двумя римскими и арабскими числами на – (символ минус)
 # Прогоняем два раза, чтобы правильно отработать тройные сочетания (например, телефоны)
@@ -175,7 +187,7 @@ pfClass
   $result[^result.match[(и)[\s ]+(др.)][gi]{${match.1} $match.2}]
 
 # Заменяем сокращение в т.ч. на <nobr>в т.ч.</nobr> убирая при этом лишние пробелы
-  $result[^result.match[(в)[\s ]+(т.)[\s ]?(ч.)][gi]{<span class="nobr">$match.1 ${match.2}$match.3</span>}]
+  $result[^result.match[(в)[\s ]+(т.)[\s ]?(ч.)][gi]{${match.1} ${match.2}$match.3}]
 
 # Прикрепляем все одно-двух-трех-символьные слова к следующим (предыдущим) словам
   $result[^result.match[(?<![-:])\b([a-zа-яё]{1,3}\b(?:[,:^;\.]?))(?!\n)[\s ]][gi]{${match.1} }]
@@ -185,16 +197,17 @@ pfClass
   $result[^result.match[(\d)[\s ]+([\w%^$])][gi]{${match.1} $match.2}]
   
 # Разбираемся с кубическими и квадратными метрами/сантиметрами.
-  $result[^result.match[(?<!(?:[\s ]|\d))(см|м)(2|3)([^^\d\w])][gi]{$match.1<sup><small>$match.2</small></sup>$match.3}]
+  $result[^result.match[(?<!(?:[\s ]|\d))(см|м)(2|3)([^^\d\w])][gi]{$match.1^switch[$match.2]{^case[2]{²}^case[3]{³}}$match.3}]
 
 # Выделяю прямую речь
   $result[^result.match[(>|\A|\n)\-\s ][g]{^taint[^#0A^#0A]${match.1}— }]
 
-# Вставляем обратно теги
-  $result[^result.match[$_tagsMark][g]{${lTags.1}^lTags.offset(1)}]
-  
-# Вставляем обратно куски, которые надо было игнорировать
-  $result[^result.match[$_ignoreMark][g]{${lIgnored.1}^lIgnored.offset(1)}]
+  ^if(!^aOptions.disableTags.bool(false)){
+#   Вставляем обратно теги
+    $result[^result.match[$_tagsMark][g]{${lTags.1}^lTags.offset(1)}]
+#   Вставляем обратно куски, которые надо было игнорировать
+    $result[^result.match[$_ignoreMark][g]{${lIgnored.1}^lIgnored.offset(1)}]
+  }
 
 @_makeVars[]
   $_preRep[^table::create{from	to
