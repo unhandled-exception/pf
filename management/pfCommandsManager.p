@@ -9,7 +9,8 @@ pfCommandsManager
 @USE
 pf/modules/pfModule.p
 pf/tests/pfAssert.p
-pf/collections/pfArrayList.p
+pf/collections/pfList.p
+pf/debug/pfRuntime.p
 
 @BASE
 pfModule
@@ -24,7 +25,7 @@ pfModule
   ^pfAssert:isTrue(def $_commandsPath && -d $_commandsPath)[Путь "$_commandsPath" не существует.]
 
   $_commandsArgs[$aOptions.args]
-  $_commandsNames[^pfArrayList::create[]]
+  $_commandsNames[^pfList::create[]]
 
   ^defReadProperty[commandsArgs]
   ^defReadProperty[commandsPath]

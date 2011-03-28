@@ -77,30 +77,29 @@ pfClass
 
   ^if($_processSpaces){
 #   Разбираемся с запятыми и лишними пробелами.
-    $result[^result.match[\s{2,}][g]{ }]
+    $result[^result.match[[\s ]{2,}][g]{ }]
     
 #   Поправляем пробелы до и после знаков препинания    
-    $result[^result.match[\b(?:\s*)([\.?!:^;]+)\s*([a-zа-я])][gi]{$match.1 $match.2}]
-    $result[^result.match[\b(?:\s*)([,])][gi]{$match.1 }]
-    $result[^result.match[(\w)\s+([\.:\?!^;])][g]{${match.1}$match.2}]
+    $result[^result.match[\b(?:[\s ]*)([\.?!:^;]+)[\s ]*([a-zа-я])][gi]{$match.1 $match.2}]
+    $result[^result.match[\b(?:[\s ]*)([,])][gi]{$match.1}]
+    $result[^result.match[([\w\)\^]\}])[\s ]+([\.:\?!^;,])][g]{${match.1}$match.2}]
 
 #   Вставляем пробел между числами и следующим словом
     $result[^result.match[(\b[\d]+)([a-zа-я])][gi]{$match.1 $match.2}]
-    $result[^result.match[(\p{L})([\.?!^;:]+)([A-ZА-Я])][g]{${match.1}${match.2} $match.3}]
+    $result[^result.match[(\w)([\.?!^;:]+)([A-ZА-Я])][g]{${match.1}${match.2} $match.3}]
  
-    $result[^result.match[(§|№)\s*(.)][g]{${match.1} $match.2}]
-    $result[^result.match[(?:(P\.)\s*)?(P\.)\s*(S\.)][gi]{${match.1}${match.2}${match.3}}]
+    $result[^result.match[(§|№)[\s ]*(.)][g]{${match.1} $match.2}]
+    $result[^result.match[(?:(P\.)[\s ]*)?(P\.)[\s ]*(S\.)][gi]{${match.1}${match.2}${match.3}}]
 
 #   Убираем лишние пробелы внутри скобок и кавычек.
-    $result[^result.match[(\s|^^)(["']+)\s*([A-ZА-Я])][g]{${match.1}${match.2}${match.3}}]
-    $result[^result.match[([a-zа-я])\s*(["']+)([\s\.,?!^;:]+)][g]{${match.1}${match.2}${match.3} }]
+    $result[^result.match[([\s ]|^^)(["']+)[\s ]*([A-ZА-Я])][g]{${match.1}${match.2}${match.3}}]
+    $result[^result.match[([a-zа-я])[\s ]*(["']+)([\s \.,?!^;:]+)][g]{${match.1}${match.2}${match.3} }]
     
-    $result[^result.match[([\(])\s+][g]{$match.1}]
-    $result[^result.match[(?:\s+)(\))][g]{$match.1}]
+    $result[^result.match[([\(])[\s ]+][g]{$match.1}]
+    $result[^result.match[(?:[\s ]+)(\))][g]{$match.1}]
   
     $result[^result.match[(\S)\((\S)][g]{$match.1 ($match.2}]
-    $result[^result.match[(\S)\)(\S)][g]{$match.1) $match.2}]
-  
+    $result[^result.match[(\S)\)([\w])][g]{$match.1) $match.2}]
   }
 
 # Кавычки
@@ -110,12 +109,12 @@ pfClass
     $ldquo[„]
     $rdquo[“]
 
-    $_preQuotePattern[\p{L}^;\.,:\)\^]\}\?!%\^$`/">-]
+    $_preQuotePattern[\w^;\.,:\)\^]\}\?!%\^$`/">-]
 
-    $result[^result.match[\s+"(\s+)][g]{"$match.1}]
+    $result[^result.match[[\s ]+"([\s ]+)][g]{"$match.1}]
 
   	$result[^result.match[^^(\"+)][g]{^for[i](1;^match.1.length[]){$laquo}}]
-   	$result[^result.match[((?:\n|^^)\s*)($_tagsMark*)(\"+)][g]{${match.1}${match.2}^for[i](1;^match.3.length[]){$laquo}}]
+   	$result[^result.match[((?:\n|^^)[\s ]*)($_tagsMark*)(\"+)][g]{${match.1}${match.2}^for[i](1;^match.3.length[]){$laquo}}]
    	$result[^result.match[(?<=[^^${_preQuotePattern}])(\"+)][g]{^for[i](1;^match.1.length[]){$laquo}}]
    	$result[^result.match[(\"+\b)][g]{^for[i](1;^match.1.length[]){$laquo}}]
    	$result[^result.match[(?<=[${_preQuotePattern}])(\"+)][g]{^for[i](1;^match.1.length[]){$raquo}}]
@@ -134,7 +133,7 @@ pfClass
     $result[^result.match[\((?:c|с)\)][gi]{©}]
     $result[^result.match[\(r\)][gi]{<sup><small>®</small></sup>}]
     $result[^result.match[\(tm\)][gi]{<sup><small>™</small></sup>}]
-    $result[^result.match[(\d+)\s*(x|х)\s*(\d+)][gi]{${match.1}×$match.3}]
+    $result[^result.match[(\d+)[\s ]*(x|х)[\s ]*(\d+)][gi]{${match.1}×$match.3}]
     $result[^result.match[\b1/2\b][gi]{¹⁄₂}]
     $result[^result.match[\b1/4\b][gi]{¹⁄₄}]
     $result[^result.match[\b1/3\b][gi]{¹⁄₃}]
@@ -145,10 +144,10 @@ pfClass
   }
   
 # Заменяет двойные знаки препинания и тире на одинарные
-  $result[^result.match[([\.,!?-])\1+][g]{$match.1}]
+  $result[^result.match[([\.,!?-—–])\1+][g]{$match.1}]
 
 # Слова с тире
-  $result[^result.match[(?<!\-)(?=\b)(\p{L}+)\-(\p{L}+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
+  $result[^result.match[(?<!\-)(?=\b)(\w+)\-(\w+)(?<=\b)(?!\-)][g]{<span class="nobr">${match.1}-$match.2</span>}]
 
 # Заменяем знак тире между двумя римскими и арабскими числами на – (символ минус)
 # Прогоняем два раза, чтобы правильно отработать тройные сочетания (например, телефоны)
@@ -156,40 +155,40 @@ pfClass
   $result[^result.match[(\d+|[IVXL]+)-(\d+|[IVXL]+)][g]{${match.1}–$match.2}]
 
 # Тире
-  $result[^result.match[(\s|&nbsp^;| )\-\s+][g]{ — }]
+  $result[^result.match[(\s|&nbsp^;| )+\-[\s ]+][g]{ — }]
 
 # Инициалы
-  $result[^result.match[([A-ZА-Я])\.\s*([A-ZА-Я])\.\s*([A-ZА-Я][a-zа-я])][g]{${match.1}.${match.2}. $match.3}]
-  $result[^result.match[([a-zа-я]+)\s*([A-ZА-Я])\.\s*([A-ZА-Я])\.][g]{${match.1} ${match.2}.${match.3}.}]
+  $result[^result.match[([A-ZА-Я])\.[\s ]*([A-ZА-Я])\.[\s ]*([A-ZА-Я][a-zа-я])][g]{${match.1}.${match.2}. $match.3}]
+  $result[^result.match[([a-zа-я]+)[\s ]*([A-ZА-Я])\.[\s ]*([A-ZА-Я])\.][g]{${match.1} ${match.2}.${match.3}.}]
 
 
 ## СОКРАЩЕНИЯ
     
 # Прикрепляем сокращаения
-  $result[^result.match[(\s+|&nbsp^;| )(рис|табл|см|стр|илл|млн|млрд|тыс|им|ул|пер|кв|офис|оф|г|д)(\.)(?:\s*)][gi]{${match.1}${match.2}${match.3} }]
-  $result[^result.match[(?:\s+)(руб\.|коп\.|у\.е\.|мин\.)(\s+|&nbsp^;| )][gi]{ ${match.1}${match.2}}]
+  $result[^result.match[(\s+|&nbsp^;| )(рис|табл|см|стр|илл|млн|млрд|тыс|им|ул|пер|кв|офис|оф|г|д)(\.)(?:[\s ]*)][gi]{${match.1}${match.2}${match.3} }]
+  $result[^result.match[(?:[\s ]+)(руб\.|коп\.|у\.е\.|мин\.)([\s ]+|&nbsp^;| )][gi]{ ${match.1}${match.2}}]
 
 # Заменяем сокращение и т.д., и т.п. на <nobr>и т.д.</nobr> <nobr>и т.п.</nobr>, убирая при этом лишние пробелы
-  $result[^result.match[(и)\s+(т)\.\s*([дп])\.][gi]{<span class="nobr">${match.1} ${match.2}.${match.3}.</span>}]
+  $result[^result.match[(и)[\s ]+(т)\.[\s ]*([дп])\.][gi]{<span class="nobr">${match.1} ${match.2}.${match.3}.</span>}]
 
 # Связываем конструкцию и др. неразрывным пробелом
-  $result[^result.match[(и)\s+(др.)][gi]{${match.1} $match.2}]
+  $result[^result.match[(и)[\s ]+(др.)][gi]{${match.1} $match.2}]
 
 # Заменяем сокращение в т.ч. на <nobr>в т.ч.</nobr> убирая при этом лишние пробелы
-  $result[^result.match[(в)\s+(т.)\s?(ч.)][gi]{<span class="nobr">$match.1 ${match.2}$match.3</span>}]
+  $result[^result.match[(в)[\s ]+(т.)[\s ]?(ч.)][gi]{<span class="nobr">$match.1 ${match.2}$match.3</span>}]
 
 # Прикрепляем все одно-двух-трех-символьные слова к следующим (предыдущим) словам
-  $result[^result.match[(?<![-:])\b([a-zа-яё]{1,3}\b(?:[,:^;\.]?))(?!\n)\s][gi]{${match.1} }]
+  $result[^result.match[(?<![-:])\b([a-zа-яё]{1,3}\b(?:[,:^;\.]?))(?!\n)[\s ]][gi]{${match.1} }]
   $result[^result.match[(\s|&nbsp^;| )(же|ли|ль|бы|б|ж|ка)([\.,!\?:^;])? ][gi]{ ${match.2}$match.3 }]
 
 # Прикрепляем слово идущее за цифрой.
-  $result[^result.match[(\d)\s+([\p{L}%^$])][gi]{${match.1} $match.2}]
+  $result[^result.match[(\d)[\s ]+([\w%^$])][gi]{${match.1} $match.2}]
   
 # Разбираемся с кубическими и квадратными метрами/сантиметрами.
-  $result[^result.match[(?<!(?:\s|\d))(см|м)(2|3)([^^\d\w])][gi]{$match.1<sup><small>$match.2</small></sup>$match.3}]
+  $result[^result.match[(?<!(?:[\s ]|\d))(см|м)(2|3)([^^\d\w])][gi]{$match.1<sup><small>$match.2</small></sup>$match.3}]
 
 # Выделяю прямую речь
-  $result[^result.match[(>|\A|\n)\-\s][g]{^taint[^#0A^#0A]${match.1}— }]
+  $result[^result.match[(>|\A|\n)\-\s ][g]{^taint[^#0A^#0A]${match.1}— }]
 
 # Вставляем обратно теги
   $result[^result.match[$_tagsMark][g]{${lTags.1}^lTags.offset(1)}]
