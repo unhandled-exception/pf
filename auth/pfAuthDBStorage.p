@@ -17,7 +17,7 @@ pfAuthStorage
 
 @create[aOptions]
 ## aOptions.sql - объект для доступа к БД
-## aOptions.usersTable[sessions] - имя таблицы с пользователем
+## aOptions.usersTable[users] - имя таблицы с пользователем
 ## aOptions.sessionsTable[sessions] - имя таблицы сессий  
 ## aOptions.cryptType[crypt|md5|sha1|mysql|old_mysql] - тип хеширования пароля (default: crypt)
 ## aOptions.salt
