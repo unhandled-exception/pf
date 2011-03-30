@@ -75,12 +75,11 @@ pfClass
   $result((def $META.HTTPS && ^META.HTTPS.lower[] eq "on") || ^META.SERVER_PORT.int(80) == 443)
 
 
-@GET_METHOD[][lMethod]
+@GET_METHOD[]
 ## Возвращает http-метод запроса в нижнем регистре
   $result[^META.REQUEST_METHOD.lower[]]
-  ^if($result eq "post"){
-    $lMethod[^_FIELDS._method.lower[]]
-    $result[^switch[]{   
+  ^if($result eq "post" && def $_FIELDS._method){
+    $result[^switch[^_FIELDS._method.lower[]]{   
       ^case[DEFAULT]{post}
       ^case[delete]{delete}
       ^case[put]{put}
