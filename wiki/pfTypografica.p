@@ -60,6 +60,7 @@ pfClass
                           )?
                         )*\/?>|\xA2\xA2[^^\n]*?==)]
    $_tagsMark[^taint[regex][<:t:>]]  
+   $_reSpan[<\/?span(?:\s+(?:[a-z]+(=(?:(?:\'[^^\']*\')|(?:\"[^^\"]*\")|(?:[0-9@\-_a-z:\/?&=\.]+)))?)?)*\/?>]
 
    ^_makeVars[]
 
@@ -68,18 +69,22 @@ pfClass
 ## aOptions.disableTags(false)
   ^cleanMethodArgument[]
   $lUseMarkup(!^aOptions.disableMarkup.bool(false))                                                
+  $result[$aText]
+
+# Удаляем из текста все спаны
+  $result[^result.match[$_reSpan][gi][]]
 
   ^if(^aOptions.disableTags.bool(false)){
-    $result[^aText.match[$_reIgnore][gi][]]
+    $result[^result.match[$_reIgnore][gi][]]
     $result[^result.match[$_reTags][gxi][]]
   }{
 #    Выкусываем из текста все куски. которые надо проигнорировать
-     $lIgnored[^aText.match[$_reIgnore][gi]]
-     $aText[^aText.match[$_reIgnore][gi]{$_ignoreMark}]
+     $lIgnored[^result.match[$_reIgnore][gi]]
+     $result[^result.match[$_reIgnore][gi]{$_ignoreMark}]
 
 #    Выкусываем из текста все html-тэги.
-     $lTags[^aText.match[$_reTags][gxi]]
-     $result[^aText.match[$_reTags][gxi]{$_tagsMark}]
+     $lTags[^result.match[$_reTags][gxi]]
+     $result[^result.match[$_reTags][gxi]{$_tagsMark}]
    }
 
 # Заменяем в тексте "типографские" символы и ентити на обычные символы.
