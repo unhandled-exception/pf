@@ -159,7 +159,7 @@ pfClass
   }
   
 # Заменяет двойные знаки препинания и тире на одинарные
-  $result[^result.match[([\.,!?-—–])\1+][g]{$match.1}]
+  $result[^result.match[([.,!?\-—–])\1+][g]{$match.1}]
 
 # Слова с дефисом                                     
   ^if($lUseMarkup){
