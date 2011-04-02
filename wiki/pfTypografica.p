@@ -91,9 +91,6 @@ pfClass
   $result[^result.replace[$_preRep]]
 
   ^if($_processSpaces){
-#   Разбираемся с запятыми и лишними пробелами.
-    $result[^result.match[[\s ]{2,}][g]{ }]
-    
 #   Поправляем пробелы до и после знаков препинания    
     $result[^result.match[\b(?:[\s ]*)([\.?!:^;]+)[\s ]*([a-zа-я])][gi]{$match.1 $match.2}]
     $result[^result.match[\b(?:[\s ]*)([,])][gi]{$match.1}]
@@ -108,13 +105,16 @@ pfClass
 
 #   Убираем лишние пробелы внутри скобок и кавычек.
     $result[^result.match[([\s ]|^^)(["']+)[\s ]*([A-ZА-Я])][g]{${match.1}${match.2}${match.3}}]
-    $result[^result.match[([a-zа-я])[\s ]*(["']+)([\s \.,?!^;:]+)][g]{${match.1}${match.2}${match.3} }]
+    $result[^result.match[(\w)[\s ]*(["']+)([\s \.,?!^;:]+)][g]{${match.1}${match.2}${match.3}^if(def ^match.4.trim[right;  ]){ }}]
     
     $result[^result.match[([\(])[\s ]+][g]{$match.1}]
     $result[^result.match[(?:[\s ]+)(\))][g]{$match.1}]
   
     $result[^result.match[(\S)\((\S)][g]{$match.1 ($match.2}]
     $result[^result.match[(\S)\)([\w])][g]{$match.1) $match.2}]
+
+#   Разбираемся с лишними пробелами.
+    $result[^result.match[[\s ]{2,}][g]{ }]
   }
 
 # Кавычки
