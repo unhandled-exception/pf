@@ -200,6 +200,7 @@ pfClass
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
 ## aOptions.contentType[]
+## aOptions.onlyVisible(false)
   ^cleanMethodArgument[]
   ^if(def $aTagID){
     $result(^CSQL.int{
@@ -210,10 +211,16 @@ pfClass
     })
   }{
      $result(^CSQL.int{
-      select count(distinct content_id) as count
-        from $_itemsTable
+      select count(distinct it.content_id) as count
+        from $_itemsTable as it
+             ^if(^aOptions.onlyVisible.bool(false)){
+               join $_tagsTable as t
+             }
        where 1=1
-         and content_type_id = "^aOptions.contentType.int($_defaultContentType)"
+         and it.content_type_id = "^aOptions.contentType.int($_defaultContentType)"
+         ^if(^aOptions.onlyVisible.bool(false)){
+           and t.is_visible = 1
+         }
      })
    }
 
