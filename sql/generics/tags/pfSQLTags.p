@@ -29,10 +29,13 @@ pfClass
   $_tagsTable[^if(def $aOptions.tagsTable){$aOptions.tagsTable}{tags}]
   $_itemsTable[^if(def $aOptions.itemsTable){$aOptions.itemsTable}{${_tagsTable}_items}]
   $_countersTable[^if(def $aOptions.countersTable){$aOptions.countersTable}{${_tagsTable}_counters}]
+  ^defReadProperty[tagsTable]
+  ^defReadProperty[itemsTable]
+  ^defReadProperty[countersTable]
 
   $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
-  ^defReadProperty[defaultFields]
   $_extraFields[t.description]
+  ^defReadProperty[defaultFields]
   ^defReadProperty[extraFields]
 
   $_defaultContentType(^aOptions.contentType.int(0))
@@ -213,13 +216,10 @@ pfClass
      $result(^CSQL.int{
       select count(distinct it.content_id) as count
         from $_itemsTable as it
-             ^if(^aOptions.onlyVisible.bool(false)){
-               join $_tagsTable as t
-             }
        where 1=1
          and it.content_type_id = "^aOptions.contentType.int($_defaultContentType)"
          ^if(^aOptions.onlyVisible.bool(false)){
-           and t.is_visible = 1
+           and it.tag_id in (select tag_id from $_tagsTable where is_visible = 1)
          }
      })
    }
