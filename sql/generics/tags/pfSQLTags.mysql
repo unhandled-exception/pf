@@ -14,7 +14,7 @@ CREATE TABLE  `tags` (
 CREATE TABLE `tags_items` (
   `content_type_id` int(10) unsigned NOT NULL DEFAULT '0',
   `tag_id` int(10) unsigned NOT NULL,
-  `content_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `content_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`content_id`,`tag_id`,`content_type_id`),
   KEY `idx_tags` (`tag_id`)
 ) ENGINE=InnoDB;
