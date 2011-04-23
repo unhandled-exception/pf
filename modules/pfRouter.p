@@ -36,7 +36,8 @@ pfClass
 ## aOptions.reversePrefix[] - префикс маршрута при бэкрезолве
 ## aOptions.name[] - имя шаблона (используется в reverse, нечувствительно к регистру)
 ## aOptions.ignoreCase(true) - игнорироавть регистр букв при обработке шаблона
-## aOptions.strict(false) - включает "строгий" режим проверки шаблона.
+## aOptions.strict(false) - включает "строгий" режим проверки шаблона.  
+## aOptions.render[$.name $.template] - хеш с параметрами шаблона, который надо выполнить. 
   ^cleanMethodArgument[]
   $result[]
   
@@ -59,6 +60,7 @@ pfClass
     $.requirements[$aOptions.requirements]
     $.name[^if(def $aOptions.name){^aOptions.name.lower[]}]
     $.strict(^aOptions.strict.bool(false))
+    $.render[$aOptions.render]
   ]
 
 @root[aRouteTo;aOptions]
@@ -66,6 +68,7 @@ pfClass
 ## aRouteTo - новый маршрут (может содержать переменные)
 ## aOptions.defaults[] - хеш со значениями переменных шаблона "по-умолчанию" 
 ## aOptions.prefix[] - дополнительный, вычисляемый префикс для путей (может содержать переменные)
+## aOptions.render[$.template $.vars] - хеш с параметрами шаблона, который надо выполнить. 
   ^cleanMethodArgument[]
   ^if(!def $aOptions.defaults){$aOptions.defaults[^hash::create[]]}
   ^if(!def $aOptions.requirements){$aOptions.requirements[^hash::create[]]}
@@ -75,12 +78,13 @@ pfClass
     $.defaults[$aOptions.defaults]        
     $.regexp[$_pfRouteRootRegex]
     $.vars[^table::create{var}]
+    $.render[$aOptions.render]
   ]                
 
 @route[aPath;aOptions][lParsedPath;it]
 ## Выполняет поиск и преобразование пути по списку маршрутов 
 ## aOptions.args
-## result[$.action $.args $.prefix]
+## result[$.action $.args $.prefix $.render]
   ^cleanMethodArgument[]
   $result[^hash::create[]]
   $aPath[^_trimPath[$aPath]]
@@ -106,7 +110,7 @@ pfClass
   ^_routes.foreach[k;it]{
 #   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
     ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){                     
-      $lPath[^_applyPath[$it.pattern;$aArgs]]
+      $lPath[^_applyPath[$it.pattern;$aArgs]] 
 #     Проверяем соотвтетствует ли полученный путь шаблоу (с ограничениями requirements)
       ^if(^lPath.match[$it.regexp]){
 #       Добавляем оставшиеся параметры из aArgs в result.args
@@ -177,6 +181,7 @@ pfClass
     }        
     $result.action[^_applyPath[$aRoute.routeTo;$result.args;$aOptions.args]]
     $result.prefix[^_applyPath[$aRoute.prefix;$result.args;$aOptions.args]]
+    $result.render[$aRoute.render]
   }                                                           
 
 @_applyPath[aPath;aVars;aArgs]

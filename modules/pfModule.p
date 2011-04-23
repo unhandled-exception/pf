@@ -206,12 +206,12 @@ pfClass
   $_action[$lProcessed.action]
   $_request[$lProcessed.request]
 
-  $result[^processAction[$lProcessed.action;$lProcessed.request;$lProcessed.prefix;$aOptions]]
+  $result[^processAction[$lProcessed.action;$lProcessed.request;$lProcessed.prefix;$aOptions $.render[$lProcessed.render]]]
   $result[^processResponse[$result;$lProcessed.action;$lProcessed.request;$aOptions]]
 
 @processRequest[aAction;aRequest;aOptions][lRewrite]
 ## Производит предобработку запроса
-## $result[$.action[] $.request[] $.prefix[]] - экшн, запрос и префикс, которые будут переданы обработчикам
+## $result[$.action[] $.request[] $.prefix[] $.render[]] - экшн, запрос, префикс, параметры шаблона, которые будут переданы обработчикам
   $lRewrite[^rewriteAction[$aAction;$aRequest]]
   $aAction[$lRewrite.action]
   ^if($lRewrite.args){
@@ -222,7 +222,7 @@ pfClass
        ^aRequest.add[$lRewrite.args]
      }
   }
-  $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix]]
+  $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix] $.render[$lRewrite.render]]
 
 @rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
@@ -284,7 +284,9 @@ pfClass
      
 @linkTo[aAction;aOptions;aAnchor][lReverse]
 ## Формирует ссылку на экшн, выполняя бэкрезолв путей.
-## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)
+## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)     
+#^pfAssert:fail[$aAction $aOptions.CLASS_NAME ^rem{^aOptions.foreach[k;v]{$k -> $v}[, ]}]
+
   ^cleanMethodArgument[]
   $lReverse[^router.reverse[$aAction;$aOptions.fields]]
   ^if($lReverse){

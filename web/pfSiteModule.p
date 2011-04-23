@@ -73,7 +73,11 @@ pfModule
 ## aOptions.passRedirect(false) - не обрабатывать эксепшн от редиректа.
   ^cleanMethodArgument[]
   ^try{
-    $result[^BASE:processAction[$aAction;$aRequest;$aPrefix;$aOptions]]
+    ^if(def $aOptions.render && def $aOptions.render.template){
+      $result[^render[$aOptions.render.template;$.vars[$aOptions.render.vars]]]
+    }{
+       $result[^BASE:processAction[$aAction;$aRequest;$aPrefix;$aOptions]]
+     }
 
     ^if(!^aOptions.passWrap.bool(false)){
       ^switch(true){
@@ -125,13 +129,14 @@ pfModule
 ## Вызывает шаблон с именем "путь/$aTemplate[.pt]"
 ## Если aTemplate начинается со "/", то не подставляем текущий перфикс.
 ## Если переменная aTemplate не задана, то зовем шаблон default. 
-## aOptions.vars
+## aOptions.vars - переменные, которые добавляются к тем, что уже заданы через assignVar.
   ^cleanMethodArgument[]
   ^if(!def $aTemplate || ^aTemplate.left(1) ne "/"){
      $lTemplatePrefix[$templatePath]
   }
 
-  $lVars[^hash::create[^if(def $aOptions.vars){$aOptions.vars}{$_templateVars}]]
+  $lVars[^hash::create[$_templateVars]]
+  ^if(def $aOptions.vars){^lVars.add[$aOptions.vars]}
   ^if(!^lVars.contains[REQUEST]){$lVars.REQUEST[$request]}
   ^if(!^lVars.contains[ACTION]){$lVars.ACTION[$action]}
   ^if(!^lVars.contains[linkTo]){$lVars.linkTo[$linkTo]}
