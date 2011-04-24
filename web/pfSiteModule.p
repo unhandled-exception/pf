@@ -69,7 +69,7 @@ pfModule
    }
   ^BASE:assignModule[$aName;$aOptions]
 
-@processAction[aAction;aRequest;aPrefix;aOptions]
+@processAction[aAction;aRequest;aPrefix;aOptions][lRedirectPath]
 ## aOptions.passRedirect(false) - не обрабатывать эксепшн от редиректа.
   ^cleanMethodArgument[]
   ^try{
@@ -96,13 +96,14 @@ pfModule
   }{
     ^if(!^aOptions.passRedirect.bool(false)){
       ^switch[$exception.type]{
-        ^case[$_redirectExceptionName]{
-          $exception.handled(true)
-          $result[^pfHTTPResponseRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
-        }
-        ^case[$_permanentRedirectExceptionName]{
-          $exception.handled(true)
-          $result[^pfHTTPResponsePermanentRedirect::create[^aRequest.buildAbsoluteUri[$exception.comment]]]
+        ^case[$_redirectExceptionName;$_permanentRedirectExceptionName]{
+          $exception.handled(true)    
+          $lRedirectPath[^if(^exception.comment.match[^^https?://][n]){$exception.comment}{^aRequest.buildAbsoluteUri[$exception.comment]}]
+          ^if($exception.type eq $_permanentRedirectExceptionName){
+            $result[^pfHTTPResponsePermanentRedirect::create[$lRedirectPath]]
+          }{
+             $result[^pfHTTPResponseRedirect::create[$lRedirectPath]]
+           }
         }
       }
     } 
@@ -140,6 +141,7 @@ pfModule
   ^if(!^lVars.contains[REQUEST]){$lVars.REQUEST[$request]}
   ^if(!^lVars.contains[ACTION]){$lVars.ACTION[$action]}
   ^if(!^lVars.contains[linkTo]){$lVars.linkTo[$linkTo]}
+  ^if(!^lVars.contains[redirectTo]){$lVars.redirectTo[$redirectTo]}
 
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
     $.vars[$lVars]
@@ -160,7 +162,7 @@ pfModule
   }
   
 @redirectTo[aAction;aOptions;aAnchor;aIsPermanent]  
-  ^throw[^if(^aIsPermanent.bool(false)){$_permanentRedirectExceptionName}{$_redirectExceptionName};$action;^linkTo[$aAction;$aOptions;$aAnchor]]
+  ^throw[^if(^aIsPermanent.bool(false)){$_permanentRedirectExceptionName}{$_redirectExceptionName};$action;^if(^aAction.match[^^https?://][n]){$aAction}{^linkTo[$aAction;$aOptions;$aAnchor]}]
 
 #----- Properties -----
 
