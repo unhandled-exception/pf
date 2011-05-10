@@ -28,7 +28,7 @@
   options.max-redirs(-1)
   options.post-redir[]
   options.autoreferer(false)
-  options.urestricted-auth(false)
+  options.unrestricted-auth(false)
 
   options.proxy-host[]
   options.proxy-port[1080]

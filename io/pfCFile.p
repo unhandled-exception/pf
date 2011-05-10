@@ -17,7 +17,7 @@ pfCFile
     $.max-redirs[$.option[maxredirs] $.type[int] $.default(-1)]
     $.post-redir[$.option[postredir]]
     $.autoreferer[$.option[autoreferer] $.type[int] $.default(0)]
-    $.urestricted-auth[$.option[urestricted_auth] $.type[int] $.default(0)]
+    $.unrestricted-auth[$.option[unrestricted_auth] $.type[int] $.default(0)]
 
 #   Proxies
     $.proxy-host[$.option[proxy]]
