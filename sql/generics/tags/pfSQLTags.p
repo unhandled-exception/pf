@@ -178,15 +178,16 @@ pfClass
 
 @sqlJoinForContent[aTagID;aJoinName;aOptions][lAlias]
 ## Возвращает sql для секции join, который позволяет получить контент для конкретного тега
-## aTagID - id тега
+## aTagID - id тега (строка, таблица с полем "item" или хеш)
 ## aJoinName - имя колонки, которое чодержит content_id в запросе
 ## aOptions.contentType
 ## aOptions.alias - алиас для таблицы с tags_items
 ## aOptions.type[left|right|...] - тип джоина (дописывается перед ключевым словом "join")
+## aOptions.tagsTableColumn - имя колонки в таблице тегов
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
   $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id = "$aTagID"}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id)]
+  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id in (^_arrayToSQL[$aTagID;$.column[$aOptions.tagsTableColumn]])}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id)]
 
 @sqlJoinForTags[aJoinName;aOptions][lAlias]
 ## Возвращает sql для секции join, который позволяет получить теги для контента
@@ -403,3 +404,22 @@ pfClass
 # это "потоконебезопасно", но для больших деревьев тегов может быть оправдано.
   ^recountTags[;$.contentType[$lContentType]]
 #  ^recountTags[$lTags;$.contentType[$lContentType]]
+
+#----- Private -----
+
+@_arrayToSQL[aArray;aOptions][lColName;k;v]
+## aArray[string|table|hash] 
+## aOptions.column[item]
+## aOptions.appendNull
+  ^cleanMethodArgument[]
+  $lColName[^if(def $aOptions.column){$aOptions.column}{item}]
+  ^if($aArray is hash){
+    $result[^aArray.foreach[k;v]{"^k.trim[both]"}[, ]]
+  }($aArray is table){
+    $result[^aArray.menu{"^aArray.[$lColName].trim[both]"}[, ]]
+  }{
+    $result["^aArray.trim[both]"]
+   }
+  ^if($aOptions.appendNull){
+    $result[$result^if(def $result){, }null]
+  }
