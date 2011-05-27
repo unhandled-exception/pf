@@ -278,11 +278,11 @@ pfModule
     }
     ^case[apache]{
       ^use[pf/auth/pfAuthApache.p]
-        $result[^pfAuthBase::create[$aAuthOptions]]
+        $result[^pfAuthApache::create[$aAuthOptions]]
     }
     ^case[cookie]{
       ^use[pf/auth/pfAuthCookie.p]
-        $result[^pfAuthBase::create[$aAuthOptions]]
+        $result[^pfAuthCookie::create[$aAuthOptions]]
     }
   }
 
