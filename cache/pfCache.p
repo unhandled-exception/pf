@@ -34,7 +34,7 @@ pfClass
 @code[aKey;aTime;aCode;aErrorHandler][lCacheFileName;lStat;lTemp]
 ## Выполняет кэширование кода. Аналог парсеровского ^cache
   $lCacheFileName[$_cacheDir/^aKey.trim[both;/]]
-  ^if($aTime is int || $aTime is double){
+  ^if(^aTime.int(-1) >= 0){
 #   если в $aTime число, то кешируем на $aTime-секунд    	
     $result[^cache[$lCacheFileName]($aTime){$aCode}{$aErrorHandler}]
   }{

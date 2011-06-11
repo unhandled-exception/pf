@@ -28,11 +28,12 @@ pfClass
 @create[aConnectString;aOptions]
 ## Создает оъект
 ## aOptions.cache - объект класса pfCache (если не найден, то используем базовый класс)
-## aOptions.isCaching(false) - включено ли кэширование?
-## aOptions.cacheLifetime(3600) - время кеширования в секундах
+## aOptions.isCaching(false) - принудительно включить кеширование для всех запросов
+## aOptions.cacheLifetime(60) - время кеширования в секундах
+## aOptions.cacheDir[] - путь к папке с кешем (если не передали объект cache)
 ## aOptions.cacheKeyPrefix[sql/] - префикс для ключа кеширования
 ## aOptions.isNatural(false) - выполнять транзакции средствами SQL-сервера (режим "натуральной транзакции").
-## aOptions.isNaturalTransactions(false) - deprecated (аливас для isNatural).
+## aOptions.isNaturalTransactions(false) - deprecated (алиас для isNatural).
 ## aOptions.enableIdentityMap(false) - включить добавление результатов запросов в коллекцию объектов.    
 ## aOptions.enableQueriesLog(false) - включить логирование sql-запросов.
 
@@ -55,7 +56,8 @@ pfClass
      }
   }
 
-  $_cacheLifetime(^aOptions.cacheLifetime.int(3600))
+  $_cacheDir[$aOptions.cacheDir]
+  $_cacheLifetime(^aOptions.cacheLifetime.int(60))
   $_cacheKeyPrefix[^if(def $aOptions.cacheKeyPrefix){$aOptions.cacheKeyPrefix}{sql/}]
 
   $_isNaturalTransactions[^if(^aOptions.contains[isNatural]){^aOptions.isNatural.bool(false)}{^aOptions.isNaturalTransactions.bool(false)}]
@@ -90,7 +92,9 @@ pfClass
 @GET_CACHE[]
   ^if(!def $_CACHE){
      ^use[pf/cache/pfCache.p]
-     $_CACHE[^pfCache::create[]]
+     $_CACHE[^pfCache::create[
+       $.cacheDir[$_cacheDir]
+     ]]
   }
   $result[$_CACHE]
 
@@ -249,12 +253,13 @@ pfClass
 
 @_sql[aType;aCode;aOptions][lResult;lCacheKey]
 ## Возвращает результат запроса. Если нужно оранизует транзакцию.
-## aOptions.isForce(false) - принудительно отменяет кеширование
+## aOptions.isCaching(false) - принудительно включает кеширование
+## aOptions.isForce(false) - принудительно отменяет кеширование (если оно включено глобально)
 ## aOptions.cacheKey[] - ключ кеширования
 ## aOptions.cacheTime[секунды|дата окончания]
 ## aOptions.queryKey
   ^cleanMethodArgument[]
-  ^if($isCaching 
+  ^if(($isCaching || $aOptions.isCaching) 
       && (def $aOptions.cacheKey || def $aOptions.queryKey) 
       && !^aOptions.isForce.bool(false)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
