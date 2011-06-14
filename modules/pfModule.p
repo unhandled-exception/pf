@@ -18,7 +18,7 @@ pfClass
 ## aOptions.uriPrefix[/] - префикс для uri. Нужно передавать только в головной модуль, 
 ##                         поскольку метод assignModule будт передавать свой собственный
 ##                         префикс.
-## aOptions.parentModule - ссфлка на объект-контейнер.
+## aOptions.parentModule - ссылка на объект-контейнер.
 ## aOptions.appendSlash(false) - нужно ли добавлять к урлам слеш.
   ^BASE:create[]
   ^cleanMethodArgument[]
@@ -222,7 +222,7 @@ pfClass
        ^aRequest.add[$lRewrite.args]
      }
   }
-  $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix] $.render[$lRewrite.render]]
+  $result[$.action[$aAction] $.request[$aRequest] $.prefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{$uriPrefix}] $.render[$lRewrite.render]]
 
 @rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
@@ -293,7 +293,7 @@ pfClass
     $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor;$lReverse.reversePrefix]]
   }{
      $result[^_makeLinkURI[$aAction;$aOptions.fields;$aAnchor]]
-   }
+   }                                                          
 
 @redirectTo[aAction;aOptions;aAnchor]
 ## Редирект на экшн. Реализация остается за программистом
