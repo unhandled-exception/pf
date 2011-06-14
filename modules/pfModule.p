@@ -222,7 +222,7 @@ pfClass
        ^aRequest.add[$lRewrite.args]
      }
   }
-  $result[$.action[$aAction] $.request[$aRequest] $.prefix[^if(def $lRewrite.prefix){$lRewrite.prefix}{$uriPrefix}] $.render[$lRewrite.render]]
+  $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix] $.render[$lRewrite.render]]
 
 @rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
@@ -243,7 +243,7 @@ pfClass
   $lAction[$aAction]
   $lRequest[$aRequest]
   $lPrefix[^if(def $aPrefix){$aPrefix}{$aOptions.prefix}]
-  $uriPrefix[^if(def $lPrefix){/$lPrefix}/] 
+  ^if(def $lPrefix){$uriPrefix[/$lPrefix]}
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
