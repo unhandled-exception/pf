@@ -263,7 +263,7 @@ pfClass
       $_action[$lAction]
     }{            
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
-         $.prefix[/^if(def $aPrefix){$aPrefix/}{/^if(def $lPrefix){$lPrefix/}$lModule/}]
+         $.prefix[$uriPrefix/$lModule/]
        ]]                                                  
      }
   }{                          
