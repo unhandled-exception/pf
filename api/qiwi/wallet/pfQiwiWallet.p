@@ -112,7 +112,7 @@ pfClass
   $lDoc[^xdoc::create{<?xml version="1.0" encoding="$_charset"?>^taint[as-is][$lResponse.text]}]
   ^_checkResponse[$lDoc]
 
-@cancelBill[aTxnID;aOptions][lResponse;lDoc]
+@cancelBill[aTxnID;aOptions][lResponse;lDoc;lOptions]
 ## Отмена счета. 
 ## aTxnID - номер счета
 ## aOptions.ignorePrefix(false) - не вставлять префикс перед номером счета.
@@ -120,6 +120,9 @@ pfClass
   ^pfAssert:isTrue(def $aTxnID)[Не задан номер транзакции (счета).]
 
   $result[]
+  $lOptions[^hash::create[$_options]]
+  ^lOptions.add[$aOptions]
+
   $lResponse[^pfCFile:load[text;$_url;
     $.charset[$_charset]
     $.method[POST]     
@@ -131,9 +134,9 @@ pfClass
         <request-type>29</request-type>
         <terminal-id>^taint[xml][$_shopID]</terminal-id>
         <extra name="password">^taint[xml][$_password]</extra>
-        <extra name="txn-id">^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$aTxnID]</extra>
+        <extra name="txn-id">^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$lOptions.prefix}$aTxnID]</extra>
         <extra name="status">reject</extra>
-      </request>          
+      </request>
     ]
   ]] 
   $lDoc[^xdoc::create{<?xml version="1.0" encoding="$_charset"?>^taint[as-is][$lResponse.text]}]
