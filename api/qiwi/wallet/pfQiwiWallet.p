@@ -50,8 +50,25 @@ pfClass
 
   $_statuses[
     $.50[Счёт не оплачен.]
+    $.52[Счет проводится.]
     $.60[Счёт оплачен.]
-    $.150[Счёт отклонён.]
+    $.150[Счёт отменен (ошибка на терминале).]
+    $.151[Счет отменен (ошибка авторизации: недостаточно средств на балансе, отклонен абонентом при оплате с лицевого счета оператора сотовой связи и т.п.).]
+    $.160[Отменен]
+    $.161[Отменен (истекло время)]
+  ]
+
+  $_successStatuses[
+    $.60(true)
+    $._default(false)
+  ]
+
+  $_cancelStatuses[
+    $.150(true)
+    $.151(true)
+    $.160(true)
+    $.161(true)
+    $._default(false)
   ]
   
   $_errors[
@@ -197,8 +214,8 @@ pfClass
       $lID[^lNodes.[$i].getAttribute[id]]
       $result.[^if(!^lOptions.ignorePrefix.bool(false)){^lID.match[^^$_options.prefix][][]}{$lID}][
         $.status[^lNodes.[$i].getAttribute[status]]
-        $.isPaid(^lNodes.[$i].getAttribute[status] == 60)
-        $.isCanceled(^lNodes.[$i].getAttribute[status] == 150)
+        $.isPaid($_successStatuses.[^lNodes.[$i].getAttribute[status]])
+        $.isCanceled($_cancelStatuses.[^lNodes.[$i].getAttribute[status]])
         $.amount[^lNodes.[$i].getAttribute[sum]]   
         $.rawID[$lID]
       ]
