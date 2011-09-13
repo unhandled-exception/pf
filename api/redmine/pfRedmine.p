@@ -116,39 +116,57 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aOptions.login)[На задан логин.]
   ^pfAssert:isTrue(def $aOptions.password)[На задан пароль.]
-  ^CSQL.void{
-    insert into ${_database}.users
-       set login = "$aOptions.login",
-           hashed_password = "^math:sha1[$aOptions.password]",
-           firstname = "$aOptions.firstname", 
-           lastname = "$aOptions.lastname", 
-           mail = "$aOptions.mail", 
-           mail_notification = "only_my_events",
-           type = "User",
-           language = "ru",
-           status = 1,
-           created_on = ^CSQL.now[]
-  }
-  $result[^CSQL.lastInsertId[]]
-  ^if($result && ^aOptions.group.int(0)){
-    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("$aOptions.group", "$result")}
-  }
-
+  ^CSQL.transaction{
+    ^CSQL.void{
+      insert into ${_database}.users
+         set login = "$aOptions.login",
+             hashed_password = "^math:sha1[$aOptions.password]",
+             firstname = "$aOptions.firstname", 
+             lastname = "$aOptions.lastname", 
+             mail = "$aOptions.mail", 
+             mail_notification = "only_my_events",
+             type = "User",
+             language = "ru",
+             status = 1,
+             created_on = ^CSQL.now[]
+    }
+    $result[^CSQL.lastInsertId[]]
+    ^_updateUserPermissions[$result;$aOptions.group]
+  }[$.isNatural(true)]
+  
 @updateUser[aUserID;aOptions]      
+  $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def ^aUserID.int(0))[На задан id пользователя.]
-  ^CSQL.void{
-    update ${_database}.users
-       set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
-           ^if(def $aOptions.password){hashed_password = "^math:sha1[$aOptions.password]",}
-           ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
-           ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
-           ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
-           updated_on = ^CSQL.now[]
-     where id = "^aUserID.int(-1)"       
-  }
-  ^if(^aUserID.int(0) && ^aOptions.group.int(0)){
-    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("$aOptions.group", "^aUserID.int(0)")}
-  }
+  ^CSQL.transaction{
+    ^CSQL.void{
+      update ${_database}.users
+         set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
+             ^if(def $aOptions.password){hashed_password = "^math:sha1[$aOptions.password]",}
+             ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
+             ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
+             ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
+             updated_on = ^CSQL.now[]
+       where id = "^aUserID.int(-1)"       
+    }
+    ^_updateUserPermissions[$aUserID;$aOptions.group]
+  }[$.isNatural(true)]
+
+@_updateUserPermissions[aUserID;aGroup]
   $result[]
-  
+  ^if(^aUserID.int(0) && ^aGroup.int(0)){
+    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("^aGroup.int(0)", "^aUserID.int(0)")}
+    ^CSQL.void{insert ignore into ${_database}.members (user_id, project_id, mail_notification, created_on) 
+                 select ^aUserID.int(0), project_id, mail_notification, ^CSQL.now[] 
+                   from ${_database}.members 
+                  where user_id = ^aGroup.int(0)
+              }
+    ^CSQL.void{insert ignore into ${_database}.member_roles (member_id, role_id, inherited_from) 
+                 select m1.id, mr.role_id, mr.inherited_from
+                 from ${_database}.members as m1
+                      join ${_database}.members as m2 on (m1.user_id = ^aUserID.int(0) and m1.project_id = m2.project_id and m2.user_id = ^aGroup.int(0))
+                      join ${_database}.member_roles as mr on (mr.member_id = m2.id)
+              }
+  }
+
+

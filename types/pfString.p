@@ -95,7 +95,7 @@ pfString
 		$sThousandDivider[ ]
 	}
 	
-	^if(^sIntegerPart.length[] > 4){
+	^if(^sIntegerPart.length[] > 3){
 		$iIncomplTriadLength(^sIntegerPart.length[] % 3)
 		^if($iIncomplTriadLength){
 			$tIncomplTriad[^sIntegerPart.match[^^(\d{$iIncomplTriadLength})(\d*)]]
