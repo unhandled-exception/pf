@@ -120,7 +120,11 @@ pfClass
     ^CSQL.void{
       insert into ${_database}.users
          set login = "$aOptions.login",
-             hashed_password = "^math:sha1[$aOptions.password]",
+
+#            The hashed password is stored in the following form: SHA1(salt + SHA1(password))             
+             hashed_password = "^math:sha1[^math:sha1[$aOptions.password]]",
+             salt = "",
+
              firstname = "$aOptions.firstname", 
              lastname = "$aOptions.lastname", 
              mail = "$aOptions.mail", 
@@ -142,7 +146,10 @@ pfClass
     ^CSQL.void{
       update ${_database}.users
          set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
-             ^if(def $aOptions.password){hashed_password = "^math:sha1[$aOptions.password]",}
+             ^if(def $aOptions.password){
+               hashed_password = "^math:sha1[^math:sha1[$aOptions.password]]",
+               salt = "",
+             }
              ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
              ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
              ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
