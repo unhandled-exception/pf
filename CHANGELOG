@@ -8,6 +8,9 @@ CHANGELOG
 0.9.4
 -----       
 
+29.09.2011
+ 1. Новый класс - api/mobile/sms/pfZagruzkaSMSGate.
+
 04.07.2011
   1. Добавлен класс для работы с xml-интерфейсом Киви.Кошелька - api/qiwi/wallet/pfQiwiWallet.p.
 
