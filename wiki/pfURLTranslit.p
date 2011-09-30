@@ -47,9 +47,9 @@ pfClass
   $lSlash[^if(^aOptions.allowSlashes.int(0)){/}]
   
   $result[^aString.trim[both]]
-  $result[^result.match[[_\s\.,?!\[\](){}]+][g]{_}]
-  $result[^result.match[(?:-{2,}|_-+_)][g]{--}]
-  $result[^result.match[[_\-]+^$][g][]]
+  $result[^result.match[[\s\.,?!\[\](){}]+][g][-]]
+  $result[^result.match[[\-_]+][g][-]]
+  $result[^result.trim[both;-_]]
 
   $result[^result.lower[]]
 
@@ -57,8 +57,8 @@ pfClass
   $result[^result.match[(?:ь|ъ)][g][]]
 
   $result[^result.replace[$_letters]]
+  $result[^result.match[j{2,}][g][]]
 
-  $result[^result.match[j{2,}][g]{}]
   $result[^result.match[[^^${lSlash}0-9a-z_\-]+][g][]]
 
 @toSupertag[aString;aOptions][lSlash]
@@ -72,7 +72,7 @@ pfClass
   $result[^toURL[$aString;$aOptions]]
   $result[^result.match[[^^${lSlash}0-9a-zA-Z\-]+][g][]]
   $result[^result.match[[\-_]+][g]{-}]
-  $result[^result.match[-+^$][g][]]
+  $result[^result.match[-+^$][g][-]]
 
 @toWiki[aString;aOptions][lStrings;lSlash]
 ## Преобразовать произвольную строку в вики-адрес
