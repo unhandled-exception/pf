@@ -70,6 +70,7 @@ pfModule
   ^BASE:assignModule[$aName;$aOptions]
 
 @processAction[aAction;aRequest;aPrefix;aOptions][lRedirectPath]
+## aOptions.passWrap(false) - не формировать объект вокруг ответа из строк и чисел. 
 ## aOptions.passRedirect(false) - не обрабатывать эксепшн от редиректа.
   ^cleanMethodArgument[]
   ^try{
@@ -110,7 +111,6 @@ pfModule
   } 
 
 @processResponse[aResponse;aAction;aRequest;aOptions][lPostDispatch]
-## aOptions.passWrap(false) - не формировать объект вокруг ответа из строк и чисел. 
 ## aOptions.passPost(false) - не делать постобработку запроса.
   ^cleanMethodArgument[]
   $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions]]
