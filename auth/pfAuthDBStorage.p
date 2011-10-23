@@ -184,7 +184,7 @@ pfAuthStorage
   ^pfAssert:isTrue(^aUserID.int(0) > 0)[Не задан userID.]
   ^CSQL.void{
     update $_usersTable
-       set ^if(^aOptions.contains[login]){login = "",}
+       set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
            ^if(^aOptions.contains[password]){password = "^passwordHash[$aOptions.password]",}
            ^if(^aOptions.contains[isActive]){is_active = "^aOptions.isActive.int(1)",}
            ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = ^if(def $aOptions.[$k]){"$aOptions.[$k]"}{null}, }}
