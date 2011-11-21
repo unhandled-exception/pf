@@ -22,6 +22,24 @@ pfSQL
   ^BASE:create[$aConnectString;$aOptions]
   $_serverType[MySQL]
 
+@startTransaction[aOptions]
+## Открывает транзакцию.
+## aOptions.isNatural
+  $result[]
+  ^cleanMethodArgument[]
+  ^if(^aOptions.isNatural.bool(false) || $isNaturalTransactions){
+    ^void{set autocommit=0}
+  }
+  ^void{start transaction}
+
+@commit[aOptions]
+## Комитит транзакцию.
+  $result[]
+  ^void{commit}  
+  ^if(!$isNaturalTransactions){
+    ^void{set autocommit=1}
+  }
+    
 #--- DATE functions ---
 
 @today[]

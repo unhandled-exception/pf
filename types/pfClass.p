@@ -14,6 +14,9 @@ pf/tests/pfAssert.p
 ## Empty constructor
   $result[]
 
+@auto[aFilespec]
+  $[__PFROOT__][^aFilespec.match[^^(?:^taint[regex][$request:document-root])(.*?)(/types/pfClass.p)^$][]{$match.1}]
+  
 #----- Properties -----
 
 @GET_isDynamic[]

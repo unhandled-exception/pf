@@ -118,19 +118,22 @@ pfClass
 
 #----- Public -----
 
-@transaction[aCode;aOptions]
+@transaction[aCode;aOptions][lQL]
 ## Организует транзакцию, обеспечивая возможность отката.
 ## aOptions.isNatural - принудительно устанавливает режим "натуральной транзакции".
+## aOptions.disableQueriesLog(false) - отключить лог на время работы транзакции
   ^cleanMethodArgument[]
   $result[]
   ^connect[$connectString]{
     ^try{
+      $lQL($_enableQueriesLog)
+      ^if(^aOptions.disableQueriesLog.bool(false)){$_enableQueriesLog(false)}
       ^_transactionsCount.inc(1)
       ^setServerEnvironment[]
       ^if($_transactionsCount == 1 && ($isNaturalTransactions || $aOptions.isNatural)){
-        ^startTransaction[]
+        ^startTransaction[$.isNatural(true)]
         $result[$aCode]
-        ^commit[]
+        ^commit[$.isNatural(true)]
       }{ 
          $result[$aCode]
        }
@@ -138,6 +141,7 @@ pfClass
        ^rollback[]
     }{
        ^_transactionsCount.dec(1)
+       $_enableQueriesLog($lQL)
      }
   }
 
@@ -150,11 +154,13 @@ pfClass
    
 @startTransaction[aOptions]
 ## Открывает транзакцию.
+## aOptions.isNatural
   $result[]
   ^void{start transaction}
 
 @commit[aOptions]
 ## Комитит транзакцию.
+## aOptions.isNatural
   $result[]
   ^void{commit}
 

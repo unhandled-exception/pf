@@ -133,11 +133,14 @@ pf/tests/pfAssert.p
 ## Формирует на время выполнения кода aCode уникальное имя для временного
 ## файла в папке aPath. После работы кода удаляет временный файл, если он создан.
   ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для названия временного файла.]
-  $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
-  $caller.[$aVarName][$lTempFileName]
-  $result[$aCode]
-  ^if(-f $lTempFileName){
-    ^file:delete[$lTempFileName]
+  ^try{
+    $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
+    $caller.[$aVarName][$lTempFileName]
+    $result[$aCode]
+  }{}{
+     ^if(-f $lTempFileName){
+       ^file:delete[$lTempFileName]
+     }
   }
 
 @hashFile[aFileName;aVarName;aCode][lHashfile]
