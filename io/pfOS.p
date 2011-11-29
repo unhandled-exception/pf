@@ -149,9 +149,12 @@ pf/tests/pfAssert.p
 ## После работы выполняет release хешфайла.
   ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для хешфайла.]
   $lHashfile[^hashfile::open[$aFileName]]
-  $caller.[$aVarName][$lHashfile]
-  $result[$aCode]
-  ^lHashfile.release[]
+  ^try{
+    $caller.[$aVarName][$lHashfile]
+    $result[$aCode]
+  }{}{
+    ^lHashfile.release[]
+  }
 
 @absolutePath[aPath;aBasePath][lBaseParts;lParts;lStep;i]
 ## Возвращает полный путь к файлу относительно aBasePath[$request:document-root].

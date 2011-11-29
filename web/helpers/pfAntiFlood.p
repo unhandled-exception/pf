@@ -68,9 +68,6 @@ pfAntiFloodStorage
 ## Должен реализовывать простой интерфейс get/set/process
 ## Изначально реализует хранение сессий в хеш-файле
 
-@USE
-pf/io/pfOS.p
-
 @BASE
 pfClass
 
@@ -95,11 +92,10 @@ pfClass
   $_lockKey[GET_LOCK]
 
 @GET_hashFile[]
-  ^if(def $_hashFile){
-    $result[$_hashFile]
-  }{
-    ^throw[${CLASS_NAME}.fail;Не используйет методы get/set вне process.]
+  ^if(!def $_hashFile){
+    $_hashFile[^hashfile::open[$_path]]
   }
+  $result[$_hashFile]
 
 @get[aKey;aOptions]
 ## Получает ключ из хранилища
@@ -123,17 +119,18 @@ pfClass
 @process[aCode][lNow]
 ## Метод в который необходимо "завернуть" вызовы get/set
 ## чтобы обеспечить атомарность операций
-  ^pfOS:hashFile[$path][_hashFile]{
-    $_hashFile.[$_lockKey][^math:uuid[]]
+  ^try-finally{
+    $hashFile.[$_lockKey][^math:uuid[]]
     $result[$aCode]
-    
+  
     ^if($_autoCleanup){
       $lNow[^date::now[]]
-      ^if(^_hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
-        ^_hashFile.cleanup[]
-        $_hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
+      ^if(^hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
+        ^hashFile.cleanup[]
+        $hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
       }
     }
+  }{
+    ^hashFile.release[]
   }
-  $_hashFile[]
 
