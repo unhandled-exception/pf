@@ -184,22 +184,28 @@ pfClass
 ## aOptions.alias - алиас для таблицы с tags_items
 ## aOptions.type[left|right|...] - тип джоина (дописывается перед ключевым словом "join")
 ## aOptions.tagsTableColumn - имя колонки в таблице тегов
+## aOptions.where - выражение, которое добавляется в секцию on
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
-  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_items_alias}]
-  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id in (^_arrayToSQL[$aTagID;$.column[$aOptions.tagsTableColumn]])}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id)]
+  $lAlias[^if(def $aOptions.alias){$aOptions.alias}]
+  $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id in (^_arrayToSQL[$aTagID;$.column[$aOptions.tagsTableColumn]])}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id $aOptions.where)]
 
-@sqlJoinForTags[aJoinName;aOptions][lAlias]
+@sqlJoinForTags[aJoinName;aOptions][lAlias;lItemsAlias]
 ## Возвращает sql для секции join, который позволяет получить теги для контента
 ## (Не забывайте группировать результат по content_id, иначе получите "лишние" строки в ответе).
 ## aJoinName - имя колонки, которое содержит content_id в запросе
 ## aOptions.contentType
 ## aOptions.alias - алиас для таблицы tags
+## aOptions.itemsAlias - alias для таблицы items
 ## aOptions.type[left|right|...] - тип джоина (дописывается перед ключевым словом "join")
+## aOptions.where - выражение, которое добавляется в секцию on для таблицы items
+## aOptions.itemsWhere - выражение, которое добавляется в секцию on для таблицы tags
+## aOptions.withoutTagsTable(false) - не делать джоин на таблицу с тегами
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с tag_id для join.]
-  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{tags_alias}]
-  $result[$aOptions.type join $_itemsTable on ($aJoinName = ${_itemsTable}.content_id and ${_itemsTable}.content_type_id = "^aOptions.contentType.int($_defaultContentType)") $aOptions.type join $_tagsTable $lAlias on (${_itemsTable}.tag_id = ${lAlias}.tag_id)]
+  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{$_tagsTable}]
+  $lItemsAlias[^if(def $aOptions.itemsAlias){$aOptions.itemsAlias}{$_itemsTable}]
+  $result[$aOptions.type join $_itemsTable $lItemsAlias on ($aJoinName = ${lItemsAlias}.content_id and ${lItemsAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" $aOptions.itemsWhere) ^if(!^aOptions.withoutTagsTable.bool(false)){$aOptions.type join $_tagsTable $lAlias on (${lItemsAlias}.tag_id = ${lAlias}.tag_id $aOptions.where)}]
 
 @count[aTagID;aOptions]
 ## Возвращает количество элементов в теге, если тег не указан, то возвращает общее количество протегированных элементов
