@@ -187,7 +187,7 @@ pfClass
 ## aOptions.where - выражение, которое добавляется в секцию on
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aJoinName)[Не задано имя колонки с content_id для join.]
-  $lAlias[^if(def $aOptions.alias){$aOptions.alias}]
+  $lAlias[^if(def $aOptions.alias){$aOptions.alias}{$_itemsTable}]
   $result[$aOptions.type join $_itemsTable $lAlias on (^if(def $aTagID){${lAlias}.tag_id in (^_arrayToSQL[$aTagID;$.column[$aOptions.tagsTableColumn]])}{1=1} and ${lAlias}.content_type_id = "^aOptions.contentType.int($_defaultContentType)" and $aJoinName = ${lAlias}.content_id $aOptions.where)]
 
 @sqlJoinForTags[aJoinName;aOptions][lAlias;lItemsAlias]
