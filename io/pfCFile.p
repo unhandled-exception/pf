@@ -177,7 +177,7 @@ pfCFile
   $result[^aForm.foreach[k;v]{^switch[$v.CLASS_NAME]{
       ^case[table]{^_tableUrlencode[^taint[uri][$k];$v;$aSeparator]}
       ^case[file]{^taint[uri][$k]=^taint[uri][$v.text]}
-      ^case[string;int;double]{^taint[uri][$k]=^taint[uri][$v]}                                      
+      ^case[string;int;double;void]{^taint[uri][$k]=^taint[uri][$v]}                                      
       ^case[bool]{^taint[uri][$k]=^v.int[]}                                      
       ^case[date]{^taint[uri][$k]=^taint[uri][^v.sql-string[]]}                                      
       ^case[DEFAULT]{^throw[cfile.options;Невозможно закодировать параметр $k типа ${v.CLASS_NAME}.]}
