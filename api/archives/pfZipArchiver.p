@@ -17,11 +17,13 @@ pfClass
   $[__^CLASS_NAME.upper[]_FILESPEC__][^aFilespec.match[^^(^taint[regex][$request:document-root])][][]]
 
 @create[aOptions]
-## aOptions.unzipPath[] - путь к unzip-скрипту
+## aOptions.unzipPath[] - путь к unzip
+## aOptions.zipPath[] - путь к zip
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]   
 
   $_unzipPath[^if(def $aOptions.unzipPath){$aOptions.unzipPath}{^file:dirname[$__PFZIPARCHIVER_FILESPEC__]/bin/unzip}]
+  $_zipPath[^if(def $aOptions.zipPath){$aOptions.zipPath}{^file:dirname[$__PFZIPARCHIVER_FILESPEC__]/bin/zip}]
   ^_cleanLastError[]
 
 @list[aZipFile;aOptions][lExec]
@@ -55,11 +57,42 @@ pfClass
     ^_error(false)[$lExec.status;$lExec.text;$lExec.stderr]
   }
 
-@extractFile[aZipFile;aOptions]
+@pack[aZipFile;aFiles;aOptions][lFiles;lFullPath;lColumn;lOpt]
+## aFiles[string|table]
+## aOptions.column[file] - название колонки для тиблицы в aFiles
+## aOptions.fullPath(false) - пути к файлам в aFile заданы в формате «от корня»
+## aOptions.junkPaths(false) - сохраянть в архиве только имена файлов, без папок
+## aOptions.withFolders(false) - создавать в архиве записи для директорий 
+  ^cleanMethodArgument[]
+  ^_cleanLastError[]
+  $result[]
+  $lFullPath(^aOptions.fullPath.bool(false))
+  $lColumn[^if(def $aOptions.column){$aOptions.column}{column}]
+    
+  ^switch[$aFiles.CLASS_NAME]{
+    ^case[string]{$lFiles[^if($lFullPath){$aFiles}{^pfOS:absolutePath[$aFiles]}]}
+    ^case[table]{
+      $lFiles[^table::create{file}]
+      ^aFiles.menu{
+        ^aFiles.append{^if($lFullPath){$aFiles.[$lColumn]}{^pfOS:absolutePath[$aFiles.[$lColumn]]}}
+      }
+    }
+    ^case[DEFAULT]{^throw[pfZipArchiver.create;Список файлов должен быть таблицей или строкой.]}
+  }
+  
+  $lOpt[^table::create{param}]
+  ^if(^aOptions.junkPaths.bool(false)){^lOpt.append{-j}}
+  ^if(!^aOptions.withFolders.bool(false)){^lOpt.append{-D}}
+  
+  $lExec[^file::exec[$_zipPath;;-q;$lOpt;^pfOS:absolutePath[$aZipFile];$lFiles]]
+  ^if($lExec.status){
+    ^_error(true)[$lExec.status;$lExec.text;$lExec.stderr]
+  }
+
+@unpack[aZipFile;aOptions]
   ^_cleanLastError[]
   $result[]
   ^throw[mega.fail;Не реализовано!]
-
 
 #----- Private -----
 
