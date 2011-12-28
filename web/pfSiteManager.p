@@ -17,18 +17,18 @@ pfSiteModule
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
-  $_REQUEST[^if(def $aOptions.request){$aOptions.request}{^pfHTTPRequest::create[]}]
-  
-  $_uriProtocol[^if(def $aOptions.uriProtocol){$aOptions.uriProtocol}{^if($REQUEST.isSECURE){https}{http}}]
-  $_uriServerName[^if(def $aOptions.uriServerName){$aOptions.uriServerName}{$REQUEST.META.SERVER_NAME}]
+  $_REQUEST[$aOptions.request]
+  $_uriProtocol[$aOptions.uriProtocol]
+  $_uriServerName[$aOptions.uriServerName]
   
 #----- Public -----  
 
-@run[aOptions][lArgs;lResult]
+@run[aOptions][lRequest;lResult;lAction]
 ## Основной процесс обработки запроса (как правило перекрывать не нужно).
-  $lArgs[^getDispatchArgs[]]
-  ^authenticate[$lArgs._action;$lArgs]
-  $result[^dispatch[$lArgs._action;$lArgs]]
+  $lRequest[$REQUEST]                   
+  $lAction[$lRequest._action]
+  ^authenticate[$lAction;$lRequest]
+  $result[^dispatch[$lAction;$lRequest]]
 
 @authenticate[aAction;aOptions]
 ## Производит авторизацию.
@@ -38,18 +38,24 @@ pfSiteModule
       $result[^onAuthFailed[$aOptions]]
     }
 
-@getDispatchArgs[aOptions]
-  $result[$REQUEST]
-
 #----- Properties -----
 
 @GET_uriProtocol[]
+  ^if(!def $uriProtocol){
+    $_uriProtocol[^if($REQUEST.isSECURE){https}{http}]
+  }
   $result[$_uriProtocol]
 
 @GET_uriServerName[]
+  ^if(!def $_uriServerName){
+    $_uriServerName[$REQUEST.META.SERVER_NAME]
+  }
   $result[$_uriServerName]
   
 @GET_REQUEST[]
+  ^if(!def $_REQUEST){
+    $_REQUEST[^pfHTTPRequest::create[]]
+  }
   $result[$_REQUEST]
 
 #----- Events -----
@@ -64,7 +70,7 @@ pfSiteModule
 
 @processResponse[aResponse;aAction;aRequest;aOptions]
 ## aOptions.passManagerPost(false)
-  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions ^if(^aOptions.passManagerPost.bool(false)){$.passPost(true)}]]
+  $result[^BASE:processResponse[$aResponse;$aAction;$aRequest;$aOptions $.passPost(^aOptions.passManagerPost.bool(false))]]
 
 @postDEFAULT[aResponse]
   ^throw[pfSiteManager.postDEFAULT;Unknown response type "$aResponse.type".]

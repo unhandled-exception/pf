@@ -15,9 +15,8 @@ pfClass
 
 @create[aOptions]
 ## Конструктор класса
-## aOptions.uriPrefix[/] - префикс для uri. Нужно передавать только в головной модуль, 
-##                         поскольку метод assignModule будт передавать свой собственный
-##                         префикс.
+## aOptions.mountPoint[/] - место монтирования. Нужно передавать только в головной модуль, 
+##                          поскольку метод assignModule будт вычислять точку монтирования самостоятельно.
 ## aOptions.parentModule - ссылка на объект-контейнер.
 ## aOptions.appendSlash(false) - нужно ли добавлять к урлам слеш.
   ^BASE:create[]
@@ -28,7 +27,9 @@ pfClass
   $_parentModule[$aOptions.parentModule]
   
   $_MODULES[^hash::create[]]  
-  $uriPrefix[^if(def $aOptions.uriPrefix){$aOptions.uriPrefix}{/}]
+  $_mountPoint[^if(def $aOptions.mountPoint){$aOptions.mountPoint}{/}]
+  $uriPrefix[$_mountPoint]
+  $_localUriPrefix[]  
 
   $_router[]   
   $_appendSlash(^aOptions.appendSlash.bool(true))
@@ -43,12 +44,22 @@ pfClass
   
 #----- Properties -----
 
+@GET_mountPoint[]
+  $result[$_mountPoint]
+
 @GET_uriPrefix[]
   $result[$_uriPrefix]
 
 @SET_uriPrefix[aUriPrefix]  
-  $_uriPrefix[$aUriPrefix/]
+  $_uriPrefix[^aUriPrefix.trim[right;/.]/]
   $_uriPrefix[^_uriPrefix.match[$_pfModuleRepeatableSlashRegex][][/]]
+
+@GET_localUriPrefix[]
+  $result[$_localUriPrefix]
+
+@SET_localUriPrefix[aLocalUriPrefix]  
+  $_localUriPrefix[^aLocalUriPrefix.trim[right;/]]
+  $_localUriPrefix[^_localUriPrefix.match[$_pfModuleRepeatableSlashRegex][][/]]
   
 @GET_action[]
   $result[$_action]
@@ -133,12 +144,12 @@ pfClass
        
        $.isCompiled(0)
        $.makeAction(^aOptions.makeAction.int(1))   
-       $.uriPrefix[${uriPrefix}$aName/]
+       $.mountPoint[${_mountPoint}$aName/]
    ]
 
 #  Перекрываем uriPrefix, который пришел к нам в $aOptions.args.
 #  Возможно и не самое удачное решение, но позволяет сохранить цепочку.
-   $_MODULES.[$aName].args.uriPrefix[$_MODULES.[$aName].uriPrefix]
+   $_MODULES.[$aName].args.mountPoint[$_MODULES.[$aName].mountPoint]
         
    ^if(^aOptions.compile.int(0)){
      ^compileModule[$aName]
@@ -206,7 +217,7 @@ pfClass
   $_action[$lProcessed.action]
   $_request[$lProcessed.request]
 
-  $result[^processAction[$lProcessed.action;$lProcessed.request;$lProcessed.prefix;$aOptions $.render[$lProcessed.render]]]
+  $result[^processAction[$lProcessed.action;$lProcessed.request;$lProcessed.prefix;^hash::create[$aOptions] $.render[$lProcessed.render]]]
   $result[^processResponse[$result;$lProcessed.action;$lProcessed.request;$aOptions]]
 
 @processRequest[aAction;aRequest;aOptions][lRewrite]
@@ -228,7 +239,7 @@ pfClass
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
 ## $result.action - новый экшн.
 ## $result.args - параметры, которые надо добавить к аргументам и передать обработчику. 
-## $result.prefix - префикс, который необходимо передать диспетчеру
+## $result.prefix - локальный префикс, который необходимо передать диспетчеру
 ## Стандартный обработчик проходит по карте преобразований и ищет подходящий шаблон, 
 ## иначе возвращает оригинальный экшн. 
   $result[^router.route[$aAction;$.args[$aRequest]]]
@@ -237,13 +248,13 @@ pfClass
   }                                 
   ^if(!def $result.args){$result.args[^hash::create[]]}
     
-@processAction[aAction;aRequest;aPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
+@processAction[aAction;aRequest;aLocalPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
 ## Производит вызов экшна.
-## aOptions.aPrefix - префикс, сформированный в processRequest.                                    
+## aOptions.prefix - префикс, сформированный в processRequest.                                    
   $lAction[$aAction]
   $lRequest[$aRequest]
-  $lPrefix[^if(def $aPrefix){$aPrefix}{$aOptions.prefix}]
-  ^if(def $lPrefix){$uriPrefix[/$lPrefix]}
+  ^if(def $aLocalPrefix){$localUriPrefix[$aLocalPrefix]}
+  ^if(def $aOptions.prefix){$uriPrefix[$aOptions.prefix]}
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
@@ -263,7 +274,7 @@ pfClass
       $_action[$lAction]
     }{            
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
-         $.prefix[/^if(def $aPrefix){$aPrefix/}{$uriPrefix/$lModule/}]
+         $.prefix[$uriPrefix/^if(def $aLocalPrefix){$aLocalPrefix/}{$lModule/}]
        ]]                                                  
      }
   }{                          
@@ -285,8 +296,6 @@ pfClass
 @linkTo[aAction;aOptions;aAnchor][lReverse]
 ## Формирует ссылку на экшн, выполняя бэкрезолв путей.
 ## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)     
-#^pfAssert:fail[$aAction $aOptions.CLASS_NAME ^rem{^aOptions.foreach[k;v]{$k -> $v}[, ]}]
-
   ^cleanMethodArgument[]
   $lReverse[^router.reverse[$aAction;$aOptions.fields]]
   ^if($lReverse){
@@ -311,9 +320,8 @@ pfClass
 ## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
   ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
-  ^if(def $aPrefix){$aPrefix[/^aPrefix.trim[both;/.]/]} 
 
-  $result[^if(def $aPrefix){$aPrefix}{$uriPrefix}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
+  $result[${uriPrefix}^if(def $aPrefix){^aPrefix.trim[both;/]}{^if(def $localUriPrefix){$localUriPrefix/}}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
   ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
 
   ^if($aOptions is hash && $aOptions){

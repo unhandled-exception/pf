@@ -37,7 +37,7 @@ pfModule
   $_responseType[html] 
   $_createOptions[$aOptions]
 
-  $templatePath[^if(^aOptions.contains[templatePrefix]){$aOptions.templatePrefix}{$uriPrefix}]
+  $templatePath[^if(^aOptions.contains[templatePrefix]){$aOptions.templatePrefix}{$mountPoint}]
   
   $_sql[^if(def $aOptions.sql){$aOptions.sql}]
   $_auth[^if(def $aOptions.auth){$aOptions.auth}]
