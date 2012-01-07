@@ -14,44 +14,45 @@ pf/io/pfCFile.p
 pfClass
 
 @create[aOptions]      
-## aOptions.serviceId[] — service_id
+## aOptions.serviceID[] — service_id
 ## aOptions.password[]
 ## aOptions.url[https://smsinfo.zagruzka.com/aggrweb]
 ## aOptions.shortNumber[]
-## aOptions.timeout(30)
+## aOptions.timeout(15)
   ^cleanMethodArgument[]
-  ^pfAssert:isTrue(def $aOptions.serviceId)[Не задано имя пользователя (serviceId).]
+  ^pfAssert:isTrue(def $aOptions.serviceID)[Не задано имя пользователя (serviceID).]
 
   ^BASE:create[$aOptions]
-  $_serviceId[$aOptions.serviceId]
+  $_serviceID[$aOptions.serviceID]
   $_password[$aOptions.password]
   $_url[^if(def $aOptions.url){$aOptions.url}{https://smsinfo.zagruzka.com/aggrweb}]
   $_shortNumber[$aOptions.shortNumber]
 
-  $_timeout(^aOptions.timeout.int(30))
+  $_timeout(^aOptions.timeout.int(15))
   
   $_requestCharset[utf-8]
   $_responseCharset[utf-8]      
-  $_maxMessageLength(480)
 
 @send[aPhone;aMessage;aOptions][lResp]
-## aPhone - номер телефона (для россии номер должен быть в формате 7xxxxxxxxxx)
+## aPhone - номер телефона (для России номер должен быть в формате 7xxxxxxxxxx)
 ## aMessage
 ## result[$.status[bool] $.smsID[table] $.comment[]] - результат операции
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aMessage)[Не задан текст сообщения.]
   ^pfAssert:isTrue(def $aPhone)[Не задан получатель сообщения.]
+  ^pfAssert:isTrue(^aPhone.length[] <= 11)[Неверный номер телефона "$aPhone".]
   $result[]
   ^try{
     $lResp[^pfCFile:load[text;$_url;
       $.method[post]
       $.charset[$_requestCharset]
       $.response-charset[$_responseCharset]
-      $.any-status(false)
+      $.any-status(true)
+      $.timeout($_timeout)
       $.form[      
-        $.clientId[$aPhone]
+        $.clientId[^if(^aPhone.length[] <= 11){7^aPhone.match[^^(.*?)(\d{10})^$][]{$match.2}}{$aPhone}]
         $.message[$aMessage]
-        $.serviceId[$_serviceId]
+        $.serviceId[$_serviceID]
         $.pass[$_password]        
         ^if(def $_shortNumber){
           $.shortNumber[$_shortNumber]
@@ -71,12 +72,18 @@ pfClass
           $.comment[$lResp.text]
         ]
       }
-      ^case[401]{^throw[sms.gate.unauthorized;Доступ к серису запрещен (неверные serviceId и password).]}
-      ^case[403;406]{^throw[sms.gate.bad_phone;Невозможно отправить сообщение на номер "$aOptions.phone".]}
+      ^case[406]{
+        $result[
+          $.status(false) 
+          $.comment[Невозможно отправить сообщение на номер "$aOptions.phone"]
+          $.badPhone(true)
+        ]
+      }
+      ^case[400;401;403]{^throw[sms.gate.fail;Доступ к серису запрещен (неверные serviceID и/или password).]}
     }
   }{
      ^if(^exception.type.match[^^(?:http|cfile)\.][n]){
-       ^throw[${self.CLASS_NAME}.fail;Ошибка при работе с смс-шлюзом;${exception.type}: $exception.comment]
+       ^throw[sms.gate.fail;Ошибка при работе с смс-шлюзом;${exception.type}: $exception.comment]
      }
    }
    

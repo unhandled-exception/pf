@@ -145,6 +145,10 @@ pfClass
      }
   }
 
+@naturalTransaction[aCode;aOptions]
+## Принудительно вызывает "натуральную транзацию". Алиас на transaction.
+  $result[^transaction{$aCode}[^hash::create[$aOptions $.isNatural(true)]]]
+
 @rollback[]
 ## Откатывает текущую транзакцию.
   $result[]

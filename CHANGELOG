@@ -7,6 +7,10 @@ CHANGELOG
 
 0.9.4
 -----
+07.01.2012
+ 1. Новый метод — pfSQL.naturalTransaction (transaction{code}[... $.isNatural(true)]).
+ 2. Небольшой рефакторинг pfZagruzkaSMSGate.
+
 28.12.2011
  1. Рефакторинг pfModule и pfSiteModule: 
     - Добавлено свойство и параметр конструктора mountPoint, определяющее точку монтирования модуля (раньше определяли по uriPrefix).

@@ -321,7 +321,7 @@ pfClass
   ^cleanMethodArgument[]
   ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
 
-  $result[${uriPrefix}^if(def $aPrefix){^aPrefix.trim[both;/]}{^if(def $localUriPrefix){$localUriPrefix/}}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
+  $result[${uriPrefix}^if(def $aPrefix){^aPrefix.trim[both;/]/}{^if(def $localUriPrefix){$localUriPrefix/}}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
   ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
 
   ^if($aOptions is hash && $aOptions){
