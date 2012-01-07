@@ -109,9 +109,7 @@ pfCFile
   $result.timeout(^aOptions.timeout.int(2))
   ^if(!^result.compressed.bool(true)){$result.encoding[identity]}{$result.encoding[]}
 
-  ^if(^aOptions.contains[any-status]){
-    $result.failonerror(!^aOptions.any-status.int(0))
-  }
+  $result.failonerror(!^aOptions.any-status.int(false)) 
 
 # Auth (Basic)
   ^if(def $aOptions.user){          

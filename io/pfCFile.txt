@@ -13,7 +13,9 @@
   options.content-type[]
   options.timeout(2) - таймаут в секундах.
   options.user - имя пользователя.
-  options.password - пароль.
+  options.password - пароль.  
+
+  options.any-status(false) - игнорировать ошибочные результаты http-ответов.
                                
   options.method[GET]
   options.compressed(true) - использовать компрессию для http-соединений.
@@ -41,8 +43,6 @@
   options.form[$.name[] ...] - параметры POST-запроса. Значением может выступать 
                                строка или таблица строк с одним столбцом. 
   options.body[] - заменяет запрос. Если задан body, то form игнорируется.
-
-  options.any-status(false) - игнорировать ошибочные результаты http-ответов.
   
   options.limit - количество байт (только если сервер поддерживает range)
   options.offset - смещение (только если сервер поддерживает range)
