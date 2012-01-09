@@ -66,12 +66,6 @@ pfClass
           $.smsID[^lResp.text.match[^^(\d+)^$][gm]]
         ]            
       }
-      ^case[500;408]{
-        $result[
-          $.status(false) 
-          $.comment[$lResp.text]
-        ]
-      }
       ^case[406]{
         $result[
           $.status(false) 
@@ -80,6 +74,7 @@ pfClass
         ]
       }
       ^case[400;401;403]{^throw[sms.gate.fail;Доступ к серису запрещен (неверные serviceID и/или password).]}
+      ^case[500;408]{^throw[sms.gate.fail;$lResp.text]}
     }
   }{
      ^if(^exception.type.match[^^(?:http|cfile)\.][n]){
