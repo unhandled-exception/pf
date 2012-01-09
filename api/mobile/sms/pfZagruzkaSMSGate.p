@@ -73,12 +73,12 @@ pfClass
           $.badPhone(true)
         ]
       }
-      ^case[400;401;403]{^throw[sms.gate.fail;Доступ к серису запрещен (неверные serviceID и/или password).]}
-      ^case[500;408]{^throw[sms.gate.fail;$lResp.text]}
+      ^case[400;401;403]{^throw[sms.gate.fail;Доступ к серису запрещен (неверные serviceID и/или password).;Статус - $lResp.status]}
+      ^case[500;408]{^throw[sms.gate.fail;Ошибка на шлюзе.;Статус - $lResp.status]}
     }
   }{
      ^if(^exception.type.match[^^(?:http|cfile)\.][n]){
-       ^throw[sms.gate.fail;Ошибка при работе с смс-шлюзом;${exception.type}: $exception.comment]
+       ^throw[sms.gate.fail;Ошибка при работе с смс-шлюзом.;${exception.type}: $exception.comment]
      }
    }
    
