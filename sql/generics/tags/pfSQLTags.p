@@ -347,14 +347,15 @@ pfClass
     }
   } 
 
-@tagging[aContent;aTags;aOptions][lTags;k;v;ck;cv;lContentType;lContentColumnName;lTagsColumnName]
+@tagging[aContent;aTags;aOptions][lTags;k;v;ck;cv;lContentType;lContentColumnName;lTagsColumnName;lHTags]
 ## Тегирует контент (можно протегировать сразу много объектов по куче тегов)  
 ## aTags - string|table
 ## aOptions.tagsTableColumn[tagID] - имя колонки в таблице с тегами, содержащее tagID
 ## aContent - string|int|hash|table. Для хеша id беерем из ключа, для таблицы из колонки.
 ## aOptions.contentTableColumn[contentID] - имя колонки в таблице с контентом, содержащее ID
 ## aOptions.mode[new|append] - заново протегировать контент или добавить теги к уже существующим
-## aOptions.contentType
+## aOptions.contentType 
+## aOptions.appendParents(false) - добавить родительские теги
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aContent)[Не заданы объекты для тегирования.]
   $result[]
@@ -381,22 +382,26 @@ pfClass
     }
 
     ^if($lTags){
+      $lHTags[^lTags.hash[$lTagsColumnName][$lTagsColumnName][$.type[string] $.distinct(true)]]
+      ^if(^aOptions.appendParents.bool(false)){
+        ^lHTags.add[^_getTagsParents[$lHTags;^tags[]]]
+      }        
       ^CSQL.void{
         insert ignore into $_itemsTable (content_type_id, tag_id, content_id)
         values 
-        ^lTags.menu{
+        ^lHTags.foreach[k;v]{
           ^switch[$aContent.CLASS_NAME]{
             ^case[string;int;double]{
-              ("$lContentType", "$lTags.[$lTagsColumnName]", "$aContent")
+              ("$lContentType", "$k", "$aContent")
             }
             ^case[hash]{       
               ^aContent.foreach[ck;cv]{
-                ("$lContentType", "$lTags.[$lTagsColumnName]", "$ck")
+                ("$lContentType", "$k", "$ck")
               }[, ]
             }
             ^case[table]{                                 
               ^aContent.menu{
-                ("$lContentType", "$lTags.[$lTagsColumnName]", "$aContent.[$lContentColumnName]")
+                ("$lContentType", "$k", "$aContent.[$lContentColumnName]")
               }[, ]
             }
           }
@@ -412,6 +417,19 @@ pfClass
 #  ^recountTags[$lTags;$.contentType[$lContentType]]
 
 #----- Private -----
+
+@_getTagsParents[aTags;aTree][k;v;lCurTag]
+## Ищет для aTags всех родителей по aTree
+## aTags[hash] - хеш с тегами
+## aTree[table] - таблица с деревом тегов
+  $result[^hash::create[]]
+  ^aTags.foreach[k;v]{
+    $lCurTag[$k]
+    ^while(^aTree.locate[tagID;$lCurTag]){
+      $result.[$aTree.tagID][$aTree.tagID]
+      $lCurTag[$aTree.parentID]
+    }
+  } 
 
 @_arrayToSQL[aArray;aOptions][lColName;k;v]
 ## aArray[string|table|hash] 
