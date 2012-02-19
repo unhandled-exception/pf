@@ -18,6 +18,7 @@ pfClass
 ## aOptions.path - путь к файлам для дефолтного хранилища
 ## aOptions.fieldName[form_uid] - имя поля формы
 ## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение [для дефолтного хранилища]
+## aOptions.ignoreLockErrors(false) - игнорировать ошибки блокировки при проверке формы
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
@@ -27,7 +28,8 @@ pfClass
 
   $_fieldName[^if(def $aOptions.fieldName){$aOptions.fieldName}{form_uid}]
   ^defReadProperty[fieldName]
-  
+
+  $_ignoreLockErrors(^aOptions.ignoreLockErrors.bool(false))
   $_safeValue[0]
   $_doneValue[1]
 
@@ -39,22 +41,30 @@ pfClass
     $lUID[^math:uuid[]]
     ^storage.set[$lUID;$_safeValue]
     $caller.[$aUIDVarName][$lUID]
-    $result[$aCode]
   }
+  $result[$aCode]
 
-@field[aUID]
+@field[aUID;aFieldName]
 ## Возвращает html-код для поля
-  $result[<input type="hidden" name="$fieldName" value="$aUID" />]
+## aFieldName[_fieldName]
+  $result[<input type="hidden" name="^if(def $aFieldName){$aFieldName}{$fieldName}" value="$aUID" />]
 
 @process[aRequest;aNormalCode;aFailCode][lUID;lValidRequest]
 ## Вы полняет проверку полей запроса aRequest и выполняет код aNormalCode
 ## Если проверка прошла неудачно, то выполняет aFailCode
   $lValidRequest(false)
-  ^storage.process{
-    $lUID[$aRequest.[$fieldName]]
-    ^if(def $lUID && ^storage.get[$lUID] eq $_safeValue){
-      ^storage.set[$lUID;$_doneValue]
-      $lValidRequest(true)
+  ^try{
+    ^storage.process{
+      $lUID[$aRequest.[$fieldName]]
+      ^if(def $lUID && ^storage.get[$lUID] eq $_safeValue){
+        ^storage.set[$lUID;$_doneValue]
+        $lValidRequest(true)
+      }
+    }
+  }{
+    ^if($_ignoreLockErrors && $exception.type eq "storage.locked"){
+      $exception.handled(true)
+      $lValidRequest(true)      
     }
   }
   $result[^if($lValidRequest){$aNormalCode}{$aFailCode}]
@@ -70,6 +80,8 @@ pfAntiFloodStorage
 
 @BASE
 pfClass
+
+#@exception: storage.locked - хранилище заблокировано (невозможно получить эксклюзивную блокировку). 
 
 @create[aOptions]
 ## aOptions.path[/../antiflood] - имя хеш-файла для хранения ключей
@@ -119,7 +131,7 @@ pfClass
 @process[aCode][lNow]
 ## Метод в который необходимо "завернуть" вызовы get/set
 ## чтобы обеспечить атомарность операций
-  ^try-finally{
+  ^try{
     $hashFile.[$_lockKey][^math:uuid[]]
     $result[$aCode]
   
@@ -129,6 +141,10 @@ pfClass
         ^hashFile.cleanup[]
         $hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
       }
+    }
+  }{
+    ^if($exception.type eq "file.access" && ^exception.comment.pos[pa_sdbm_open] > -1){
+      ^throw[storage.locked;$exception.source;$exception.comment]
     }
   }{
     ^hashFile.release[]
