@@ -24,9 +24,11 @@ pfAuthStorage
   ^cleanMethodArgument[]
   ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL.]
 
+  ^BASE:create[$aOptions]
+
   $_sql[$aOptions.sql]
-  ^if(def $aOptions.usersTable){$_usersTable[$aOptions.usersTable]}{$_usersTable[users]}  
-  ^if(def $aOptions.sessionsTable){$_sessionsTable[$aOptions.sessionsTable]}{$_sessionsTable[sessions]}  
+  $_usersTable[^if(def $aOptions.usersTable){$aOptions.usersTable}{users}]  
+  $_sessionsTable[^if(def $aOptions.sessionsTable){$aOptions.sessionsTable}{sessions}]  
 
   $_cryptType[$aOptions.cryptType] 
   $_salt[^if(def $aOptions.salt){$aOptions.salt}{^$apr1^$}]
@@ -166,14 +168,14 @@ pfAuthStorage
   ^CSQL.safeInsert{
     ^CSQL.void{
       insert into $_usersTable (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){`^if(def $v){$v}{$k}`, }} login, password, is_active)
-      values (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){"$aOptions.[$k]", }} "$aOptions.login", "^passwordHash[$aOptions.password]", "^aOptions.isActive.int(1)")
+      values (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){"$aOptions.[$k]", }} "^taint[$aOptions.login]", "^taint[^passwordHash[$aOptions.password]]", "^aOptions.isActive.int(1)")
     }
     $result[^CSQL.lastInsertId[]]
   }{
      ^throw[pfAuth.user.exists;Пользователь "$aOptions.login" уже есть в системе.] 
    }
 
-@userModify[aUserID;aOptions]
+@userModify[aUserID;aOptions][k;v]
 ## Изменяет данные пользователя
 ## aOptions.login
 ## aOptions.password
@@ -184,10 +186,10 @@ pfAuthStorage
   ^pfAssert:isTrue(^aUserID.int(0) > 0)[Не задан userID.]
   ^CSQL.void{
     update $_usersTable
-       set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
-           ^if(^aOptions.contains[password]){password = "^passwordHash[$aOptions.password]",}
+       set ^if(^aOptions.contains[login]){login = "^taint[$aOptions.login]",}
+           ^if(^aOptions.contains[password]){password = "^taint[^passwordHash[$aOptions.password]]",}
            ^if(^aOptions.contains[isActive]){is_active = "^aOptions.isActive.int(1)",}
-           ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = ^if(def $aOptions.[$k]){"$aOptions.[$k]"}{null}, }}
+           ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = ^if(def $aOptions.[$k]){"^taint[$aOptions.[$k]]"}{null}, }}
            id = id
      where id = "^aUserID.int(0)"
   }

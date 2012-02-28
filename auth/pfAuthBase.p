@@ -87,6 +87,10 @@ pfClass
   $consonants[bcdfghklmnprstvxz]
   $result[^for[i](1;$passwd_length){^if($i % 2 ){^consonants.mid(^math:random(^consonants.length[] );1)}{^vowels.mid(^math:random(^vowels.length[]);1)}}]
 
-@can[aWhat]
-## Интерфейс к AuthSecurity
-  ^security.can[$user;$aWhat]
+@can[aPermission]
+## Интерфейс к AuthSecurity для текущего пользователя
+  $result(^security.can[$user;$aPermission])
+
+@grant[aPermission]
+## Интерфейс к AuthSecurity для текущего пользователя
+  $result[^security.grant[$user;$aPermission]]
