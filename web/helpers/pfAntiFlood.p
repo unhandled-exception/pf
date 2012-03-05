@@ -14,80 +14,92 @@ pfClass
 #----- Constructor -----
 
 @create[aOptions]
-## aOptions.storage[pfAntiFloodStorage] - хранилище данных
+## aOptions.storage[pfAntiFloodHashStorage] - хранилище данных
 ## aOptions.path - путь к файлам для дефолтного хранилища
-## aOptions.fieldName[form_uid] - имя поля формы
+## aOptions.fieldName[form_token] - имя поля формы
 ## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение [для дефолтного хранилища]
 ## aOptions.ignoreLockErrors(false) - игнорировать ошибки блокировки при проверке формы
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
   $_expires(^aOptions.expires.int(15*60))
-  $_storage[^if(def $aOptions.storage){$aOptions.storage}{^pfAntiFloodStorage::create[$.path[$aOptions.path] $.expires($_expires)]}]
+  $_storage[^if(def $aOptions.storage){$aOptions.storage}{
+    ^pfAntiFloodHashStorage::create[
+      $.path[$aOptions.path]
+      $.ignoreLockErrors(^aOptions.ignoreLockErrors.bool(false))
+      $.expires($_expires)
+    ]
+  }]
   ^defReadProperty[storage]
 
-  $_fieldName[^if(def $aOptions.fieldName){$aOptions.fieldName}{form_uid}]
+  $_fieldName[^if(def $aOptions.fieldName){$aOptions.fieldName}{form_token}]
   ^defReadProperty[fieldName]
 
-  $_ignoreLockErrors(^aOptions.ignoreLockErrors.bool(false))
-  $_safeValue[0]
-  $_doneValue[1]
 
 #----- Methods -----
 
-@protect[aUIDVarName;aCode][lUID]
-## Формирует uid в переменной aUIDVarName и выполняет код
-  ^storage.process{
-    $lUID[^math:uuid[]]
-    ^storage.set[$lUID;$_safeValue]
-    $caller.[$aUIDVarName][$lUID]
-  }
+@field[aToken;aFieldName]
+## Возвращает html-код для поля
+## aToken — ксли не задан токен, то он формируется автоматически.
+## aFieldName[_fieldName]
+  ^if(!def $aToken){$aToken[^storage.generateToken[]]}
+  $result[<input type="hidden" name="^if(def $aFieldName){$aFieldName}{$fieldName}" value="$aToken" />]
+
+@protect[aTokenVarname;aCode]
+## Формирует token в переменной aTokenVarname и выполняет код
+  $caller.[$aTokenVarname][^storage.generateToken[]]
   $result[$aCode]
 
-@field[aUID;aFieldName]
-## Возвращает html-код для поля
-## aFieldName[_fieldName]
-  $result[<input type="hidden" name="^if(def $aFieldName){$aFieldName}{$fieldName}" value="$aUID" />]
-
-@process[aRequest;aNormalCode;aFailCode][lUID;lValidRequest]
-## Вы полняет проверку полей запроса aRequest и выполняет код aNormalCode
+@process[aRequest;aNormalCode;aFailCode]
+## Выполняет проверку полей запроса aRequest и выполняет код aNormalCode
 ## Если проверка прошла неудачно, то выполняет aFailCode
-  $lValidRequest(false)
-  ^try{
-    ^storage.process{
-      $lUID[$aRequest.[$fieldName]]
-      ^if(def $lUID && ^storage.get[$lUID] eq $_safeValue){
-        ^storage.set[$lUID;$_doneValue]
-        $lValidRequest(true)
-      }
-    }
-  }{
-    ^if($_ignoreLockErrors && $exception.type eq "storage.locked"){
-      $exception.handled(true)
-      $lValidRequest(true)      
-    }
-  }
-  $result[^if($lValidRequest){$aNormalCode}{$aFailCode}]
+  $result[^if(^storage.validateToken[$aRequest.[$fieldName]]){$aNormalCode}{$aFailCode}]
 
+@validateRequest[aRequest]                                    
+## Выполняет проверку полей запроса aRequest и возвращает результат.
+  $result(^storage.validateToken[$aRequest.[$fieldName]])
 
+#----------------------------------------------------------------
 
 @CLASS
 pfAntiFloodStorage
 
-## Хранилище ключей-значений 
-## Должен реализовывать простой интерфейс get/set/process
-## Изначально реализует хранение сессий в хеш-файле
+## Интерфейс хранилища  
 
 @BASE
 pfClass
 
-#@exception: storage.locked - хранилище заблокировано (невозможно получить эксклюзивную блокировку). 
+@create[aOptions]
+  ^BASE:create[]
+
+@generateToken[][lUID]
+## Генерирует новый токен
+  ^_abstractMethod[]
+
+@validateToken[aToken]
+## Проверяет валидность токена
+  $result(false)
+  
+@cleanup[]
+  $result[]
+
+
+#----------------------------------------------------------------
+
+@CLASS
+pfAntiFloodHashStorage
+
+## Хранилище токенов (uuid) в хеш-файле
+
+@BASE
+pfAntiFloodStorage
 
 @create[aOptions]
 ## aOptions.path[/../antiflood] - имя хеш-файла для хранения ключей
 ## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение
 ## aOptions.autoCleanup(true) - автоматически очищать неиспользуемые пары
-## aOptions.cleanupTimeout - время в секундах между очистками хешфайла
+## aOptions.cleanupTimeout(60*60) - время в секундах между очистками хешфайла
+## aOptions.ignoreLockErrors(false) - игнорировать ошибки блокировки при проверке формы
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
@@ -103,44 +115,87 @@ pfClass
   $_hashFile[]
   $_lockKey[GET_LOCK]
 
+  $_ignoreLockErrors(^aOptions.ignoreLockErrors.bool(false))
+  $_safeValue[0]
+  $_doneValue[1]
+
+
+#----- Properties -----
+
 @GET_hashFile[]
   ^if(!def $_hashFile){
     $_hashFile[^hashfile::open[$_path]]
   }
   $result[$_hashFile]
 
-@get[aKey;aOptions]
+#---- Public ----
+
+@generateToken[][lUID]
+## Генерирует новый токен
+  ^_process{
+    $lUID[^math:uuid[]]
+    ^_set[$lUID;$_safeValue]
+  }
+  $result[$lUID]
+
+@validateToken[aToken]
+## Проверяет валидность токена
+  $result(false)
+  $aToken[^aToken.trim[both]]
+  ^try{
+    ^_process{
+      ^if(def $aToken && ^_get[$aToken] eq $_safeValue){
+        ^_set[$aToken;$_doneValue]
+        $result(true)
+      }
+    }
+  }{
+    ^if($_ignoreLockErrors && $exception.type eq "storage.locked"){
+      $exception.handled(true)
+      $result(true)      
+    }
+  }      
+
+@cleanup[][lNow]
+## Удаляет старые записи из хешфайла.
+  $result[]
+  $lNow[^date::now[]]
+  ^if(^hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
+    ^hashFile.cleanup[]
+    $hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
+  }
+  
+
+#----- Private -----
+
+@_get[aKey;aOptions]
 ## Получает ключ из хранилища
   $result[$hashFile.[$aKey]]
 
-@set[aKey;aValue;aOptions]
+@_set[aKey;aValue;aOptions]
 ## Записывает ключ в хранилище
   $hashFile.[$aKey][
     $.value[$aValue] 
     ^if($_expires){$.expires($_expires)}
   ]
   $result[]
-  
-@delete[aKey]
+
+@_delete[aKey]
 ## Удаляет ключ из хранилища
   ^if(def $aKey){
     ^hashFile.delete[$aKey]
   }
   $result[]
 
-@process[aCode][lNow]
-## Метод в который необходимо "завернуть" вызовы get/set
+@_process[aCode][lNow]
+## Метод в который необходимо "завернуть" вызовы _get/_set
 ## чтобы обеспечить атомарность операций
   ^try{
     $hashFile.[$_lockKey][^math:uuid[]]
     $result[$aCode]
-  
+
     ^if($_autoCleanup){
-      $lNow[^date::now[]]
-      ^if(^hashFile.[$_cleanupKey].int(0) + $_cleanupTimeout < ^lNow.unix-timestamp[]){
-        ^hashFile.cleanup[]
-        $hashFile.[$_cleanupKey][^lNow.unix-timestamp[]]
-      }
+      ^cleanup[]
     }
   }{
     ^if($exception.type eq "file.access" && ^exception.comment.pos[pa_sdbm_open] > -1){
@@ -150,3 +205,108 @@ pfClass
     ^hashFile.release[]
   }
 
+
+#----------------------------------------------------------------
+
+@CLASS
+pfAntiFloodDBStorage
+
+## Хранилище токенов в базе данных.
+## Только для MySQL, лучше использовать innodb-engine.
+## token = hex(aes('id|salt', password)) 
+
+@BASE
+pfAntiFloodStorage
+
+@create[aOptions]
+## aOptions.sql[] - sql-класс
+## aOptions.table[antiflood]
+## aOptions.password[] - пароль для шифрования токена
+## aOptions.expires(15*60) - сколько секунд хранить пару ключ/значение
+## aOptions.autoCleanup(true) - автоматически очищать неиспользуемые пары
+  ^cleanMethodArgument[]
+  ^pfAssert:isTrue(def $aOptions.sql)[Не задан sql-класс.]
+  ^pfAssert:isTrue($aOptions.sql is pfSQL)[SQL-класс должен быть наследником pfSQL.]
+  ^pfAssert:isTrue(def $aOptions.password)[Не задан пароль для шифрования токена.]
+
+  ^BASE:create[$aOptions]
+    
+  $_csql[$aOptions.sql]
+  $_tableName[^if(def $aOptions.table){$aOptions.table}{antiflood}]
+  $_password[$aOptions.password]
+
+  $_expires(^aOptions.expires.int(15*60))
+  $_autoCleanup(^aOptions.autoCleanup.bool(true))
+  
+#----- Properties -----
+
+@GET_CSQL[]
+  $result[$_csql]
+
+#----- Public -----
+
+@generateToken[][lID;lSalt]
+## Генерирует новый токен
+  ^CSQL.transaction{
+    ^if($_autoCleanup && ^math:random(5) == 1){
+      ^cleanup[]
+    }
+
+    $lSalt[^math:uid64[]]
+    $lSalt[^lSalt.lower[]]
+    ^CSQL.void{       
+       insert into $_tableName (salt) 
+            values (0x$lSalt)
+    }
+    $lID[^CSQL.lastInsertId[]]
+  }
+  $result[^_packTocken[$lID;$lSalt]]
+
+@validateToken[aToken][lToken;lID;lNow]
+## Проверяет валидность токена
+  $result(false)
+  $lToken[^_unpackToken[^aToken.trim[both]]]
+  ^if($lToken){
+    ^CSQL.naturalTransaction{
+      $lNow[^date::now[]]
+      $lID[^CSQL.string{
+        select id
+          from $_tableName
+         where id = "^taint[$lToken.id]"
+               and salt = 0x^taint[$lToken.salt]
+               and processed_at is null
+               and created_at >= date_sub("^lNow.sql-string[]", interval ^_expires.int[] second)
+         limit 1
+         for update
+      }[$.default{}][$.isForce(true)]]
+      ^if(def $lID){
+        $result(true)
+        ^CSQL.void{update $_tableName set processed_at = ^CSQL.now[] where id ="$lID"}
+      }
+    }
+  }
+
+@cleanup[][lNow]
+## Удаляет из стораджа устаревшие записи (expires sec + 12 hours)
+  $result[]                                           
+  $lNow[^date::now[]]
+  ^CSQL.void{
+     delete from $_tableName 
+      where created_at between 
+              date_sub("^lNow.sql-string[]", interval 10 year) 
+              and date_sub("^lNow.sql-string[]", interval ^_expires.int[] + (60*60*12) second)
+  }
+
+#----- Private -----
+
+@_packTocken[aID;aSalt]
+  $result[^CSQL.string{select lower(hex(aes_encrypt('^taint[sql][$aID|$aSalt]', '$_password')))}]
+
+@_unpackToken[aToken][lString]                      
+## result[$.id $.salt]
+  $result[^hash::create[]]
+  $lString[^CSQL.string{select aes_decrypt(unhex('^taint[sql][$aToken]'), '$_password')}]
+  ^lString.match[^^(\d+)\|([a-f0-9]{16})^$][]{
+    $result.id[$match.1]
+    $result.salt[$match.2]
+  }                                
