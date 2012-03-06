@@ -271,11 +271,11 @@ pfAuthDBStorage
 
 @_permissionsToString[aPermissions;aOptions][lColumn;k;v]
 ## aPermissions[string|table|hash]
-## aOptions.column[permissions]
+## aOptions.column[permission]
   ^switch[$aPermissions.CLASS_NAME]{
     ^case[DEFAULT;string]{$result[$aPermissions]}
     ^case[table]{
-      $lColumn[^if(def $aOptions.column){$aOptions.column}{permissions}]
+      $lColumn[^if(def $aOptions.column){$aOptions.column}{permission}]
       $result[^aPermissions.menu{+$aPermissions.[$lColumn]^#0A}]
     }
     ^case[hash]{
