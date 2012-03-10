@@ -148,11 +148,16 @@ pfAuthStorage
     ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
   }
 
-@clearSessionsForLogin[aLogin]
+@clearSessionsForLogin[aLogin;aOptions]
+## aOptions.ignoreSession[session]
+  ^cleanMethodArgument[]
   $result[]
   ^CSQL.void{
      delete from $_sessionsTable
       where login = "$aLogin"
+      ^if($aOptions.ignoreSession){
+        and uid != "^taint[$aOptions.ignoreSession.uid]"
+      }
   }
    
 @userAdd[aOptions][k;v]

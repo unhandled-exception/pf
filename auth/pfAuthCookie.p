@@ -47,6 +47,9 @@ pfAuthBase
 
 @GET_formPrefix[]
   $result[$_formPrefix]
+  
+@GET_session[]
+  $result[$_session]
 
 #----- Public -----
 
