@@ -67,7 +67,7 @@ pfClass
   ^_cleanLastError[]
   $result[]
   $lFullPath(^aOptions.fullPath.bool(false))
-  $lColumn[^if(def $aOptions.column){$aOptions.column}{column}]
+  $lColumn[^if(def $aOptions.column){$aOptions.column}{file}]
     
   ^switch[$aFiles.CLASS_NAME]{
     ^case[string]{$lFiles[^if($lFullPath){$aFiles}{^pfOS:absolutePath[$aFiles]}]}
