@@ -74,7 +74,7 @@ pfClass
     ^case[table]{
       $lFiles[^table::create{file}]
       ^aFiles.menu{
-        ^aFiles.append{^if($lFullPath){$aFiles.[$lColumn]}{^pfOS:absolutePath[$aFiles.[$lColumn]]}}
+        ^lFiles.append{^if($lFullPath){$aFiles.[$lColumn]}{^pfOS:absolutePath[$aFiles.[$lColumn]]}}
       }
     }
     ^case[DEFAULT]{^throw[pfZipArchiver.create;Список файлов должен быть таблицей или строкой.]}
