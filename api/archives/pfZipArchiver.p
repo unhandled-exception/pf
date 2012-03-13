@@ -59,7 +59,7 @@ pfClass
 
 @pack[aZipFile;aFiles;aOptions][lFiles;lFullPath;lColumn;lOpt]
 ## aFiles[string|table]
-## aOptions.column[file] - название колонки для тиблицы в aFiles
+## aOptions.column[name] - название колонки для тиблицы в aFiles
 ## aOptions.fullPath(false) - пути к файлам в aFile заданы в формате «от корня»
 ## aOptions.junkPaths(false) - сохраянть в архиве только имена файлов, без папок
 ## aOptions.withFolders(false) - создавать в архиве записи для директорий 
@@ -67,7 +67,7 @@ pfClass
   ^_cleanLastError[]
   $result[]
   $lFullPath(^aOptions.fullPath.bool(false))
-  $lColumn[^if(def $aOptions.column){$aOptions.column}{file}]
+  $lColumn[^if(def $aOptions.column){$aOptions.column}{name}]
     
   ^switch[$aFiles.CLASS_NAME]{
     ^case[string]{$lFiles[^if($lFullPath){$aFiles}{^pfOS:absolutePath[$aFiles]}]}
