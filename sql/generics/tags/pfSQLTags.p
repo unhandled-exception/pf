@@ -19,6 +19,12 @@ pfClass
 ## aOptions.tagsTable[tags] - имя таблицы с тегами
 ## aOptions.itemsTable[{tagsTable}_items] - имя таблицы с тегированным контентом
 ## aOptions.countersTable[{tagsTable}_counters] - имя таблицы со счетчиками
+## aOptions.deleteToArchive(false) — при удалении тегов, сначала копировать информацию в архив.
+##                                   Архивные таблицы имеют ту же структуру, что и основные.
+## aOptions.archiveTagsTable[archive_tags] - имя архивной таблицы с тегами
+## aOptions.archiveTtemsTable[{archiveTagsTable}_items] - имя архивной таблицы с тегированным контентом
+## aOptions.archiveCountersTable[{archiveTagsTable}_counters] - имя архивной таблицы со счетчиками
+
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
   
@@ -32,6 +38,14 @@ pfClass
   ^defReadProperty[tagsTable]
   ^defReadProperty[itemsTable]
   ^defReadProperty[countersTable]
+
+  $_deleteToArchive(^aOptions.deleteToArchive.bool(false))
+  $_archiveTagsTable[^if(def $aOptions.archiveTagsTable){$aOptions.archiveTagsTable}{archive_tags}]
+  $_archiveItemsTable[^if(def $aOptions.archiveItemsTable){$aOptions.archiveItemsTable}{${_archiveTagsTable}_items}]
+  $_archiveCountersTable[^if(def $aOptions.archiveCountersTable){$aOptions.archiveCountersTable}{${_archiveTagsTable}_counters}]
+  ^defReadProperty[archiveTagsTable]
+  ^defReadProperty[archiveItemsTable]
+  ^defReadProperty[archiveCountersTable]
 
   $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
   $_extraFields[t.description]
@@ -276,25 +290,34 @@ pfClass
       insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
       values
       ^lTags.foreach[tag;v]{
-          ("$tag", "^if(def $aOptions.slug){$aOptions.slug}{^transliter.toURL[$tag]}", "$aOptions.description",
+          ("$tag", "^if(def ^aOptions.slug.trim[both]){$aOptions.slug}{^transliter.toURL[$tag]}", "$aOptions.description",
                   "^aOptions.parentID.int(0)", "^aOptions.threadID.int(0)", "^aOptions.sortOrder.int(0)", "^aOptions.isVisible.int(1)")
       }[, ]
     }                  
   }
   $result[^tags[$.title[$lTags]]]
 
-@deleteTag[aTagID]
+@deleteTag[aTagID;aOptions]
 ## Удаляет тег и все, что им протегировано.
+## aOptions.disableTransaction(false) — выключает «реальную» транзакцию
+  ^cleanMethodArgument[]
   ^pfAssert:isTrue(^aTagID.int(0))[Не задан ID тега.]
   $result[]          
-  ^CSQL.transaction{
+  ^CSQL.transaction{ 
+    ^if($_deleteToArchive){ 
+#     Эта функция доступна только для MySQL :)      
+      ^CSQL.void{replace into $_archiveCountersTable select * from $_countersTable where tag_id = "$aTagID"}
+      ^CSQL.void{replace into $_archiveItemsTable select * from $_itemsTable where tag_id = "$aTagID"}
+      ^CSQL.void{replace into $_archiveTagsTable select * from $_tagsTable where tag_id = "$aTagID"}
+    }
     ^CSQL.void{delete from $_countersTable where tag_id = "$aTagID"}
     ^CSQL.void{delete from $_itemsTable where tag_id = "$aTagID"}
     ^CSQL.void{delete from $_tagsTable where tag_id = "$aTagID"}
-  }
+  }[$.isNatural(!^aOptions.disableTransaction.bool(false))]
 
 @modifyTag[aTagID;aOptions][k;v]
 ## Редактирует запись о теге в БД
+## aOptions.title
 ## aOptions.slug
 ## aOptions.description
 ## aOptions.parentID
@@ -306,7 +329,10 @@ pfClass
     update $_tagsTable
        set ^_tagsFields.foreach[k;v]{
              ^if(^aOptions.contains[$k]){
-               $v = "$aOptions.[$k]",
+               ^switch[$k]{                            
+                 ^case[DEFAULT]{$v = "$aOptions.[$k]",}
+                 ^case[slug]{$v = "^if(!def ^aOptions.slug.trim[both] && def $aOptions.title){^transliter.toURL[$aOptions.title]}{$aOptions.slug}",}
+               }
              }
            }
            tag_id = tag_id
@@ -324,7 +350,7 @@ pfClass
 #   но для джененрик-класса привязка к одной базе не канает. 
     $lTagsList[^if(def $aTags && $aTags){^aTags.menu{"$aTags.tagID"}[, ], -1}]
     $lWhere[1=1
-      ^if(def $aTags){
+      ^if(def $lTagsList){
         and tag_id in ($lTagsList)
       }
       ^if(def $aOptions.contentType){ and content_type_id = "$aOptions.contentType"}
@@ -365,7 +391,7 @@ pfClass
     $lContentColumnName[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
     $lTagsColumnName[^if(def $aOptions.tagsTableColumn){$aOptions.tagsTableColumn}{tagID}]
 
-    $lTags[^if($aTags is string){^newTags[$aTags]}{$aTags}] 
+    $lTags[^if(def $aTags && $aTags is string){^newTags[$aTags]}{$aTags}] 
 
     ^if(!def $aOptions.mode || $aOptions.mode eq "new"){
       ^CSQL.void{
@@ -375,7 +401,6 @@ pfClass
           ^case[string;int;double]{content_id = "$aContent"}
           ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{"$ck"}[, ],} -1)}
           ^case[table]{content_id in (^if($aContent){^aContent.menu{"$aContent.[$lContentColumnName]"}[, ],} -1)}
-          }
         }
         and content_type_id = "$lContentType"
       }
