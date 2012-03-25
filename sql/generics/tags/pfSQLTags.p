@@ -47,7 +47,7 @@ pfClass
   ^defReadProperty[archiveItemsTable]
   ^defReadProperty[archiveCountersTable]
 
-  $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order, t.is_visible as isVisible]
+  $_defaultFields[t.parent_id as parentID, t.thread_id as threadID, t.title, t.slug, t.sort_order as sortOrder, t.is_visible as isVisible]
   $_extraFields[t.description]
   ^defReadProperty[defaultFields]
   ^defReadProperty[extraFields]
@@ -63,7 +63,7 @@ pfClass
     $.description[description]
     $.threadID[thread_id]
     $.parentID[parent_id]
-    $.sortOrder[sortOrder]
+    $.sortOrder[sort_order]
     $.isVisible[is_visible]
   ]
   
