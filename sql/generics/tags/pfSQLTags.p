@@ -255,7 +255,8 @@ pfClass
 @splitTags[aTags;aOptions][lTags;lTitle]
 ## Разбивает строку на отдельные теги, нормализует строки и удаляет повторы
 ## aOptions.separator[] - регулярное выражение для "разделителя" тегов 
-## aOptions.columnTitle[tag]         
+## aOptions.columnTitle[tag]
+## result[hash]         
   ^cleanMethodArgument[]
   $result[^hash::create[]]
   ^if(def $aTags){
@@ -270,8 +271,8 @@ pfClass
     }
   }
      
-@newTags[aTags;aOptions][lTags;tag;v]
-## Создает новые теги в системе, если они не существует.
+@newTag[aTag;aOptions][lTags;tag;v]
+## Создает новый тег
 ## aTag - string
 ## aOptions.slug
 ## aOptions.description
@@ -279,23 +280,18 @@ pfClass
 ## aOptions.threadID
 ## aOptions.sortOrder
 ## aOptions.isVisible    
-## aOptions.separator - разделитель тегов в строке
-## result[tag]
-  ^cleanMethodArgument[]   
-  ^pfAssert:isTrue(def $aTags)[На задано имя тега.]
+## result[tag_id]
+  ^cleanMethodArgument[]
+  $aTag[^normalizeTagTitle[$aTag]]
+  ^pfAssert:isTrue(def $aTag)[На задано имя тега.]
 
-  $lTags[^splitTags[$aTags;$.separator[$aOptions.separator]]]
-  ^if($lTags){
-    ^CSQL.void{
-      insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
-      values
-      ^lTags.foreach[tag;v]{
-          ("$tag", "^if(def ^aOptions.slug.trim[both]){$aOptions.slug}{^transliter.toURL[$tag]}", "$aOptions.description",
-                  "^aOptions.parentID.int(0)", "^aOptions.threadID.int(0)", "^aOptions.sortOrder.int(0)", "^aOptions.isVisible.int(1)")
-      }[, ]
-    }                  
-  }
-  $result[^tags[$.title[$lTags]]]
+  ^CSQL.void{
+    insert ignore into $_tagsTable (title, slug, description, parent_id, thread_id, sort_order, is_visible)
+    values
+        ("$aTag", "^if(def ^aOptions.slug.trim[both]){$aOptions.slug}{^transliter.toURL[$aTag]}", "$aOptions.description",
+                "^aOptions.parentID.int(0)", "^aOptions.threadID.int(0)", "^aOptions.sortOrder.int(0)", "^aOptions.isVisible.int(1)")
+  }                  
+  $result[^CSQL.lastInsertId[]]
 
 @deleteTag[aTagID;aOptions]
 ## Удаляет тег и все, что им протегировано.
