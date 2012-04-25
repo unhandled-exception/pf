@@ -29,13 +29,15 @@ pf/tests/pfAssert.p
 
 #----- Public -----
 
-@cleanMethodArgument[aName]
-## Метод проверяет пришел ли вызывающему методу
-## параметр с именем $aName[aOptions].
-## Если пришел пустой параметр или строка, то записываем в него пустой хеш.
-  ^if(!def $aName){$aName[aOptions]}
-  ^if(!def $caller.[$aName] || ($caller.[$aName] is string && !def ^caller.[$aName].trim[])){$caller.[$aName][^hash::create[]]}
+@cleanMethodArgument[*aNames][k;v]
+## Если в переменных aNames, вызывающего метода, содержится void или пустая строка,
+## то записываем в них пустой хеш.
   $result[]
+  ^if(!$aNames)[$aNames[$.0[aOptions]]]
+  ^aNames.foreach[k;v]{
+    ^if(!def $v){$v[aOptions]}
+    ^if(!def $caller.[$v] || ($caller.[$v] is string && !def ^caller.[$v].trim[])){$caller.[$v][^hash::create[]]}
+  }
 
 @defProperty[aPropertyName;aVarName;aType][lVarName]
 ## Добавляет в объект свойство с именем aPropertyName

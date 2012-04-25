@@ -8,6 +8,10 @@ CHANGELOG
 0.9.4
 -----   
 
+25.04.2012
+ 1. Переписан метод pfClass.cleanMethodArgument. Теперь он умеет очищать несколько переменных:
+     ^cleanMethodArgument[aFirstOptions;aSecondOptions;aThirdOptions]
+
 26.03.2012
  1. Метод pfSQLTags.newTags переименован в newTag и создает он теперь только один тег. Возвращает ID нового тега.
 
