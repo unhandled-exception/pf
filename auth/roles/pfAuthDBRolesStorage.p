@@ -106,18 +106,20 @@ pfAuthDBStorage
       from $_rolesToUsersTable as ru
            join $_rolesTable as r using (role_id)
      where 1=1
-           ^switch[$aUsers.CLASS_NAME]{
-             ^case[string]{
-               and user_id = "^aUsers.int(-1)"
+           ^if(def $aUsers){
+             ^switch[$aUsers.CLASS_NAME]{
+               ^case[string]{
+                   and user_id = "^aUsers.int(-1)"
+               }
+               ^case[table]{
+                 $lColName[^if(def $aOptions.columnName){$aOptions.columnName}{roleID}]
+                 and user_id in (^aUsers.menu{"^aUsers.[$lColName].int(-1)", } -1)
+               }
+               ^case[hash]{
+                 and user_id in (^aUsers.foreach[k;v]{"^k.int(-1)", } -1)
+               }
              }
-             ^case[table]{
-               $lColName[^if(def $aOptions.columnName){$aOptions.columnName}{roleID}]
-               and user_id in (^aUsers.menu{"^aUsers.[$lColName].int(-1)", } -1)
-             }
-             ^case[hash]{
-               and user_id in (^aUsers.foreach[k;v]{"^k.int(-1)", } -1)
-             }
-           }  
+           }
            ^switch[$aOptions.active]{
              ^case[DEFAULT;active]{and r.is_active = "1"}
              ^case[inactive]{and r.is_active = "0"}
