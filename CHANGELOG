@@ -5,8 +5,19 @@ Copyright (c) Oleg Volchkov
 CHANGELOG
 =========
 
+Основной репозиторий: http://code.volchkov.net/parser3-pf/src
+
+1.0
+---
+
+04.06.2012
+  1. Код библиотеки достаточно стабильный, поэтому текущий транк считаю версией 1.0.
+
+
 0.9.4
 -----   
+
+Tag: http://code.volchkov.net/parser3-pf/src/29f6a0d2a8b6
 
 30.05.2012
  1. Новый класс sql/generics/builder/pfSQLBuilder — генератор sql-выражений. Пока глубокая бета с неопределенным API.
