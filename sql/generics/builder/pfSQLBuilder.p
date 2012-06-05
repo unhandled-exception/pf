@@ -52,6 +52,7 @@ pfClass
 ##   curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
 ##   null - если не задано значение, то возвращает null.
+##   uid - уникальный идентификатор (math:uuid)
 
 @_processFieldsOptions[aOptions]
   $result[^hash::create[$aOptions]]
@@ -86,7 +87,7 @@ pfClass
 ## aOptions.data - хеш с данными
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   $aOptions[^_processFieldsOptions[$aOptions]]
-  $lData[^if(def $aOptions.data){$aOptions.data}]
+  $lData[^if(def $aOptions.data){$aOptions.data}{^hash::create[]}]
   $lTableAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
@@ -132,7 +133,8 @@ pfClass
     ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
     ^case[json]{"^taint[^json:string[$aValue]]"}
     ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
-    ^case[DEFAULT]{"^taint[$aValue]"}
+    ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
+    ^case[DEFAULT]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
   }]
 
 @array[aField;aValue;aOptions][locals]
@@ -140,13 +142,15 @@ pfClass
 ## aValue[table|hash|...]
 ## aOptions.column[primaryKey] — имя колонки в таблице
 ## aOptions.emptyValue[null] — значение массива, если в aValue нет данных
+## aOptions.valueFunction[fieldValue] — функция форматирования значения поля
   ^cleanMethodArgument[]
+  $lValueFunction[^if(^aOptions.contains[valueFunction]){$aOptions.valueFunction}{$fieldValue}]
   $lEmptyValue[^if(^aOptions.contains[emptyValue]){$aOptions.emptyValue}{null}]
   $lColumn[^if(def $aOptions.column){$aOptions.column}{primaryKey}]
   $result[^switch(true){
-    ^case($aValue is hash){^aValue.foreach[k;v]{^fieldValue[$aField;$k]}[, ]}
-    ^case($aValue is table){^aValue.menu{^fieldValue[$aField;$aValue.[$lColumn]]}[, ]}
-    ^case[DEFAULT]{^fieldValue[$aField;$aValue]}
+    ^case($aValue is hash){^aValue.foreach[k;v]{^lValueFunction[$aField;$k]}[, ]}
+    ^case($aValue is table){^aValue.menu{^lValueFunction[$aField;$aValue.[$lColumn]]}[, ]}
+    ^case[DEFAULT]{^lValueFunction[$aField;$aValue]}
   }]
   ^if(!def $result && def $lEmptyValue){
     $result[$lEmptyValue]
@@ -172,7 +176,7 @@ pfClass
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   ^cleanMethodArgument[]
-  $result[insert into $aTableName (^fieldsList[$aFields;$aOptions]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
+  $result[insert into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
 @updateStatement[aTableName;aFields;aData;aWhere;aOptions][locals]
 ## Строит выражение для update
@@ -180,7 +184,7 @@ pfClass
 ## aFields - поля
 ## aData - данные
 ## aWhere - выражение для where
-##          (для безопасности блок where принудительно задается принудительно,
+##          (для безопасности блок where задается принудительно,
 ##           если нужно иное поведение укажите aWhere[1=1])
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
@@ -192,4 +196,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
-  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where ^processStatementMacro[$aFields;$aWhere]]
+  $result[update $aTableName set ^processStatementMacro[$aFields;^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]]

@@ -37,15 +37,15 @@ pfClass
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
   $_plural[^if(def $aOptions.plural){$aOptions.plural}]
 
-  $_skipOnInsert[^if(def $aOptions.skipOnInsert){$aOptions.skipOnInsert}{^hash::create[]}]
-  $_skipOnUpdate[^if(def $aOptions.skipOnUpdate){$aOptions.skipOnUpdate}{^hash::create[]}]
-
   $_fields[^hash::create[]]
   ^if(^aOptions.contains[fields]){
     ^aOptions.fields.foreach[k;v]{
       ^addField[$k;$v]
     }
   }
+
+  $_skipOnInsert[^hash::create[^if(def $aOptions.skipOnInsert){$aOptions.skipOnInsert}]]
+  $_skipOnUpdate[^hash::create[^if(def $aOptions.skipOnUpdate){$aOptions.skipOnUpdate}]]
 
 
 #----- Статические методы и конструктор -----
@@ -103,13 +103,13 @@ pfClass
      $lField.dbField[^if(def $aOptions.dbField){$aOptions.dbField}{$aFieldName}]
      $lField.primary(^aOptions.primary.bool(false))
      $lField.auto(^aOptions.auto.bool(false))
-     $lField.processor[$aOptions.processor]
-     $lField.default{$aOptions.processor}
-     $lField.format[$aOptions.format]
-     ^if(^aOptions.skipOnUpdate.bool(false)){
+     $lField.processor[^if(def $aOptions.processor){$aOptions.processor}]
+     $lField.default[^if(def $aOptions.default){$aOptions.default}]
+     $lField.format[^if(def $aOptions.format){$aOptions.format}]
+     ^if(^aOptions.skipOnUpdate.bool(false) || $lField.primary){
        $self._skipOnUpdate.[$aFieldName](true)
      }
-     ^if(^aOptions.skipOnInsert.bool(false)){
+     ^if(^aOptions.skipOnInsert.bool(false) || $lField.primary){
        $self._skipOnInsert.[$aFieldName](true)
      }
      ^if($lField.primary && !def $_primaryKey){
@@ -137,8 +137,11 @@ pfClass
 #----- Выборки -----
 
 @get[aPrimaryKeyValue;aOptions]
-  ^pfAssert:isTrue(def $_primaryKey)[Невозможно получить запись — не задан первичный ключ.]
-  $result[^all[$.[$_primaryKey][$aPrimaryKeyValue]]]
+  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  $result[^one[$.[$_primaryKey][$aPrimaryKeyValue]]]
+
+@one[aOptions;aSQLOptions]
+  $result[^all[$aOptions;$aSQLOptions]]
   ^if($result){
     $result[^result._at[first]]
   }
@@ -152,22 +155,33 @@ pfClass
 ## Для поддержки специфики СУБД:
 ##   aSQLOptions.tail — концовка запроса
 ##   aSQLOptions.options — модификатор после select (distinct, sql_cach и т.п.)
+ ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
  ^cleanMethodArgument[aOptions;aSQLOptions]
- $lJoinFields[^_allJoinFields[$aOptions]]
- $lGroup[^_allGroup[$aOptions]]
- $lOrder[^_allOrder[$aOptions]]
 
- $lWhere[^if(^aOptions.contains[where]){$aOptions.where}]
- $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+ $lResultType[^if(^aOptions.asTable.bool(false)){table}{hash}]
+ ^CSQL.[$lResultType]{
+   ^_selectExpression[$lResultType;$aOptions;$aSQLOptions]
+ }[
+    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
+    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
+  ]]
 
- ^CSQL.[^if(^aOptions.asTable.bool(false)){table}{hash}]{
-   ^_builder.processStatementMacro[$_fields;
+@_selectExpression[aResultType;aOptions;aSQLOptions][locals]
+  $lJoinFields[^_allJoinFields[$aOptions]]
+  $lGroup[^_allGroup[$aOptions]]
+  $lOrder[^_allOrder[$aOptions]]
+
+  $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  $result[^_builder.processStatementMacro[$_fields;
      select ^if(def $aSQLOptions.options){$aSQLOptions.options}
+            ^if($aResultType eq "hash"){
+#             Для хеша добавляем еще одно поле с первичным ключем
+              `${_tableAlias}`.`$_fields.[$_primaryKey].dbField` as  `_ORM_HASH_KEY_`,
+            }
             ^_allFields[$aOptions]^if(def $lJoinFields){, $lJoinFields}
        from $_tableName as $_tableAlias
             ^_allJoin[]
-      where ^if(def $lWhere){$lWhere}{1=1}
-            ^_allWhere[$aOptions]
+      where ^_allWhere[$aOptions]
     ^if(def $lGroup){
       group by $lGroup
     }
@@ -178,11 +192,7 @@ pfClass
       order by $lOrder
     }
     ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
-  ][$.tableAlias[$_tableAlias]]
- }[
-    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
-  ]]
+  ][$.tableAlias[$_tableAlias]]]
 
 @_allFields[aOptions]
   $result[^_builder.selectFields[$_fields;$.tableAlias[$_tableAlias]]]
@@ -195,16 +205,17 @@ pfClass
 
 @_allWhere[aOptions][locals]
 ## Если надо сделать иной вариант для where, перекрываем метод...
-  $result[
-#  Выборка отдельных полей
+  $lWhere[^if(^aOptions.contains[where]){$aOptions.where}]
+  $result[^if(def $lWhere){$lWhere}{1=1}
+#  Выборка по отдельным полям (равенство значений)
    ^_fields.foreach[k;v]{
      ^if(^aOptions.contains[$k]){
-         and :$k = ^_builder.fieldValue[$v;$aOptions.[$k]]
+         and :$k = ^_fieldValue[$v;$aOptions.[$k]]
      }
    }
 #  Выборка по нескольким значениям из первичного ключа
    ^if(def $_plural && ^aOptions.contains[$_plural]){
-     and :$_primaryKey in (^_builder.array[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$_primaryKey]])
+     and :$_primaryKey in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$_primaryKey]])
    }
   ]
 
@@ -221,18 +232,48 @@ pfClass
 #----- Манипуляция данными -----
 
 @new[aOptions]
-  …
+## Вставляем значение в базу
+  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
+  ^cleanMethodArgument[]
+  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aOptions;$.skipFields[$_skipOnInsert]]}
   $result[^CSQL.lastInsertId[]]
 
-@modify[aPrimaryKey;aOptions]
-  update
-         set …, $_primaryKeyField = $_primaryKeyField
-    where $_primaryKeyField = "^taint[$aPrimaryKey]"
+@modify[aPrimaryKeyValue;aData]
+## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
+  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
+  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  ^cleanMethodArgument[aData]
+  $result[^CSQL.void{
+    ^_builder.updateStatement[$_tableName;$_fields;$aData][:$_primaryKey = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
+      $.skipAbsent(true)
+      $.skipFields[$_skipOnUpdate]
+      $.emptySetExpression[:$_primaryKey = :$_primaryKey]
+    ]
+  }]
 
-@delete[aPrimaryKey]
-  delete from $_tableName where $_primaryKeyField = "^taint[$aPrimaryKey]"
+@delete[aPrimaryKeyValue]
+## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue
+  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
+  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  $result[^CSQL.void{^_builder.processStatementMacro[$_fields;
+    delete from $_tableName where :$_primaryKey = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+  ]}]
 
 @deleteAll[aOptions]
-  delete from $_tableName
-    where ^_allWhere[aOptions]
+## Удаляем все записи из таблицы
+## Условие для удаления берем из _allWhere
+  ^cleanMethodArgument[]
+  $result[^CSQL.void{^_builder.processStatementMacro[$_fields;
+    delete from $_tableName
+     where ^_allWhere[$aOptions]
+  ]}]
 
+
+#----- Private -----
+
+@_fieldValue[aField;aValue]
+  $result[^_builder.fieldValue[$aField;$aValue]]
+
+@_valuesArray[aField;aValues;aOptions]
+  ^cleanMethodArgument[]
+  $result[^_builder.array[$aField;$aValues;$aOptions $.valueFunction[$_fieldValue]]]
