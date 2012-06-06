@@ -159,7 +159,9 @@ pfClass
     }{
        $result[^result._at[first]]
      }
-  }
+  }{
+     $result[^hash::create[]]
+   }
 
 @all[aOptions;aSQLOptions][locals]
 ## aOptions.asTable(false) — возвращаем хеш
