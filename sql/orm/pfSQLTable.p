@@ -174,6 +174,7 @@ pfClass
 ## Для поддержки специфики СУБД:
 ##   aSQLOptions.tail — концовка запроса
 ##   aSQLOptions.options — модификатор после select (distinct, sql_cach и т.п.)
+##   aSQLOptions.skipFields — пропустить поля
  ^cleanMethodArgument[aOptions;aSQLOptions]
 
  $lResultType[^switch(true){
@@ -201,7 +202,7 @@ pfClass
 #             Для хеша добавляем еще одно поле с первичным ключем
               `${_tableAlias}`.`$_fields.[$_primaryKey].dbField` as  `_ORM_HASH_KEY_`,
             }
-            ^_allFields[$aOptions]^if(def $lJoinFields){, $lJoinFields}
+            ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
        from $_tableName as $_tableAlias
             ^_allJoin[]
       where ^_allWhere[$aOptions]
@@ -217,8 +218,13 @@ pfClass
     ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
   ][$.tableAlias[$_tableAlias]]]
 
-@_allFields[aOptions]
-  $result[^_builder.selectFields[$_fields;$.tableAlias[$_tableAlias]]]
+@_allFields[aOptions;aSQLOptions]
+  $result[^_builder.selectFields[$_fields;
+    $.tableAlias[$_tableAlias]
+    ^if(^aSQLOptions.contains[skipFields]){
+      $.skipFields[$aSQLOptions.skipFields]
+    }
+  ]]
 
 @_allJoinFields[aOptions]
   $result[]

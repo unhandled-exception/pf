@@ -194,4 +194,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
-  $result[update $aTableName set ^processStatementMacro[$aFields;^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]]
+  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{^processStatementMacro[$aFields;$aOptions.emptySetExpression]} where ^processStatementMacro[$aFields;$aWhere]]
