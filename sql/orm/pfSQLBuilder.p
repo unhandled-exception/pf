@@ -22,7 +22,7 @@ pfClass
   $_today[^date::today[]]
 
 @auto[]
-  $_pfSQLBuilder_PatternVar[((?:[:\*])\{?([\p{L}\p{Nd}_\-]+)\}?)]
+  $_pfSQLBuilder_PatternVar[((?:\:)\{?([\p{L}\p{Nd}_\-]+)\}?)]
   $_pfSQLBuilder_PatternRegex[^regex::create[$_pfSQLBuilder_PatternVar][g]]
 
 #----- Работа с полями -----
@@ -58,13 +58,16 @@ pfClass
   $result.skipAbsent(^aOptions.skipAbsent.bool(false))
   $result.skipFields[^hash::create[$aOptions.skipFields]]
 
+@sqlFieldName[aField;aTableAlias][locals]
+  $result[^if(def $aTableAlias){`${aTableAlias}`.}`^taint[$aField.dbField]`]
+
 @selectFields[aFields;aOptions][locals]
 ## Возвращает список полей для выражения select
 ## aOptions.tableAlias
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   $aOptions[^_processFieldsOptions[$aOptions]]
-  $lTableAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
+  $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
 
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
@@ -72,7 +75,7 @@ pfClass
     ^if(^v.contains[expression]){
       $result.[^result._count[]][$v.expression as `^taint[$k]`]
     }{
-       $result.[^result._count[]][${lTableAlias}`^taint[$v.dbField]` as `^taint[$k]`]
+       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as `^taint[$k]`]
      }
   }
   $result[^result.foreach[k;v]{$v}[, ]]
@@ -86,13 +89,13 @@ pfClass
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lData[^if(def $aOptions.data){$aOptions.data}{^hash::create[]}]
-  $lTableAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
+  $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
     ^if(^v.contains[expression]){^continue[]}
     ^if($aOptions.skipAbsent && !^lData.contains[$k] && !(def $v.processor && ^v.processor.pos[auto_] >= 0)){^continue[]}
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
-    $result.[`^result._count[]][${lTableAlias}`^taint[$v.dbField]`]
+    $result.[`^result._count[]][^sqlFieldName[$v;$lTableAlias]]
   }
   $result[^result.foreach[k;v]{$v}[, ]]
 
@@ -106,13 +109,12 @@ pfClass
   ^cleanMethodArgument[aData]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lAlias[^if(def $aOptions.alias){${aOptions.alias}}]
-  $lTableAlias[^if(def $lAlias){`${lAlias}`.}]
 
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
     ^if(^aOptions.skipFields.contains[$k] || ^v.contains[expression]){^continue[]}
     ^if($aOptions.skipAbsent && !^aData.contains[$k] && !(def $v.processor && ^v.processor.pos[auto_] >= 0)){^continue[]}
-    $result.[^result._count[]][^if(!$aOptions.skipNames){${lTableAlias}`^taint[$v.dbField]` = }^fieldValue[$v;^if(^aData.contains[$k]){$aData.[$k]}]]
+    $result.[^result._count[]][^if(!$aOptions.skipNames){^sqlFieldName[$v;$lAlias] = }^fieldValue[$v;^if(^aData.contains[$k]){$aData.[$k]}]]
   }
   $result[^result.foreach[k;v]{$v}[, ]]
 
@@ -161,7 +163,6 @@ pfClass
 
 @processStatementMacro[aFields;aString;aOptions][locals]
 ## aOptions.tableAlias
-  ^cleanMethodArgument[]
   $lAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
   $result[^aString.match[$_pfSQLBuilder_PatternRegex][]{${lAlias}`^if(^aFields.contains[$match.2]){$aFields.[$match.2].dbField}{$match.1}`}]
 
@@ -194,4 +195,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
-  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{^processStatementMacro[$aFields;$aOptions.emptySetExpression]} where ^processStatementMacro[$aFields;$aWhere]]
+  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]

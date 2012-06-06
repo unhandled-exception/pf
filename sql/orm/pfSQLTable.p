@@ -23,6 +23,7 @@ pfClass
 ## aOptions.builder
 ## aOptions.allAsTable(false) — по умолчанию возвращать результат в виде таблицы.
 ## aOptions.enableUnsafeActions(false) — включить небезопасные групповые операции
+## aOptions.skipWhereMacros(false) — пропустить макросы в where и having
 
 ## Следующие поля необязательны, но полезны
 ## при создании объекта на основании другой таблицы:
@@ -58,7 +59,10 @@ pfClass
 
   $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
   $_enableUnsafeActions(^aOptions.enableUnsafeActions.bool(false))
-  
+
+  $_skipWhereMacros(^aOptions.skipWhereMacros.bool(false))
+
+
 #----- Статические методы и конструктор -----
 
 @auto[]
@@ -191,32 +195,37 @@ pfClass
 
 @_selectExpression[aResultType;aOptions;aSQLOptions][locals]
   $lJoinFields[^_allJoinFields[$aOptions]]
-  $lGroup[^_allGroup[$aOptions]]
-  $lOrder[^_allOrder[$aOptions]]
+  $lGroup[^_processMacro[^_allGroup[$aOptions]]]
+  $lOrder[^_processMacro[^_allOrder[$aOptions]]]
 
   $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
-  $result[^_builder.processStatementMacro[$_fields;
-     select ^if(def $aSQLOptions.options){$aSQLOptions.options}
-            ^if($aResultType eq "hash"){
-              ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
-#             Для хеша добавляем еще одно поле с первичным ключем
-              `${_tableAlias}`.`$_fields.[$_primaryKey].dbField` as  `_ORM_HASH_KEY_`,
-            }
-            ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
-       from $_tableName as $_tableAlias
-            ^_allJoin[]
-      where ^_allWhere[$aOptions]
-    ^if(def $lGroup){
-      group by $lGroup
-    }
-    ^if(def $lHaving){
-     having $lHaving
-    }
-    ^if(def $lOrder){
-      order by $lOrder
-    }
-    ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
-  ][$.tableAlias[$_tableAlias]]]
+  $lHaving[^if($_skipWhereMacros){^_processMacro[$lHaving]}]
+
+  $result[
+       select ^if(def $aSQLOptions.options){$aSQLOptions.options}
+              ^if($aResultType eq "hash"){
+                ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
+#               Для хеша добавляем еще одно поле с первичным ключем
+                `${_tableAlias}`.`$_fields.[$_primaryKey].dbField` as  `_ORM_HASH_KEY_`,
+              }
+              ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+         from $_tableName as $_tableAlias
+              ^_processMacro[^_allJoin[$aOptions]]
+#            Выражение для where делаем из двух частей, чтобы не огребать проблемы с макросами
+        where 1=1
+              ^_fieldsWhere[$aOptions]
+              ^if($_skipWhereMacros){^_allWhere[$aOptions]}{^_processMacro[^_allWhere[$aOptions]]}
+      ^if(def $lGroup){
+        group by $lGroup
+      }
+      ^if(def $lHaving){
+       having $lHaving
+      }
+      ^if(def $lOrder){
+        order by $lOrder
+      }
+      ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
+  ]
 
 @_allFields[aOptions;aSQLOptions]
   $result[^_builder.selectFields[$_fields;
@@ -233,21 +242,9 @@ pfClass
   $result[]
 
 @_allWhere[aOptions][locals]
-## Если надо сделать иной вариант для where, перекрываем метод...
-  $lWhere[^if(^aOptions.contains[where]){$aOptions.where}]
-  $result[^if(def $lWhere){$lWhere}{1=1}
-#  Выборка по отдельным полям (равенство значений)
-   ^_fields.foreach[k;v]{
-     ^if(^aOptions.contains[$k]){
-         and :$k = ^_fieldValue[$v;$aOptions.[$k]]
-     }
-   }
-#  Выборка по нескольким значениям из первичного ключа
-   ^if(def $_plural && ^aOptions.contains[$_plural]){
-     $lColumn[^if(def $aOptions.primaryKeyColumn){$aOptions.primaryKeyColumn}{$_primaryKey}]
-     and :$_primaryKey in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$lColumn]])
-   }
-  ]
+## Дополнительное выражение для where
+## (выражение для полей формируется в _fieldsWhere)
+  $result[^if(^aOptions.contains[where]){$aOptions.where}]
 
 @_allGroup[aOptions]
   $result[]
@@ -257,6 +254,23 @@ pfClass
 
 @_allOrder[aOptions]
   $result[^if(def $_primaryKey){:$_primaryKey asc}]
+
+@_fieldsWhere[aOptions][locals]
+## Выражение для выборки по полям
+## В этом методе не поддерживаются макросы!
+  $result[
+#  Выборка по отдельным полям (равенство значений)
+   ^_fields.foreach[k;v]{
+     ^if(^aOptions.contains[$k]){
+         and ^_sqlFieldName[$k] = ^_fieldValue[$v;$aOptions.[$k]]
+     }
+   }
+#  Выборка по нескольким значениям из первичного ключа
+   ^if(def $_plural && ^aOptions.contains[$_plural]){
+     $lColumn[^if(def $aOptions.primaryKeyColumn){$aOptions.primaryKeyColumn}{$_primaryKey}]
+     and ^_sqlFieldName[$_primaryKey] in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$lColumn]])
+   }
+  ]
 
 
 #----- Манипуляция данными -----
@@ -273,10 +287,10 @@ pfClass
   ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
   ^cleanMethodArgument[aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][:$_primaryKey = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
+    ^_builder.updateStatement[$_tableName;$_fields;$aData][^_sqlFieldName[$_primaryKey](true) = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
       $.skipAbsent(true)
       $.skipFields[$_skipOnUpdate]
-      $.emptySetExpression[:$_primaryKey = :$_primaryKey]
+      $.emptySetExpression[^_sqlFieldName[$_primaryKey] = ^_sqlFieldName[$_primaryKey]]
     ]
   }]
 
@@ -284,9 +298,9 @@ pfClass
 ## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue
   ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
   ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
-  $result[^CSQL.void{^_builder.processStatementMacro[$_fields;
-    delete from $_tableName where :$_primaryKey = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
-  ]}]
+  $result[^CSQL.void{
+    delete from $_tableName where ^_sqlFieldName[$_primaryKey](true) = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+  }]
 
 #----- Групповые операции с данными -----
 #----- Крайне опасные функции!
@@ -296,7 +310,11 @@ pfClass
   ^pfAssert:isTrue($_enableUnsafeActions)[Выполнение modifyAll запрещено.]
   ^cleanMethodArgument[aOptions;aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][^_allWhere[$aOptions]][
+    ^_builder.updateStatement[$_tableName;$_fields;$aData][
+      1=1
+      ^_fieldsWhere[$aOptions]
+      ^if($_skipWhereMacros){^_allWhere[$aOptions]}{^_processMacro[^_allWhere[$aOptions]]}
+    ][
       $.skipAbsent(true)
       $.skipFields[$_skipOnUpdate]
       $.emptySetExpression[]
@@ -310,7 +328,9 @@ pfClass
   ^cleanMethodArgument[]
   $result[^CSQL.void{^_builder.processStatementMacro[$_fields;
     delete from $_tableName
-     where ^_allWhere[$aOptions]
+     where 1=1
+           ^_fieldsWhere[$aOptions]
+           ^if($_skipWhereMacros){^_allWhere[$aOptions]}{^_processMacro[^_allWhere[$aOptions]]}
   ]}]
 
 
@@ -322,3 +342,10 @@ pfClass
 @_valuesArray[aField;aValues;aOptions]
   ^cleanMethodArgument[]
   $result[^_builder.array[$aField;$aValues;$aOptions $.valueFunction[$_fieldValue]]]
+
+@_sqlFieldName[aFieldName;aSkipAlias][locals]
+  $lField[$_fields.[$aFieldName]]
+  $result[^_builder.sqlFieldName[$lField;^if(!$aSkipAlias){$_tableAlias}]]
+
+@_processMacro[aString]
+  $result[^_builder.processStatementMacro[$_fields;$aString;$.tableAlias[$_tableAlias]]]
