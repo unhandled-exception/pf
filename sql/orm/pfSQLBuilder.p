@@ -69,11 +69,12 @@ pfClass
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
 
-  $result[^hash::create[]]
+  $result[^hash::create[]]                              
+  $lFields[^hash::create[$aFields]]
   ^aFields.foreach[k;v]{
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
     ^if(^v.contains[expression]){
-      $result.[^result._count[]][$v.expression as `^taint[$k]`]
+      $result.[^result._count[]][^processStatementMacro[$lFields;$v.expression;$.tableAlias[$lTableAlias]] as `^taint[$k]`]
     }{
        $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as `^taint[$k]`]
      }
