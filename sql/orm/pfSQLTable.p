@@ -1,12 +1,17 @@
+# PF Library
+
+## Шлюз таблицы данных (Table Data Gateway).
+
 @CLASS
 pfSQLTable
 
 #@compat 3.4.2
+#@compat_db mysql
 
 @USE
 pf/types/pfClass.p
 pf/tests/pfAssert.p
-pf/sql/generics/builder/pfSQLBuilder.p
+pf/sql/orm/pfSQLBuilder.p
 
 @BASE
 pfClass
@@ -16,10 +21,12 @@ pfClass
 ## aOptions.tableAlias
 ## aOptions.schema
 ## aOptions.builder
+## aOptions.allAsTable(false) — по умолчанию возвращать результат в виде таблицы.
+## aOptions.enableUnsafeActions(false) — включить небезопасные групповые операции
 
 ## Следующие поля необязательны, но полезны
 ## при создании объекта на основании другой таблицы:
-##   aOptions.fields
+##   aOptions.fields[$.field[...]]
 ##   aOptions.primaryKey
 ##   aOptions.plural[название первичного ключа в множественном числе]
 ##   aOptions.skipOnInsert[$.field(bool)]
@@ -28,8 +35,10 @@ pfClass
   ^BASE:create[$aOptions]
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
 
-  $_tableName[$aTableName]
   $_csql[^if(def $aOptions.sql){$aOptions.sql}{$_pfSQLTable_csql}]
+  ^pfAssert:isTrue(def $_csql)[Не задан объект для работы с SQL-сервером.]
+
+  $_tableName[$aTableName]
   $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_pfSQLTable_builder}]
 
   $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}{$aTableName}]
@@ -47,7 +56,9 @@ pfClass
   $_skipOnInsert[^hash::create[^if(def $aOptions.skipOnInsert){$aOptions.skipOnInsert}]]
   $_skipOnUpdate[^hash::create[^if(def $aOptions.skipOnUpdate){$aOptions.skipOnUpdate}]]
 
-
+  $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
+  $_enableUnsafeActions(^aOptions.enableUnsafeActions.bool(false))
+  
 #----- Статические методы и конструктор -----
 
 @auto[]
@@ -143,22 +154,31 @@ pfClass
 @one[aOptions;aSQLOptions]
   $result[^all[$aOptions;$aSQLOptions]]
   ^if($result){
-    $result[^result._at[first]]
+    ^if($result is table){
+      $result[$result.fields]
+    }{
+       $result[^result._at[first]]
+     }
   }
 
 @all[aOptions;aSQLOptions][locals]
-## aOptions.asTable(false) — по-умолчанию возвращаем hash
+## aOptions.asTable(false) — возвращаем хеш
+## aOptions.asHash(true) — возвращаем таблицу
 ## aOptions.where{expression} — выражение для where
 ## aOptions.having{expression} — выражение для having
 ## aOptions.limit
 ## aOptions.offset
+## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
 ## Для поддержки специфики СУБД:
 ##   aSQLOptions.tail — концовка запроса
 ##   aSQLOptions.options — модификатор после select (distinct, sql_cach и т.п.)
- ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
  ^cleanMethodArgument[aOptions;aSQLOptions]
 
- $lResultType[^if(^aOptions.asTable.bool(false)){table}{hash}]
+ $lResultType[^switch(true){
+   ^case(^aOptions.asTable.bool(false)){table}
+   ^case(^aOptions.asHash.bool(false)){hash})
+   ^case[DEFAULT]{$_defaultResultType}
+ }]
  ^CSQL.[$lResultType]{
    ^_selectExpression[$lResultType;$aOptions;$aSQLOptions]
  }[
@@ -175,6 +195,7 @@ pfClass
   $result[^_builder.processStatementMacro[$_fields;
      select ^if(def $aSQLOptions.options){$aSQLOptions.options}
             ^if($aResultType eq "hash"){
+              ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
 #             Для хеша добавляем еще одно поле с первичным ключем
               `${_tableAlias}`.`$_fields.[$_primaryKey].dbField` as  `_ORM_HASH_KEY_`,
             }
@@ -215,7 +236,8 @@ pfClass
    }
 #  Выборка по нескольким значениям из первичного ключа
    ^if(def $_plural && ^aOptions.contains[$_plural]){
-     and :$_primaryKey in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$_primaryKey]])
+     $lColumn[^if(def $aOptions.primaryKeyColumn){$aOptions.primaryKeyColumn}{$_primaryKey}]
+     and :$_primaryKey in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$lColumn]])
    }
   ]
 
@@ -233,10 +255,9 @@ pfClass
 
 @new[aOptions]
 ## Вставляем значение в базу
-  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
   ^cleanMethodArgument[]
   ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aOptions;$.skipFields[$_skipOnInsert]]}
-  $result[^CSQL.lastInsertId[]]
+  $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
 
 @modify[aPrimaryKeyValue;aData]
 ## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
@@ -259,9 +280,25 @@ pfClass
     delete from $_tableName where :$_primaryKey = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
   ]}]
 
+#----- Групповые операции с данными -----
+#----- Крайне опасные функции!
+
+@modifyAll[aOptions;aData]
+## Изменяем все записи/ Условие обновления берем из _allWhere
+  ^pfAssert:isTrue($_enableUnsafeActions)[Выполнение modifyAll запрещено.]
+  ^cleanMethodArgument[aOptions;aData]
+  $result[^CSQL.void{
+    ^_builder.updateStatement[$_tableName;$_fields;$aData][^_allWhere[$aOptions]][
+      $.skipAbsent(true)
+      $.skipFields[$_skipOnUpdate]
+      $.emptySetExpression[]
+    ]
+  }]
+
 @deleteAll[aOptions]
 ## Удаляем все записи из таблицы
 ## Условие для удаления берем из _allWhere
+  ^pfAssert:isTrue($_enableUnsafeActions)[Выполнение deleteAll запрещено.]
   ^cleanMethodArgument[]
   $result[^CSQL.void{^_builder.processStatementMacro[$_fields;
     delete from $_tableName

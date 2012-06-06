@@ -1,7 +1,6 @@
 # PF Library
 
 ## Класс для упрощения построения сложных sql-запросов.
-#! BETA
 
 @CLASS
 pfSQLBuilder
@@ -35,7 +34,6 @@ pfClass
 ##     $.processor[int|bool|curdate|curtime|...] <- Как обрабатывать поле при присвоении (по-умолчанию "^taint[value]")
 ##     $.format[] — форматная строка для процессоров (числа)
 ##     $.default[] <- Значение по-умолчанию (if !def).
-##     $.auto(false) <- Автоматически добавлять значение (игнорируем ключ skipAbsent)
 ##     $.expression{}
 ##   ]
 ## ]
