@@ -165,7 +165,7 @@ pfClass
 @processStatementMacro[aFields;aString;aOptions][locals]
 ## aOptions.tableAlias
   $lAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
-  $result[^aString.match[$_pfSQLBuilder_PatternRegex][]{${lAlias}`^if(^aFields.contains[$match.2]){$aFields.[$match.2].dbField}{$match.1}`}]
+  $result[^aString.match[$_pfSQLBuilder_PatternRegex][]{^if(^aFields.contains[$match.2]){${lAlias}`$aFields.[$match.2].dbField`}{$match.1}}]
 
 @insertStatement[aTableName;aFields;aData;aOptions][locals]
 ## Строит выражение insert into values
