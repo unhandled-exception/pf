@@ -21,10 +21,6 @@ pfClass
   $_now[^date::now[]]
   $_today[^date::today[]]
 
-@auto[]
-  $_pfSQLBuilder_PatternVar[((?:\:)\{?([\p{L}\p{Nd}_\-]+)\}?)]
-  $_pfSQLBuilder_PatternRegex[^regex::create[$_pfSQLBuilder_PatternVar][g]]
-
 #----- Работа с полями -----
 
 ## Формат описания полей
@@ -69,14 +65,14 @@ pfClass
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
 
-  $result[^hash::create[]]                              
+  $result[^hash::create[]]
   $lFields[^hash::create[$aFields]]
   ^aFields.foreach[k;v]{
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
     ^if(^v.contains[expression]){
-      $result.[^result._count[]][^processStatementMacro[$lFields;$v.expression;$.tableAlias[$lTableAlias]] as `^taint[$k]`]
+      $result.[^result._count[]][$v.expression as `$k`]
     }{
-       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as `^taint[$k]`]
+       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as `$k`]
      }
   }
   $result[^result.foreach[k;v]{$v}[, ]]
@@ -158,14 +154,6 @@ pfClass
   }
 
 #----- Построение sql-выражений -----
-
-## Макроподстановки:
-##   — В выражениях «:fieldName» заменяется на имя поля в БД.
-
-@processStatementMacro[aFields;aString;aOptions][locals]
-## aOptions.tableAlias
-  $lAlias[^if(def $aOptions.tableAlias){`${aOptions.tableAlias}`.}]
-  $result[^aString.match[$_pfSQLBuilder_PatternRegex][]{^if(^aFields.contains[$match.2]){${lAlias}`$aFields.[$match.2].dbField`}{$match.1}}]
 
 @insertStatement[aTableName;aFields;aData;aOptions][locals]
 ## Строит выражение insert into values
