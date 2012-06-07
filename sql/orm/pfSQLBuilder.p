@@ -161,10 +161,12 @@ pfClass
 ## aFields - поля
 ## aData - данные
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
+## aOptions.ignore(true)
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   ^cleanMethodArgument[]
-  $result[insert into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
+  $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
+  $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
 @updateStatement[aTableName;aFields;aData;aWhere;aOptions][locals]
 ## Строит выражение для update

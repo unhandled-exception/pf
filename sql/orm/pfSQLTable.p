@@ -28,7 +28,6 @@ pfClass
 ## при создании объекта на основании другой таблицы:
 ##   aOptions.fields[$.field[...]]
 ##   aOptions.primaryKey
-##   aOptions.plural[название первичного ключа в множественном числе]
 ##   aOptions.skipOnInsert[$.field(bool)]
 ##   aOptions.skipOnUpdate[$.field(bool)]
   ^cleanMethodArgument[]
@@ -45,7 +44,6 @@ pfClass
   $_enableTableAlias(false)
 
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
-  $_plural[^if(def $aOptions.plural){$aOptions.plural}]
 
   $_fields[^hash::create[]]
   ^if(^aOptions.contains[fields]){
@@ -77,12 +75,13 @@ pfClass
 #----- Метаданные -----
 
 @addField[aFieldName;aOptions][locals]
-## aOptions.expression[] — sql-выражение для поля
 ## aOptions.bdField
+## aOptions.fieldExpression[] — выражение для названия поля
+## aOptions.expression[] — sql-выражение для значения поля (если не определено, то используем fieldExpression)
+## aOptions.plural[] — название поля для групповой выборки
 ## aOptions.processor
 ## aOptions.default
 ## aOptions.format
-## aOptions.primary(false)
 ## aOptions.primary(false)
 ## aOptions.skipOnInsert(false)
 ## aOptions.skipOnUpdate(false)
@@ -92,16 +91,20 @@ pfClass
   ^pfAssert:isTrue(!^_fields.contains[$aFieldName])[Поле «${aFieldName}» в таблице уже существует.]
 
   $lField[^hash::create[]]
-  ^if(^aOptions.contains[expression]){
-     $lField.expression[$aOptions.expression]
+
+  $lField.plural[$aOptions.plural]
+  $lField.processor[^if(def $aOptions.processor){$aOptions.processor}]
+  $lField.default[^if(def $aOptions.default){$aOptions.default}]
+  $lField.format[^if(def $aOptions.format){$aOptions.format}]
+
+  ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
+     $lField.fieldExpression[$aOptions.fieldExpression]
+     $lField.expression[^if(def $aOptions.expression){$aOptions.expression}{$lField.fieldExpression}]
      $self._skipOnUpdate.[$aFieldName](true)
      $self._skipOnInsert.[$aFieldName](true)
   }{
      $lField.dbField[^if(def $aOptions.dbField){$aOptions.dbField}{$aFieldName}]
      $lField.primary(^aOptions.primary.bool(false))
-     $lField.processor[^if(def $aOptions.processor){$aOptions.processor}]
-     $lField.default[^if(def $aOptions.default){$aOptions.default}]
-     $lField.format[^if(def $aOptions.format){$aOptions.format}]
      ^if(^aOptions.skipOnUpdate.bool(false) || $lField.primary){
        $self._skipOnUpdate.[$aFieldName](true)
      }
@@ -118,9 +121,6 @@ pfClass
 
 @GET_TABLENAME[]
   $result[$_tableName]
-
-@GET_PLURAL[]
-  $result[$_plural]
 
 @GET_FIELDS[]
   $result[$_fields]
@@ -168,8 +168,9 @@ pfClass
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
 ## Для поддержки специфики СУБД:
 ##   aSQLOptions.tail — концовка запроса
-##   aSQLOptions.options — модификатор после select (distinct, sql_cach и т.п.)
+##   aSQLOptions.selectОptions — модификатор после select (distinct, sql_no_cache и т.п.)
 ##   aSQLOptions.skipFields — пропустить поля
+##   + Все опции pfSQL.
  ^cleanMethodArgument[aOptions;aSQLOptions]
 
  $lResultType[^switch(true){
@@ -177,27 +178,42 @@ pfClass
    ^case(^aOptions.asHash.bool(false)){hash})
    ^case[DEFAULT]{$_defaultResultType}
  }]
- ^CSQL.[$lResultType]{
-   ^_processAliases{^_selectExpression[$lResultType;$aOptions;$aSQLOptions]}
+ $result[^CSQL.[$lResultType]{
+   ^_processAliases{
+     ^_selectExpression[
+       ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
+       ^if($lResultType eq "hash"){
+         ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
+#         Для хеша добавляем еще одно поле с первичным ключем
+          $PRIMARYKEY as `_ORM_HASH_KEY_`,
+       }
+       $lJoinFields[^_allJoinFields[$aOptions]]
+       ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+     ][$lResultType;$aOptions;$aSQLOptions]
+   }
  }[
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
     ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
-  ]]
+  ][$aSQLOptions]]]
 
-@_selectExpression[aResultType;aOptions;aSQLOptions][locals]
-  $lJoinFields[^_allJoinFields[$aOptions]]
+
+@count[aOptions;aSQLOptions]
+  ^cleanMethodArgument[aOptions;aSQLOptions]
+  $result[^CSQL.int{
+    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aOptions;$aSQLOptions]}
+  }[
+    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
+    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
+  ][$aSQLOptions]]]
+
+
+@_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
   $lGroup[^_allGroup[$aOptions]]
   $lOrder[^_allOrder[$aOptions]]
   $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
 
   $result[
-       select ^if(def $aSQLOptions.options){$aSQLOptions.options}
-              ^if($aResultType eq "hash"){
-                ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
-#               Для хеша добавляем еще одно поле с первичным ключем
-                $PRIMARYKEY as `_ORM_HASH_KEY_`,
-              }
-              ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+       select $aFields
          from $_tableName as $_tableAlias
               ^_allJoin[$aOptions]
 #            Выражение для where делаем из двух частей, чтобы не огребать проблемы с макросами
@@ -232,19 +248,19 @@ pfClass
 ## Дополнительное выражение для where
 ## (выражение для полей формируется в _fieldsWhere)
   $result[1=1
-#   Выборка по отдельным полям (равенство значений)
     ^_fields.foreach[k;v]{
+#     Выборка по отдельным полям (равенство значений)
       ^if(^aOptions.contains[$k]){
-          and ^_sqlFieldName[$k] = ^_fieldValue[$v;$aOptions.[$k]]
+        and ^_sqlFieldName[$k] = ^_fieldValue[$v;$aOptions.[$k]]
+      }
+
+#     Если для колонки задано поле с множественным числом, то строим выражение in
+      ^if(def $v.plural && ^aOptions.contains[$v.plural]){
+        $lColumn[^if(^aOptions.contains[${v.plural}Column]){$aOptions.[${v.plural}Column]}{$k}]
+        and ^_sqlFieldName[$k] in (^_valuesArray[$k;$aOptions.[$v.plural];$.column[$lColumn]])
       }
     }
-
-#   Выборка по нескольким значениям из первичного ключа
-    ^if(def $_plural && ^aOptions.contains[$_plural]){
-      $lColumn[^if(def $aOptions.primaryKeyColumn){$aOptions.primaryKeyColumn}{$_primaryKey}]
-      and $PRIMARYKEY in (^_valuesArray[$_fields.[$_primaryKey];$aOptions.[$_plural];$.column[$lColumn]])
-    }
-
+#   Дополнительное условие
     ^if(^aOptions.contains[where]){$aOptions.where}
   ]
 
@@ -260,10 +276,11 @@ pfClass
 
 #----- Манипуляция данными -----
 
-@new[aOptions]
+@new[aOptions;aSQLOptions]
 ## Вставляем значение в базу
+## aSQLOptions.ignore(true)
   ^cleanMethodArgument[]
-  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aOptions;$.skipFields[$_skipOnInsert]]}
+  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aOptions;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
   $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
 
 @modify[aPrimaryKeyValue;aData]
@@ -321,12 +338,20 @@ pfClass
   $result[^_builder.fieldValue[$aField;$aValue]]
 
 @_valuesArray[aField;aValues;aOptions]
+## aField — имя или хеш с полем
   ^cleanMethodArgument[]
+  ^if($aField is string){
+    $aField[$_fields.[$aField]]
+  }
   $result[^_builder.array[$aField;$aValues;$aOptions $.valueFunction[$_fieldValue]]]
 
 @_sqlFieldName[aFieldName;aSkipAlias][locals]
   $lField[$_fields.[$aFieldName]]
-  $result[^_builder.sqlFieldName[$lField;^if($_enableTableAlias){$_tableAlias}]]
+  ^if(^lField.contains[fieldExpression]){
+    $result[$lField.fieldExpression]
+  }{
+     $result[^_builder.sqlFieldName[$lField;^if($_enableTableAlias){$_tableAlias}]]
+   }
 
 @_processAliases[aCode]
   $_enableTableAlias(true)
