@@ -22,7 +22,6 @@ pfClass
 ## aOptions.schema
 ## aOptions.builder
 ## aOptions.allAsTable(false) — по умолчанию возвращать результат в виде таблицы.
-## aOptions.enableUnsafeActions(false) — включить небезопасные групповые операции
 
 ## Следующие поля необязательны, но полезны
 ## при создании объекта на основании другой таблицы:
@@ -56,7 +55,6 @@ pfClass
   $_skipOnUpdate[^hash::create[^if(def $aOptions.skipOnUpdate){$aOptions.skipOnUpdate}]]
 
   $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
-  $_enableUnsafeActions(^aOptions.enableUnsafeActions.bool(false))
 
 
 #----- Статические методы и конструктор -----
@@ -139,6 +137,7 @@ pfClass
   ^if(^_fields.contains[$lField]){
     $result[^_sqlFieldName[$lField]]
   }
+
 
 #----- Выборки -----
 
@@ -304,12 +303,12 @@ pfClass
     delete from $_tableName where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
   }]
 
+
 #----- Групповые операции с данными -----
-#----- Крайне опасные функции!
 
 @modifyAll[aOptions;aData]
-## Изменяем все записи/ Условие обновления берем из _allWhere
-  ^pfAssert:isTrue($_enableUnsafeActions)[Выполнение modifyAll запрещено.]
+## Изменяем все записи
+## Условие обновления берем из _allWhere
   ^cleanMethodArgument[aOptions;aData]
   $result[^CSQL.void{
     ^_builder.updateStatement[$_tableName;$_fields;$aData][
@@ -324,7 +323,6 @@ pfClass
 @deleteAll[aOptions]
 ## Удаляем все записи из таблицы
 ## Условие для удаления берем из _allWhere
-  ^pfAssert:isTrue($_enableUnsafeActions)[Выполнение deleteAll запрещено.]
   ^cleanMethodArgument[]
   $result[^CSQL.void{
     delete from $_tableName
