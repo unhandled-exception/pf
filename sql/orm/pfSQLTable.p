@@ -246,7 +246,10 @@ pfClass
 @_allWhere[aOptions][locals]
 ## Дополнительное выражение для where
 ## (выражение для полей формируется в _fieldsWhere)
-  $result[1=1
+  $result[
+#   Дополнительное условие
+    ^if(^aOptions.contains[where]){$aOptions.where}{1=1}
+
     ^_fields.foreach[k;v]{
 #     Выборка по отдельным полям (равенство значений)
       ^if(^aOptions.contains[$k]){
@@ -259,8 +262,6 @@ pfClass
         and ^_sqlFieldName[$k] in (^_valuesArray[$k;$aOptions.[$v.plural];$.column[$lColumn]])
       }
     }
-#   Дополнительное условие
-    ^if(^aOptions.contains[where]){$aOptions.where}
   ]
 
 @_allGroup[aOptions]

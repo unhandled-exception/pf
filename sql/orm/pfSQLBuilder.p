@@ -131,7 +131,7 @@ pfClass
     ^case[json]{"^taint[^json:string[$aValue]]"}
     ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
     ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
-    ^case[DEFAULT]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
+    ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
   }]
 
 @array[aField;aValue;aOptions][locals]
