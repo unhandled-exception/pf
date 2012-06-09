@@ -276,11 +276,11 @@ pfClass
 
 #----- Манипуляция данными -----
 
-@new[aOptions;aSQLOptions]
+@new[aData;aSQLOptions]
 ## Вставляем значение в базу
 ## aSQLOptions.ignore(true)
-  ^cleanMethodArgument[]
-  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aOptions;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
+  ^cleanMethodArgument[aData;aSQLOptions]
+  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
   $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
 
 @modify[aPrimaryKeyValue;aData]

@@ -103,7 +103,7 @@ pfClass
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipNames(false) - не выводить имена полей, только значения (для insert values)
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^cleanMethodArgument[aData]
+  ^cleanMethodArgument[aData;aOptions]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lAlias[^if(def $aOptions.alias){${aOptions.alias}}]
 
@@ -164,7 +164,7 @@ pfClass
 ## aOptions.ignore(true)
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^cleanMethodArgument[]
+  ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
   $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
@@ -182,7 +182,7 @@ pfClass
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   ^pfAssert:isTrue(def $aWhere)[Не задано выражение для where.]
-  ^cleanMethodArgument[]
+  ^cleanMethodArgument[aData;aOptions]
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
