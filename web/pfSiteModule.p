@@ -64,6 +64,37 @@ pfModule
   $_uriServerName[$aOptions.uriServerName]
 
 
+@auto[]
+# Дополнительная таблица mime-типов
+# Можно расширить в наследниках для поддержки нужных типов.
+  $_PFSITEMODULE_EXT_MIME[
+    $.css[text/css]
+    $.csv[text/csv]
+    $.docx[application/vnd.openxmlformats-officedocument.wordprocessingml.document]
+    $.flv[video/x-flv]
+    $.gz[application/x-gzip]
+    $.json[application/json]
+    $.js[application/javascript]
+    $.odc[application/vnd.oasis.opendocument.chart]
+    $.odf[application/vnd.oasis.opendocument.formula]
+    $.odg[application/vnd.oasis.opendocument.graphics]
+    $.odi[application/vnd.oasis.opendocument.image]
+    $.odp[application/vnd.oasis.opendocument.presentation]
+    $.ods[application/vnd.oasis.opendocument.spreadsheet]
+    $.odt[application/vnd.oasis.opendocument.text]
+    $.ogg[audio/ogg]
+    $.pptx[application/vnd.openxmlformats-officedocument.presentationml.presentation]
+    $.rar[application/x-rar-compressed]
+    $.rdf[application/rdf+xml]
+    $.rss[application/rss+xml]
+    $.tar[application/x-tar]
+    $.woff[application/font-woff]
+    $.xlsx[application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
+    $.xul[application/vnd.mozilla.xul+xml]
+  ]
+# Стандартный mime-тип
+  $_PFSITEMODULE_DEFAULT_MIME[application/octet-stream]
+
 
 #----- Public -----
 
@@ -311,18 +342,19 @@ pfModule
 @postAS-IS[aResponse]
   $result[$aResponse]
   ^if(!$_passDefaultPost){
+    $result[]
     ^_setResponseHeaders[$aResponse]
     ^if(def $aResponse.download){
       $response:download[$aResponse.download]
     }{
-       $result[$aResponse.body]
+       $response:body[$aResponse.body]
      }
   }
 
 @postHTML[aResponse]
   $result[$aResponse]
   ^if(!$_passDefaultPost){
-    ^if(!def ${aResponse.content-type}){
+    ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[text/html]
     }
     ^_setResponseHeaders[$aResponse]
@@ -332,7 +364,7 @@ pfModule
 @postXML[aResponse]
   $result[$aResponse]
   ^if(!$_passDefaultPost){
-    ^if(!def ${aResponse.content-type}){
+    ^if(!def $aResponse.[content-type]){
      $aResponse.content-type[text/xml]
     }
     ^_setResponseHeaders[$aResponse]
@@ -342,7 +374,7 @@ pfModule
 @postTEXT[aResponse]
   $result[$aResponse]
   ^if(!$_passDefaultPost){
-    ^if(!def ${aResponse.content-type}){
+    ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[text/plain]
     }
     ^_setResponseHeaders[$aResponse]
@@ -353,7 +385,7 @@ pfModule
   $result[$aResponse]
   ^if(!$_passDefaultPost){
     $result[]
-    ^if(!def ${aResponse.content-type}){
+    ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[application/octet-stream]
     }
     ^if(def $aResponse.download){
@@ -372,6 +404,19 @@ pfModule
   }
 
 #----- Private -----
+
+@_getMimeByExt[aExt]
+## Возвращает mime-тип для файла.
+## Полезно, если нужно сделать выдачу файлов в браузер.
+  ^if(^MAIN:MIME-TYPES.locate[ext;$aExt]){
+    $result[$MAIN:MIME-TYPES.mime-type]
+  }(^_PFSITEMODULE_EXT_MIME.contains[$aExt]){
+     $result[$_PFSITEMODULE_EXT_MIME.[$aExt]]
+#    Хак: добавляем тип в MAIN:MIME-TYPES, чтобы он работал для файлов в response:body
+     ^MAIN:MIME-TYPES.append{$aExt	$result}
+  }{
+     $result[$_PFSITEMODULE_DEFAULT_MIME]
+   }
 
 @_findHandler[aAction;aRequest][lActionName;lMethod]
 ## Ищет и возвращает имя функции-обработчика для экшна.
