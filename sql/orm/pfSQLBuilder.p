@@ -118,21 +118,25 @@ pfClass
 @fieldValue[aField;aValue][locals]
 ## Возвращает значение поля в sql-формате.
   ^pfAssert:isTrue(def $aField)[Не задано описание поля.]
-  $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
-    ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
-    ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
-    ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-    ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
-    ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
-    ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
-    ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
-    ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
-    ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
-    ^case[json]{"^taint[^json:string[$aValue]]"}
-    ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
-    ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
-    ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
-  }]
+  ^try{
+    $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
+      ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
+      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
+      ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
+      ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
+      ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
+      ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
+      ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
+      ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
+      ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
+      ^case[json]{"^taint[^json:string[$aValue]]"}
+      ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
+      ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
+      ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
+    }]
+  }{
+     ^throw[pfSQLBuilder.bad.value;Ошибка при преобразовании поля ${aField.name} (processor: ^if(def $aField.processor){$aField.processor}{default}^; value type: $aValue.CLASS_NAME);[${exception.type}] ${exception.source}, ${exception.comment}.]
+   }
 
 @array[aField;aValue;aOptions][locals]
 ## Строит массив значений

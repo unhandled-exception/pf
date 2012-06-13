@@ -90,6 +90,7 @@ pfClass
 
   $lField[^hash::create[]]
 
+  $lField.name[$aFieldName]
   $lField.plural[$aOptions.plural]
   $lField.processor[^if(def $aOptions.processor){$aOptions.processor}]
   $lField.default[^if(def $aOptions.default){$aOptions.default}]
