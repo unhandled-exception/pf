@@ -56,6 +56,9 @@ pfClass
 
   $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
 
+  $_now[^date::now[]]
+  $_today[^date::today[]]
+
 
 #----- Статические методы и конструктор -----
 

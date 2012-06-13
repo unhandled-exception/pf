@@ -46,6 +46,7 @@ pfClass
 ##   curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
 ##   null - если не задано значение, то возвращает null.
+##   uint_null - преобразуем зачение в целое без знака, если не задано значение, то возвращаем null
 ##   uid - уникальный идентификатор (math:uuid)
 
 @_processFieldsOptions[aOptions]
@@ -131,6 +132,7 @@ pfClass
       ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
       ^case[json]{"^taint[^json:string[$aValue]]"}
       ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
+      ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
       ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
       ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
     }]
