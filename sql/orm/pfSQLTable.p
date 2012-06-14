@@ -59,6 +59,7 @@ pfClass
   $_now[^date::now[]]
   $_today[^date::today[]]
 
+  $__context[]
 
 #----- Статические методы и конструктор -----
 
@@ -164,8 +165,12 @@ pfClass
 @all[aOptions;aSQLOptions][locals]
 ## aOptions.asTable(false) — возвращаем хеш
 ## aOptions.asHash(true) — возвращаем таблицу
-## aOptions.where{expression} — выражение для where [Обязательно код в фигурных скобках.]
-## aOptions.having{expression} — выражение для having [Обязательно код в фигурных скобках.]
+## Выражения для контроля выборки (код в фигурных скобках):
+##   aOptions.selectFields{exression} — выражение для списка полей (вместо автогенерации)
+##   aOptions.where{expression} — выражение для where
+##   aOptions.having{expression} — выражение для having
+##   aOptions.groupBy{expression} — выражение для groupBy
+##   aOptions.orderBy{expression} — выражение для orderBy
 ## aOptions.limit
 ## aOptions.offset
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
@@ -182,18 +187,22 @@ pfClass
    ^case[DEFAULT]{$_defaultResultType}
  }]
  $result[^CSQL.[$lResultType]{
-   ^_processAliases{
-     ^_selectExpression[
+   ^_selectExpression[
+     ^_asContext[select]{
        ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
-       ^if($lResultType eq "hash"){
-         ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
-#         Для хеша добавляем еще одно поле с первичным ключем
-          $PRIMARYKEY as `_ORM_HASH_KEY_`,
-       }
-       $lJoinFields[^_allJoinFields[$aOptions]]
-       ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
-     ][$lResultType;$aOptions;$aSQLOptions]
-   }
+       ^if(^aOptions.contains[selectFields]){
+         $aOptions.selectFields
+       }{
+         ^if($lResultType eq "hash"){
+           ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
+#             Для хеша добавляем еще одно поле с первичным ключем
+            $PRIMARYKEY as `_ORM_HASH_KEY_`,
+         }
+         $lJoinFields[^_allJoinFields[$aOptions]]
+         ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+        }
+     }
+   ][$lResultType;$aOptions;$aSQLOptions]
  }[
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
     ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
@@ -211,16 +220,17 @@ pfClass
 
 
 @_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
-  $lGroup[^_allGroup[$aOptions]]
-  $lOrder[^_allOrder[$aOptions]]
-  $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  ^_asContext[where]{
+    $lGroup[^if(^aOptions.contains[groupBy]){$aOptions.groupBy}{^_allGroup[$aOptions]}]
+    $lOrder[^if(^aOptions.contains[orderBy]){$aOptions.orderBy}{^_allOrder[$aOptions]}]
+    $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  }
 
   $result[
        select $aFields
          from $_tableName as $_tableAlias
-              ^_allJoin[$aOptions]
-#            Выражение для where делаем из двух частей, чтобы не огребать проблемы с макросами
-        where ^_allWhere[$aOptions]
+              ^_asContext[where]{^_allJoin[$aOptions]}
+        where ^_asContext[where]{^_allWhere[$aOptions]}
       ^if(def $lGroup){
         group by $lGroup
       }
@@ -348,15 +358,25 @@ pfClass
   }
   $result[^_builder.array[$aField;$aValues;$aOptions $.valueFunction[$_fieldValue]]]
 
-@_sqlFieldName[aFieldName;aSkipAlias][locals]
+@_sqlFieldName[aFieldName][locals]
   $lField[$_fields.[$aFieldName]]
-  ^if(^lField.contains[fieldExpression]){
+  ^if($__context eq "where"
+      && ^lField.contains[fieldExpression]
+      && def $lField.fieldExpression){
     $result[$lField.fieldExpression]
+  }(^lField.contains[expression]
+    && def $lField.expression
+   ){
+     $result[$lField.expression^if($__context eq "select"){ as `$aFieldName`}]
   }{
-     $result[^_builder.sqlFieldName[$lField;^if($_enableTableAlias){$_tableAlias}]]
+     ^if(!^lField.contains[dbField]){
+       ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
+     }
+     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$_tableAlias}]]
    }
 
-@_processAliases[aCode]
-  $_enableTableAlias(true)
+@_asContext[aContext;aCode][locals]
+  $lOldContext[$self.__context]
+  $self.__context[$aContext]
   $result[$aCode]
-  $_enableTableAlias(false)
+  $self.__context[$lOldContext]
