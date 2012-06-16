@@ -46,6 +46,7 @@ pfClass
 ##   curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
 ##   null - если не задано значение, то возвращает null.
+##   uint_null - преобразуем зачение в целое без знака, если не задано значение, то возвращаем null
 ##   uid - уникальный идентификатор (math:uuid)
 
 @_processFieldsOptions[aOptions]
@@ -103,7 +104,7 @@ pfClass
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipNames(false) - не выводить имена полей, только значения (для insert values)
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^cleanMethodArgument[aData]
+  ^cleanMethodArgument[aData;aOptions]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lAlias[^if(def $aOptions.alias){${aOptions.alias}}]
 
@@ -118,21 +119,26 @@ pfClass
 @fieldValue[aField;aValue][locals]
 ## Возвращает значение поля в sql-формате.
   ^pfAssert:isTrue(def $aField)[Не задано описание поля.]
-  $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
-    ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
-    ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
-    ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-    ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
-    ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
-    ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
-    ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
-    ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
-    ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
-    ^case[json]{"^taint[^json:string[$aValue]]"}
-    ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
-    ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
-    ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
-  }]
+  ^try{
+    $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
+      ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
+      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
+      ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
+      ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
+      ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
+      ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
+      ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
+      ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
+      ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
+      ^case[json]{"^taint[^json:string[$aValue]]"}
+      ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
+      ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
+      ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
+      ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
+    }]
+  }{
+     ^throw[pfSQLBuilder.bad.value;Ошибка при преобразовании поля ${aField.name} (processor: ^if(def $aField.processor){$aField.processor}{default}^; value type: $aValue.CLASS_NAME);[${exception.type}] ${exception.source}, ${exception.comment}.]
+   }
 
 @array[aField;aValue;aOptions][locals]
 ## Строит массив значений
@@ -164,7 +170,7 @@ pfClass
 ## aOptions.ignore(true)
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^cleanMethodArgument[]
+  ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
   $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
@@ -182,7 +188,7 @@ pfClass
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
   ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
   ^pfAssert:isTrue(def $aWhere)[Не задано выражение для where.]
-  ^cleanMethodArgument[]
+  ^cleanMethodArgument[aData;aOptions]
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
