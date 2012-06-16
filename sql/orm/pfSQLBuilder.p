@@ -124,9 +124,9 @@ pfClass
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
       ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-      ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
-      ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
-      ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
+      ^case[now;auto_now]{^if(def $aValue){"^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}"}{"^_now.sql-string[]"}}
+      ^case[cuttime;auto_curtime]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}"}
+      ^case[cutdate;auto_curdate]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}"}
       ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
       ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
       ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
