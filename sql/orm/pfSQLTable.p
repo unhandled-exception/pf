@@ -73,7 +73,6 @@ pfClass
     $.[>][>]
     $.[<=][<=]
     $.[>=][>=]
-    $.not[<>]
     $.[!=][<>]
     $.[!][<>]
     $.[<>][<>]
@@ -285,39 +284,8 @@ pfClass
 @_allWhere[aOptions][locals]
 ## Дополнительное выражение для where
 ## (выражение для полей формируется в _fieldsWhere)
-  $lConds[^__conditions[$aOptions]]
+  $lConds[^_buildConditions[$aOptions]]
   $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
-
-@__conditions[aOptions;aOP][locals]
-## Строим выражение для сравнения
-## aOp[AND|OR|NOT]
-  ^cleanMethodArgument[]
-  $result[]
-
-  $lConds[^hash::create[]]
-  $_res[^hash::create[]]
-
-  ^aOptions.foreach[k;v]{
-    ^k.match[$_PFSQLTABLE_COMPARSION_REGEX][]{
-      ^if(^_fields.contains[$match.1]){
-#       Проверка одного поля
-        ^if(def $match.2 && !^_PFSQLTABLE_OPS.contains[$match.2]){
-          ^throw[pfSQLTable.invalid.op;Неизвестный оператор «${match.2}» для поля «${match.1}».]
-        }
-        $lField[$_fields.[$match.1]]
-        $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
-      }(^_plurals.contains[$match.1]){
-#       Проверка поля в множественном числе
-        $lField[$_plurals.[$match.1]]
-        $lColumn[^if(^aOptions.contains[${lField.plural}Column]){$aOptions.[${k}Column]}{$lField.name}]
-        $_res.[^_res._count[]][^_sqlFieldName[$lField.name] ^if(^match.2.lower[] eq "not"){not in}{in} (^_valuesArray[$lField.name;$v;$.column[$lColumn]])]
-      }($match.1 eq "OR" || $match.1 eq "AND" || $match.1 eq "NOT"){
-#       Рекурсивный вызов логического блока
-        $_res.[^_res._count[]][^__conditions[$v;$match.1]]
-      }
-    }
-  }
-  $result[^if($_res){^if($aOP eq "NOT"){not} (^_res.foreach[k;v]{$v}[ $_PFSQLTABLE_LOGICAL.[$aOP] ])}]
 
 @_allGroup[aOptions]
   $result[]
@@ -421,3 +389,37 @@ pfClass
   $self.__context[$aContext]
   $result[$aCode]
   $self.__context[$lOldContext]
+
+@_buildConditions[aConds;aOP][locals]
+## Строим выражение для сравнения
+## aOp[AND|OR|NOT]
+  ^cleanMethodArgument[aConds]
+  $result[]
+
+  $lConds[^hash::create[]]
+  $_res[^hash::create[]]
+
+  ^aConds.foreach[k;v]{
+    ^k.match[$_PFSQLTABLE_COMPARSION_REGEX][]{
+      ^if(^_fields.contains[$match.1] && !def $match.2 || ^_PFSQLTABLE_OPS.contains[$match.2]){
+#       $.[field operator][value]
+        $lField[$_fields.[$match.1]]
+        $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
+      }(^_plurals.contains[$match.1]
+        || (^_fields.contains[$match.1] && ($match.2 eq "in" || $match.2 eq "!in"))
+       ){
+#       $.[field [!]in][hash|table|values string]
+#       $.[plural [not]][hash|table|values string]
+        $_res.[^_res._count[]][^_condArrayField[$aConds;$match.1;^match.2.lower[];$v]]
+      }($match.1 eq "OR" || $match.1 eq "AND" || $match.1 eq "NOT"){
+#       Рекурсивный вызов логического блока
+        $_res.[^_res._count[]][^_buildConditions[$v;$match.1]]
+      }
+    }
+  }
+  $result[^if($_res){^if($aOP eq "NOT"){not} (^_res.foreach[k;v]{$v}[ $_PFSQLTABLE_LOGICAL.[$aOP] ])}]
+
+@_condArrayField[aConds;aFieldName;aOperator;aValue][locals]
+  $lField[^if(^_plurals.contains[$aFieldName]){$_plurals.[$aFieldName]}{$_fields.[$aFieldName]}]
+  $lColumn[^if(^aConds.contains[${aFieldName}Column]){$aConds.[${aFieldName}Column]}{$lField.name}]
+  $result[^_sqlFieldName[$lField.name] ^if($aOperator eq "not" || $aOperator eq "!in"){not in}{in} (^_valuesArray[$lField.name;$aValue;$.column[$lColumn]])]
