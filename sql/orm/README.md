@@ -26,14 +26,14 @@ pfSQLTable
       `created_at` DATETIME NULL ,
       `updated_at` DATETIME NULL ,
       PRIMARY KEY (`client_id`));
-      
+                                    
     CREATE TABLE IF NOT EXISTS `clients_to_users` (
       `client_id` INT(10) UNSIGNED NOT NULL ,
       `user_id` INT(10) UNSIGNED NOT NULL ,
       `created_at` DATETIME NULL DEFAULT NULL ,
       PRIMARY KEY (`client_id`, `user_id`) ,
       INDEX `user_idx` (`user_id` ASC) );
-      
+                                  
     CREATE TABLE IF NOT EXISTS `auth_users` (
       `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
       `name` VARCHAR(200) NULL ,
@@ -47,14 +47,14 @@ pfSQLTable
 
     @CLASS
     сlientsTable
-    
+                                    
     @BASE
     pfSQLTable
-    
+                                    
     @create[aOptions]
       ^BASE:create[clients;aOptions]
       $_tableAlias[c]
-      
+                                    
       ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
@@ -78,46 +78,46 @@ pfSQLTable
     @main[]
     # Создаем объек для соединения с СУБД
       $csql[^pfMySQL::create[mysql://user:password@localhost/test_db]]
-    
+                                  
     # Связываем его с классом pfSQLTable и всеми его наследниками
       ^pfSQLTable:assignServer[$csql]
-      
+                                  
     # Создаем объект таблицы клиентов
       $ct[^clientsTable::create[]]
 
 Я воспользовался статическим методом assignServer, чтобы не передавать в каждый класс sql-объект, но иногда удобно делать это вручную (например, если вы используете несколько баз данных в проекте), тогда можно написать такой код:
 
     $ct[^clientsTable::create[$.sql[$csql]]]
-  
+
 Теперь можно приступать непосредственно к работе с данными:
 
     # Создаем нового клиента
       $clientID[^ct.new[$.title[Студия Лебедева] $.url[http://artlebedev.ru]]]
-      
+                                  
     # Изменяем данные
       ^ct.modify[$clientID;$.phone[+7 495 926-18-00]]
-       
+                                
     # Достаем запись из базы данных по первичному ключу
       $client[^ct.get[$clientID]]
-      
+                                
     # Метод get возвращает хеш со всеми полями, которые мы задали через метод addField
       $client.title - $client.url - $client.phone - $client.createdAt - $client.updated_at
-      
-    # Если нам надо удалить клиента, то вызываем метод 
+                                
+    # Если нам надо удалить клиента, то вызываем метод
     # ^ct.delete[$clientID].
 
 В результате мы получим строку:
 
     Студия Лебедева - http://artlebedev.ru - +7 495 926-18-00 - 2012-06-08 12:48:00 - 2012-06-08 12:48:01
- 
-Мы не написали вручную ни одного запроса к базе данных, но смогли добавить, изменить и  получить данные из нее. Магия! :) 
+
+Мы не написали вручную ни одного запроса к базе данных, но смогли добавить, изменить и  получить данные из нее. Магия! :)
 
 ### Процессоры
 
 Посмотрите на результат: поля createdAt и updatedAt мы нигде явно не задавали, но данные для них были сформированы автоматически — это результат работы процессоров. Как я уже писал выше, класс pfSQLTable ничего не знает о внутреннем устройстве таблицы в БД, но в некоторых случаях подобное неведение мешает строить эффективные запросы. Например, целочисленный первичный ключ хотелось бы преобразовывать в число, а не задавать как строку — в этом случае MySQL эффективнее использует индексы. Некоторые поля надо обновлять автоматически: при вставке новой записи хочется записать в поле createdAt текущие дату и время, а при обновлении проделать такую же операцию с полем updatedAt. Для решения этих задач предусмотрен механизм процессоров.
 
 Процессор — это правило по которому производится преобразование значения поля при записи или выборке данных из таблицы. Преобразования производятся только при формировании запросов insert, update и секции where для select, insert, update или delete.
-                           
+
 В нашей табличке есть четыре поля с процессорами:
 
     ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
@@ -146,29 +146,62 @@ pfSQLTable
 Процессоры позволяют нам задать значение ввиде типа, которые нельзя представить в виде строки стандартными методами. Мы можем передать метод изменения данных дату ^ct.modify[$.updatedAt[^date::now[]]] и класс автоматически вызовет метод sql-date перед передачей в базу данных.
 
 
-### Выборки                   
+### Выборки
 
 Работа с единичной записью в БД интересна, но большинству программ требуется делать какие-то выборки из базы данных. Стандартные выборки можно делать через метод all класса:
 
     # Выбираем всех клиентов
       $allClients[^ct.all[]]
-
+                                  
     # В результате получаем хеш хешей, в котором первичным ключем является clientID,
-    # а значениями 
+    # а значениями
       ^allClients.foreach[k;v]{
         $v.clientID — $v.title
       }[<br />]
-      
+                                  
     # Или получить в результате таблицу
       $allClients[^ct.all[$.asTable(true)]]
-      
+                                  
     # Можно ограничить выборку десятью записями
       $allClients[^ct.all[$.limit(10)]]
 
-Можно делать выборки по значениям полей. Если мы передали методу all ключи, соответствующие именам полей, то формируется запрос на проверку равенства значений заданных полей таблицы. 
+Можно делать выборки по значениям полей. Если мы передали методу all ключи, соответствующие именам полей, то формируется запрос на проверку равенства значений заданных полей таблицы.
 
     # Сформируем запрос select ... from clients where url = "http://artlebedev.ru" and title = "Студия Лебедева"
       $allClients[^ct.all[$.url[http://artlebedev.ru] $.tile[Студия Лебедева]]]
+
+Можно делать сравнение не только на равенство. Для этого надо указать условие в следующем формате:
+
+    # Формат: $.[поле оператор][значение]
+    # Следующий запрос сформирует запрос select ... from clients where client_id <= 100
+      $.[clientID <=][100]
+
+Поддерживаются операторы:
+
+* < (меньше)
+* > (больше)
+* <= (меньше или равно)
+* >= (больше или равно)
+* != (не равно)
+* like (сравнение строки, преобразуется like "значение")
+* = (равно, но его можно не указывать совсем)
+
+Если мы хотим одновременно проверить на равенство несколько значений (множество), то можно воспользоваться операторм in:
+
+      $allClients[^ct.all[$.[clientID in][13,14,25]]]
+    # И мы получим запрос:
+    # select ... from clients where client_id in (13, 14, 25)
+                                    
+    # Негативная проверка
+      $allClients[^ct.all[$.[clientID !in][13,14,25]]]
+    # select ... from clients where client_id not in (13, 14, 25)
+
+
+В качестве значения поля для оператора in может принимать строку, хеш или таблицу. Строка должна быть в csv-формате: значения разделяются запятыми, а в качестве ограничителей можно использовать двойные кавычки (если значение содержит кавычки то их надо удвоить; пример: слово, "два слова", "слово, запятая", "фраза ""с кавычками"""). Если значение поля хеш, то в качестве значений используются ключи хеша. Для таблиц имя колонки должно соответствовать имени поля, но можно задать произвольное название, прибавив к имени поля суффикс «Colimn». Хеши и таблицы удобно использовать для подстановки результатов других выборок (подробности описаны чуть ниже).
+
+      ^all[$.[clientID in][$.13[] $.14[] $.15[]]]
+      ^all[$.[clientID in][^table::{clientID ...}]]
+      ^all[$.[clientID in][^table::{id ...}] $.clientIDColumn[id]]
 
 Если в таблице определен первичный ключ, то сортировка идет именно по нему. Если мы хотим определить свой вариант сортировки, то необходимо перекрыть метод _allOrder в clientsTable:
 
@@ -184,7 +217,7 @@ pfSQLTable
 
     # Сортировка по названию (DEFAULT)
       $allClients[^ct.all[]]
-    
+                                  
     # Сортировка по времени добавления
       $allClients[^ct.all[$.order[added]]]
 
@@ -193,10 +226,10 @@ pfSQLTable
 
     @CLASS
     managersTable
-      
+                                        
     @BASE
     pfSQLTable
-      
+                                      
     @create[aOptions]
       ^BASE:create[clients_to_users;
         $.allAsTable(true)
@@ -210,28 +243,37 @@ pfSQLTable
 
     # Создаем объект
       $mt[^managersTable::create[]]
-       
+                                      
     # Добавляем записи (связывае менеджера и пользователя)
     # Метод new, в данном случае, не возвращает значение первичного ключа!
       ^mt.new[$.clientID[1] $.userID[1]]
       ^mt.new[$.clientID[2] $.userID[1]]
-      
+                                    
     # Если надо удалить запись, то можем написать
     # ^mt.deleteAll[$.clientID[2] $.userID[1]]
 
 У полей clientID и userID заданы значения множественного числа clients и users, которые можно удобно использовать при выборке:
 
     # Достаем из базы всех клиентов
-      $allClients[^ct.all[]] 
-      
-    # А теперь всех менеджеров для клиентов  
-      $managersForClients[^mt.all[$.clients[$allClients]]]              
+      $allClients[^ct.all[]]
+                                      
+    # А теперь всех менеджеров для клиентов
+      $managersForClients[^mt.all[$.clients[$allClients]]]
 
-В результате мы полуичил хеш со всеми клиентами в allClients и таблицу с менедежрами для всех клиетов в managersForClients. Обратите внимание, что мы передали методу mt.all в параметре clients результат предыдущейй выборки, а метод сам преобразовал вызов в выражение client_id in (1, 2, ...), где значениями множества явились ключи хеша. В качестве значения параметра clients могут выступать хеш, таблица или строка — система автомтически сформирует код для преобразования значения в множество. Теперь мы можем выполнить и обратную операцию: получить всех клиентов для менеджеров.
+В результате мы полуичил хеш со всеми клиентами в allClients и таблицу с менедежрами для всех клиетов в managersForClients. Обратите внимание, что мы передали методу mt.all в параметре clients результат предыдущейй выборки, а метод сам преобразовал вызов в выражение client_id in (1, 2, ...), где значениями множества явились ключи хеша. В качестве значения параметра clients могут выступать хеш, таблица или строка — система автомтически сформирует код для преобразования значения в множество. Того же эффекта можно было добиться использовав оператор in:
+
+      $managersForClients[^mt.all[$.[clientID in][$allClients]]]
+
+Но часто удобнее использовать множественное число вместо названия первичного ключа. С множественным числом можно использовать и негативную проверку:
+
+      $managersForClients[^mt.all[$.[clients !in][$allClients]]
+
+
+Теперь мы можем выполнить и обратную операцию: получить всех клиентов для менеджеров.
 
     # Достаем всех менеджеров
       $allManagers[^mt.all[]]
-      
+
     # А теперь достаем всех клиентов для менеджеров
       $clientsForManagers[^ct.all[$.clients[$allManagers]]]
 
@@ -239,6 +281,33 @@ pfSQLTable
 
     # Название параметра с именем колонки получается добавлением к нему суффикса Column
       $clientsForManagers[^ct.all[$.clients[$allManagers] $.clientsColumn[id]]]
+
+По-умолчанию все условия объединяются союзом «и» (and), но иногда может потребоваться использовать союз «а» или отрицание (not). Сделать это можно, использовав в условиях группирующие ключи $.OR, $.AND, $.NOT. Простой пример:
+
+      ^all[
+        $.[clientID !=][15]
+        $.OR[
+          $.AND[$.[clientID >=][22] $.[clientID <=][30]]
+          $.[AND 2][$.[clientID] >=][35] $.[clientID < 45]]
+          $.[title like][Студия%]
+        ]
+        $.NOT[
+          $.createdAt[^date::now[]]
+        ]
+      ]
+      
+    # Получим запрос:
+      select ... from clients
+      where client_id <> 15 and
+      ((client_id >= 22 and client_id <= 30)
+        or (client_id >= 35) and client_id < 45)
+        or title like "Студия%"
+      )
+      and not (created_at != "2012-06-17 20:26:15")
+
+Ключи AND и OR связывают все условия в группе условиями and и or соответсвенно, а NOT связывает ключем and, но добавляет для всей группы отрицание (not). Если нужно объединить несколько однозначных групп, то можно использовть любой дополнительный идентифкатор, который казывется в ключе после пробела («AND 2» в примере). Группы можно неограниченно вкладывать друг в друга.
+
+Групповые модификаторы позволяют делать достаточно сложные выборки, но синтаксис их не очень удобный, поэтому лучше избегать очень сложных группировок, тем более, что СУБД не всегда эффективно делает выборки по условиям с or или not.
 
 
 ### Выборки с произвольным условием
@@ -259,50 +328,50 @@ pfSQLTable
       ^cleanMethodArgument[]
       $result[
         ^BASE:_allWhere[$aOptions]
-          
+                                                      
         ^if(^aOptions.contains[period]){
           ^switch[$aOptions]{
     #       Переменные _now и _today в pfSQLTable уже есть. :)
-            ^case[last-month]{and $createdAt between date_sub("^_now.sql-string[]", interval 1 month) and "^_now.sql-string[]"} 
+            ^case[last-month]{and $createdAt between date_sub("^_now.sql-string[]", interval 1 month) and "^_now.sql-string[]"}
           }
         }
       ]
 
 
-### Выражения в полях и джоины   
+### Выражения в полях и джоины
 
 Иногда удобно доставать вместе с основными полями еще и некоторые поля из связаных таблиц. Давайте немного расширим класс managersTable:
 
     @CLASS
     managersTable
-      
+                                                      
     @BASE
     pfSQLTable
-      
+                                                    
     @create[]
       ^BASE:create[clients_to_users;
         $.allAsTable(true)
         $.tableAlias[cu]
       ]
-        
+                              
       ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[int]]
       ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[int]]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
       ^addField[name;$.fieldExpression[au.name]]
       ^addField[isActive;$.fieldExpression[au.is_active] $.processor[bool]]
-        
+                                                    
     @_allJoin[aOptions]
       $result[join auth_users as au on ($userID = au.id)]
-        
+                                                  
     @_allOrder[aOptions]
       $result[$name asc, $userID asc]
-  
+
 Мы добавили два поля name и isActive для которых задали параметр fieldExpression с именами полей в табличке auth_users. Связали таблички в методе _allJoin и добавили сортировку выборки по имени менеджера. Теперь мы можем получить одним запросом сразу все данные о менеджере:
 
     # Все менеджеры для клиента с id: 1
       $mfc[^mt.all[$.clientID[1]]]
-      ^mfc.menu{$mfc.userID — $mfc.name}[<br />]  
-      
+      ^mfc.menu{$mfc.userID — $mfc.name}[<br />]
+                                          
     # Можем выбрать только активных менеджеров
       $mfc[^mt.all[$.clientID[1] $.isActive(true)]]
 
@@ -312,16 +381,16 @@ pfSQLTable
 
     @CLASS
     clientsTable
-                  
+                                              
     @BASE
     pfSQLTable
-                
+                                              
     @create[]
       ^BASE:create[clients;
         $.allAsTable(true)
         $.tableAlias[c]
       ]
-        
+                                              
       ^addField[clientID;$.plural[clients] $.dbField[client_id] $.primary(true) $.processor[int]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
@@ -332,19 +401,19 @@ pfSQLTable
       ^addField[comment]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
       ^addField[updatedAt;$.dbField[updated_at] $.processor[auto_now]]
-      
+                                            
       ^addField[managers;$.expression[group_concat(au.name separator ", ")]]
       ^addField[manCnt;$.expression[count(au.id)]]
-            
+                                              
     @_allJoin[aOptions]
       $result[
         left join clients_to_users as cu on $clientID = cu.client_id
         left join auth_users as au on cu.user_id = au.user_id
       ]
-    
+                                            
     @_allGroup[aOptions]
       $result[$clientID]
-        
+                                          
     @_allOrder[aOptions]
       $result[^switch[$aOptions.order]{
         ^case[added]{$createdAt desc, $clientID desc}
@@ -362,14 +431,14 @@ pfSQLTable
 
     @BASE
     pfSQLTable
-      
+                                        
     @create[aTableName;aOptions]
       ^BASE:create[$aTableName;$aOptions]
-        
+                                      
       ^addField[id;$.primary(true) $.processor[int]]
       ...
       ^addField[isActive;$.dbField[is_active] $.processor[bool] $.default(1)]
-      
+                                      
     @_allWhere[aOptions]
     ## aOptions
       ^cleanMethodArgument[]
@@ -381,11 +450,11 @@ pfSQLTable
            ^case[DEFAULT;active]{and $isActive = 1}
         }
       ]
-      
+                                      
     @delete[aID]
       $result[^modify[$aID;$.isActive(false)]]
-      
+                                      
     @restore[aID]
       $result[^modify[$aID;$.isActive(true)]]
-  
+
 И получаем возможность удалять и восстанавливать записи. При выборках мы будем получать только активные записи, но если написать ^all[$.active[inactive]], то получим все, что «удалили» (^all[$.active[any]] — любые записи).
