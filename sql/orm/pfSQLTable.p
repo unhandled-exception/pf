@@ -57,6 +57,9 @@ pfClass
 
   $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
 
+  $_defaultOrderBy[]
+  $_defaultGroupBy[]
+
   $_now[^date::now[]]
   $_today[^date::today[]]
 
@@ -193,8 +196,8 @@ pfClass
 ##   aOptions.selectFields{exression} — выражение для списка полей (вместо автогенерации)
 ##   aOptions.where{expression} — выражение для where
 ##   aOptions.having{expression} — выражение для having
-##   aOptions.groupBy{expression} — выражение для groupBy
-##   aOptions.orderBy{expression} — выражение для orderBy
+##   aOptions.orderBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для orderBy
+##   aOptions.groupBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для groupBy
 ## aOptions.limit
 ## aOptions.offset
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
@@ -245,8 +248,8 @@ pfClass
 
 @_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
   ^_asContext[where]{
-    $lGroup[^if(^aOptions.contains[groupBy]){$aOptions.groupBy}{^_allGroup[$aOptions]}]
-    $lOrder[^if(^aOptions.contains[orderBy]){$aOptions.orderBy}{^_allOrder[$aOptions]}]
+    $lGroup[^_allGroup[$aOptions]]
+    $lOrder[^_allOrder[$aOptions]]
     $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
   }
 
@@ -287,15 +290,34 @@ pfClass
   $lConds[^_buildConditions[$aOptions]]
   $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
 
-@_allGroup[aOptions]
-  $result[]
-
 @_allHaving[aOptions]
   $result[]
 
-@_allOrder[aOptions]
-  $result[^if(def $_primaryKey){$PRIMARYKEY asc}]
+@_allGroup[aOptions][locals]
+## aOptions.groupBy
+  ^if(^aOptions.contains[groupBy]){
+    $lGroup[$aOptions.groupBy]
+  }{
+    $lGroup[$_defaultGroupBy]
+  }
+  ^switch(true){
+    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){desc}(^v.lower[] eq "asc"){asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lGroup.trim[]]}
+  }
 
+@_allOrder[aOptions][locals]
+## aOptions.orderBy
+  ^if(^aOptions.contains[orderBy]){
+    $lOrder[$aOptions.orderBy]
+  }(def $_defaultOrderBy){
+    $lOrder[$_defaultOrderBy]
+  }{
+     $lOrder[^if(def $_primaryKey){$PRIMARYKEY asc}]
+   }
+  ^switch(true){
+    ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lOrder.trim[]]}
+  }
 
 #----- Манипуляция данными -----
 
