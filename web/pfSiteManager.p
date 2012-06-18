@@ -15,6 +15,5 @@ pfSiteModule
 #----- Constructor -----
 
 @create[aOptions]
-## aOptions.request
   ^cleanMethodArgument[]
   ^BASE:create[^hash::create[$aOptions] $.asManager(true)]
