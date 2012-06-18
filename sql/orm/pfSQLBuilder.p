@@ -21,6 +21,10 @@ pfClass
   $_now[^date::now[]]
   $_today[^date::today[]]
 
+@auto[][lSeparator;lEncloser]
+  $_PFSQLBUILDER_CSV_REGEX_[^regex::create[((?:\s*"(?:[^^"]*|"{2})*"\s*(?:,|^$))|\s*"[^^"]*"\s*(?:,|^$)|[^^,]+(?:,|^$)|(?:,))][g]]
+  $_PFSQLBUILDER_CSV_QTRIM_REGEX_[^regex::create["(.*)"][]]
+
 #----- Работа с полями -----
 
 ## Формат описания полей
@@ -124,9 +128,9 @@ pfClass
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
       ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-      ^case[now;auto_now]{^if(def $aValue){"^taint[$aValue]"}{"^_now.sql-string[]"}}
-      ^case[cuttime;auto_curtime]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[time]}"}
-      ^case[cutdate;auto_curdate]{"^if(def $aValue){^taint[$aValue]}{^_now.sql-string[date]}"}
+      ^case[now;auto_now]{^if(def $aValue){"^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}"}{"^_now.sql-string[]"}}
+      ^case[cuttime;auto_curtime]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}"}
+      ^case[cutdate;auto_curdate]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}"}
       ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
       ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
       ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
@@ -142,21 +146,37 @@ pfClass
 
 @array[aField;aValue;aOptions][locals]
 ## Строит массив значений
-## aValue[table|hash|...]
+## aValue[table|hash|csv-string]
 ## aOptions.column[primaryKey] — имя колонки в таблице
 ## aOptions.emptyValue[null] — значение массива, если в aValue нет данных
 ## aOptions.valueFunction[fieldValue] — функция форматирования значения поля
   ^cleanMethodArgument[]
+  $result[]
   $lValueFunction[^if(^aOptions.contains[valueFunction]){$aOptions.valueFunction}{$fieldValue}]
   $lEmptyValue[^if(^aOptions.contains[emptyValue]){$aOptions.emptyValue}{null}]
   $lColumn[^if(def $aOptions.column){$aOptions.column}{primaryKey}]
-  $result[^switch(true){
-    ^case($aValue is hash){^aValue.foreach[k;v]{^lValueFunction[$aField;$k]}[, ]}
-    ^case($aValue is table){^aValue.menu{^lValueFunction[$aField;$aValue.[$lColumn]]}[, ]}
-    ^case[DEFAULT]{^lValueFunction[$aField;$aValue]}
+  ^switch(true){
+    ^case($aValue is hash){$result[^aValue.foreach[k;v]{^lValueFunction[$aField;$k]}[, ]]}
+    ^case($aValue is table){$result[^aValue.menu{^lValueFunction[$aField;$aValue.[$lColumn]]}[, ]]}
+    ^case($aValue is string){
+      $lItems[^_parseCSVString[$aValue]]
+      $result[^lItems.foreach[k;v]{^lValueFunction[$aField;$v]}[, ]]
+    }
+    ^case[DEFAULT]{
+      ^throw[pfSQLBuilder.bad.array.values;Значениями массива может быть хешем, таблицей или csv-строкой.]
+    }
   }]
   ^if(!def $result && def $lEmptyValue){
     $result[$lEmptyValue]
+  }
+
+@_parseCSVString[aString][loacals]
+# $result[$.0[] $.1[] ...]
+  $result[^hash::create[]]
+  ^aString.match[$_PFSQLBUILDER_CSV_REGEX_][]{
+    $lValue[^match.1.trim[right;,]]
+    $lValue[^lValue.match[$_PFSQLBUILDER_CSV_QTRIM_REGEX_][]{^match.1.replace[""]["]}]
+    $result.[^result._count[]][$lValue]
   }
 
 #----- Построение sql-выражений -----

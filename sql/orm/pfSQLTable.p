@@ -33,11 +33,11 @@ pfClass
   ^BASE:create[$aOptions]
   ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
 
-  $_csql[^if(def $aOptions.sql){$aOptions.sql}{$_pfSQLTable_csql}]
+  $_csql[^if(def $aOptions.sql){$aOptions.sql}{$_PFSQLTABLE_CSQL}]
   ^pfAssert:isTrue(def $_csql)[Не задан объект для работы с SQL-сервером.]
 
   $_tableName[$aTableName]
-  $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_pfSQLTable_builder}]
+  $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_PFSQLTABLE_BUILDER}]
 
   $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}{$aTableName}]
   $_enableTableAlias(false)
@@ -45,6 +45,7 @@ pfClass
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
 
   $_fields[^hash::create[]]
+  $_plurals[^hash::create[]]
   ^if(^aOptions.contains[fields]){
     ^aOptions.fields.foreach[k;v]{
       ^addField[$k;$v]
@@ -64,15 +65,35 @@ pfClass
 #----- Статические методы и конструктор -----
 
 @auto[]
-  $_pfSQLTable_csql[]
-  $_pfSQLTable_builder[^pfSQLBuilder::create[]]
+  $_PFSQLTABLE_CSQL[]
+  $_PFSQLTABLE_BUILDER[^pfSQLBuilder::create[]]
+  $_PFSQLTABLE_COMPARSION_REGEX[^regex::create[^^\s*(\S+)(?:\s+(\S+))?][]]
+  $_PFSQLTABLE_OPS[
+    $.[<][<]
+    $.[>][>]
+    $.[<=][<=]
+    $.[>=][>=]
+    $.[!=][<>]
+    $.[!][<>]
+    $.[<>][<>]
+    $.like[like]
+    $.[=][=]
+    $.[==][=]
+    $._default[=]
+  ]
+  $_PFSQLTABLE_LOGICAL[
+    $.OR[or]
+    $.AND[and]
+    $.NOT[and]
+    $._default[and]
+  ]
 
 @static:assignServer[aSQLServer]
 # Чтобы можно было задать коннектор для всех объектов сразу.
-  $_pfSQLTable_csql[$aSQLServer]
+  $_PFSQLTABLE_CSQL[$aSQLServer]
 
 @static:assignBuilder[aSQLBuilder]
-  $_pfSQLTable_csql[$aSQLBuilder]
+  $_PFSQLTABLE_BUILDER[$aSQLBuilder]
 
 #----- Метаданные -----
 
@@ -119,6 +140,9 @@ pfClass
      }
    }
   $_fields.[$aFieldName][$lField]
+  ^if(def $lField.plural){
+    $_plurals.[$lField.plural][$lField]
+  }
 
 #----- Свойства -----
 
@@ -260,23 +284,8 @@ pfClass
 @_allWhere[aOptions][locals]
 ## Дополнительное выражение для where
 ## (выражение для полей формируется в _fieldsWhere)
-  $result[
-#   Дополнительное условие
-    ^if(^aOptions.contains[where]){$aOptions.where}{1=1}
-
-    ^_fields.foreach[k;v]{
-#     Выборка по отдельным полям (равенство значений)
-      ^if(^aOptions.contains[$k]){
-        and ^_sqlFieldName[$k] = ^_fieldValue[$v;$aOptions.[$k]]
-      }
-
-#     Если для колонки задано поле с множественным числом, то строим выражение in
-      ^if(def $v.plural && ^aOptions.contains[$v.plural]){
-        $lColumn[^if(^aOptions.contains[${v.plural}Column]){$aOptions.[${v.plural}Column]}{$k}]
-        and ^_sqlFieldName[$k] in (^_valuesArray[$k;$aOptions.[$v.plural];$.column[$lColumn]])
-      }
-    }
-  ]
+  $lConds[^_buildConditions[$aOptions]]
+  $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
 
 @_allGroup[aOptions]
   $result[]
@@ -380,3 +389,37 @@ pfClass
   $self.__context[$aContext]
   $result[$aCode]
   $self.__context[$lOldContext]
+
+@_buildConditions[aConds;aOP][locals]
+## Строим выражение для сравнения
+## aOp[AND|OR|NOT]
+  ^cleanMethodArgument[aConds]
+  $result[]
+
+  $lConds[^hash::create[]]
+  $_res[^hash::create[]]
+
+  ^aConds.foreach[k;v]{
+    ^k.match[$_PFSQLTABLE_COMPARSION_REGEX][]{
+      ^if(^_fields.contains[$match.1] && !def $match.2 || ^_PFSQLTABLE_OPS.contains[$match.2]){
+#       $.[field operator][value]
+        $lField[$_fields.[$match.1]]
+        $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
+      }(^_plurals.contains[$match.1]
+        || (^_fields.contains[$match.1] && ($match.2 eq "in" || $match.2 eq "!in"))
+       ){
+#       $.[field [!]in][hash|table|values string]
+#       $.[plural [not]][hash|table|values string]
+        $_res.[^_res._count[]][^_condArrayField[$aConds;$match.1;^match.2.lower[];$v]]
+      }($match.1 eq "OR" || $match.1 eq "AND" || $match.1 eq "NOT"){
+#       Рекурсивный вызов логического блока
+        $_res.[^_res._count[]][^_buildConditions[$v;$match.1]]
+      }
+    }
+  }
+  $result[^if($_res){^if($aOP eq "NOT"){not} (^_res.foreach[k;v]{$v}[ $_PFSQLTABLE_LOGICAL.[$aOP] ])}]
+
+@_condArrayField[aConds;aFieldName;aOperator;aValue][locals]
+  $lField[^if(^_plurals.contains[$aFieldName]){$_plurals.[$aFieldName]}{$_fields.[$aFieldName]}]
+  $lColumn[^if(^aConds.contains[${aFieldName}Column]){$aConds.[${aFieldName}Column]}{$lField.name}]
+  $result[^_sqlFieldName[$lField.name] ^if($aOperator eq "not" || $aOperator eq "!in"){not in}{in} (^_valuesArray[$lField.name;$aValue;$.column[$lColumn]])]
