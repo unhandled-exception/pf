@@ -223,7 +223,7 @@ pfClass
          ^if($lResultType eq "hash"){
            ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
 #             Для хеша добавляем еще одно поле с первичным ключем
-            $PRIMARYKEY as `_ORM_HASH_KEY_`,
+            $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],
          }
          $lJoinFields[^_allJoinFields[$aOptions]]
          ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
@@ -398,7 +398,7 @@ pfClass
   }(^lField.contains[expression]
     && def $lField.expression
    ){
-     $result[$lField.expression^if($__context eq "select"){ as `$aFieldName`}]
+     $result[$lField.expression^if($__context eq "select"){ as ^_builder.quoteIdentifier[$aFieldName]}]
   }{
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
