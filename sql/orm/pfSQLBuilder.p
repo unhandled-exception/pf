@@ -80,7 +80,7 @@ pfClass
 ## Возвращает список полей для выражения select
 ## aOptions.tableAlias
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
 
@@ -102,7 +102,7 @@ pfClass
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет (нaдо обязательно задать поле aOptions.data)
 ## aOptions.data - хеш с данными
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lData[^if(def $aOptions.data){$aOptions.data}{^hash::create[]}]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
@@ -121,7 +121,7 @@ pfClass
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipNames(false) - не выводить имена полей, только значения (для insert values)
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lAlias[^if(def $aOptions.alias){${aOptions.alias}}]
@@ -136,7 +136,7 @@ pfClass
 
 @fieldValue[aField;aValue][locals]
 ## Возвращает значение поля в sql-формате.
-  ^pfAssert:isTrue(def $aField)[Не задано описание поля.]
+  ^pfAssert:isTrue(def $aField){Не задано описание поля.}
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
@@ -202,8 +202,8 @@ pfClass
 ## aData - данные
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.ignore(true)
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
   $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
@@ -219,11 +219,11 @@ pfClass
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.emptySetExpression[выражение, которое надо подставить, если нет данных для обновления]
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^pfAssert:isTrue(def $aWhere)[Не задано выражение для where.]
+  ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
+  ^pfAssert:isTrue(def $aWhere){Не задано выражение для where.}
   ^cleanMethodArgument[aData;aOptions]
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
-  ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
+  ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression)){Необходимо задать выражение для пустого update set.}
   $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]

@@ -31,17 +31,14 @@ pfClass
 ##   aOptions.skipOnUpdate[$.field(bool)]
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
 
   $_csql[^if(def $aOptions.sql){$aOptions.sql}{$_PFSQLTABLE_CSQL}]
-  ^pfAssert:isTrue(def $_csql)[Не задан объект для работы с SQL-сервером.]
+  ^pfAssert:isTrue(def $_csql){Не задан объект для работы с SQL-сервером.}
 
-  $_tableName[$aTableName]
   $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_PFSQLTABLE_BUILDER}]
 
-  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}{$aTableName}]
-  $_enableTableAlias(false)
-
+  $_tableName[$aTableName]
+  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
 
   $_fields[^hash::create[]]
@@ -113,8 +110,8 @@ pfClass
 ## aOptions.skipOnUpdate(false)
   $result[]
   ^cleanMethodArgument[]
-  ^pfAssert:isTrue(def $aFieldName)[Не задано имя поля таблицы.]
-  ^pfAssert:isTrue(!^_fields.contains[$aFieldName])[Поле «${aFieldName}» в таблице уже существует.]
+  ^pfAssert:isTrue(def $aFieldName){Не задано имя поля таблицы.}
+  ^pfAssert:isTrue(!^_fields.contains[$aFieldName]){Поле «${aFieldName}» в таблице уже существует.}
 
   $lField[^hash::create[]]
 
@@ -149,8 +146,15 @@ pfClass
 
 #----- Свойства -----
 
-@GET_TABLENAME[]
+@GET_TABLE_NAME[]
+  ^pfAssert:isTrue(def $_tableName){Не задано имя таблицы в классе $self.CLASS_NAME}
   $result[$_tableName]
+
+@GET_TABLE_ALIAS[]
+  ^if(!def $_tableAlias){
+    $_tableAlias[$TABLE_NAME]
+  }
+  $result[$_tableAlias]
 
 @GET_FIELDS[]
   $result[$_fields]
@@ -174,7 +178,7 @@ pfClass
 #----- Выборки -----
 
 @get[aPrimaryKeyValue;aOptions]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   $result[^one[$.[$_primaryKey][$aPrimaryKeyValue]]]
 
 @one[aOptions;aSQLOptions]
@@ -221,7 +225,7 @@ pfClass
          $aOptions.selectFields
        }{
          ^if($lResultType eq "hash"){
-           ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
+           ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}. Выборку можно делать только в таблицу.}
 #             Для хеша добавляем еще одно поле с первичным ключем
             $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],
          }
@@ -255,7 +259,7 @@ pfClass
 
   $result[
        select $aFields
-         from $_tableName as $_tableAlias
+         from ^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
               ^_asContext[where]{^_allJoin[$aOptions]}
         where ^_asContext[where]{^_allWhere[$aOptions]}
       ^if(def $lGroup){
@@ -272,7 +276,7 @@ pfClass
 
 @_allFields[aOptions;aSQLOptions]
   $result[^_builder.selectFields[$_fields;
-    $.tableAlias[$_tableAlias]
+    $.tableAlias[$TABLE_ALIAS]
     ^if(^aSQLOptions.contains[skipFields]){
       $.skipFields[$aSQLOptions.skipFields]
     }
@@ -325,16 +329,16 @@ pfClass
 ## Вставляем значение в базу
 ## aSQLOptions.ignore(true)
   ^cleanMethodArgument[aData;aSQLOptions]
-  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
+  ^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
   $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
 
 @modify[aPrimaryKeyValue;aData]
 ## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
-  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   ^cleanMethodArgument[aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
+    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
       $.skipAbsent(true)
       $.skipFields[$_skipOnUpdate]
       $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
@@ -343,10 +347,10 @@ pfClass
 
 @delete[aPrimaryKeyValue]
 ## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue
-  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   $result[^CSQL.void{
-    delete from $_tableName where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+    delete from $TABLE_NAME where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
   }]
 
 
@@ -357,7 +361,7 @@ pfClass
 ## Условие обновления берем из _allWhere
   ^cleanMethodArgument[aOptions;aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][
+    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][
       ^_allWhere[$aOptions]
     ][
       $.skipAbsent(true)
@@ -371,7 +375,7 @@ pfClass
 ## Условие для удаления берем из _allWhere
   ^cleanMethodArgument[]
   $result[^CSQL.void{
-    delete from $_tableName
+    delete from $TABLE_NAME
      where ^_allWhere[$aOptions]
   }]
 
@@ -403,7 +407,7 @@ pfClass
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
      }
-     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$_tableAlias}]]
+     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$TABLE_ALIAS}]]
    }
 
 @_asContext[aContext;aCode][locals]
