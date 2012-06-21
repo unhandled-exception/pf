@@ -177,7 +177,7 @@ pfClass
       $result[^lItems.foreach[k;v]{^lValueFunction[$aField;$v]}[, ]]
     }
     ^case[DEFAULT]{
-      ^throw[pfSQLBuilder.bad.array.values;Значениями массива может быть хешем, таблицей или csv-строкой.]
+      ^throw[pfSQLBuilder.bad.array.values;Значениями массива может быть хеш, таблица или csv-строка.]
     }
   }]
   ^if(!def $result && def $lEmptyValue){

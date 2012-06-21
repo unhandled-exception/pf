@@ -383,6 +383,10 @@ pfClass
 #----- Private -----
 
 @_fieldValue[aField;aValue]
+## aField — имя или хеш с полем
+  ^if($aField is string){
+    $aField[$_fields.[$aField]]
+  }
   $result[^_builder.fieldValue[$aField;$aValue]]
 
 @_valuesArray[aField;aValues;aOptions]
