@@ -106,6 +106,7 @@ pfClass
 ## aOptions.default
 ## aOptions.format
 ## aOptions.primary(false)
+## aOptions.sequence(true) — автоинкремент (только для первичного ключа)
 ## aOptions.skipOnInsert(false)
 ## aOptions.skipOnUpdate(false)
   $result[]
@@ -129,6 +130,7 @@ pfClass
   }{
      $lField.dbField[^if(def $aOptions.dbField){$aOptions.dbField}{$aFieldName}]
      $lField.primary(^aOptions.primary.bool(false))
+     $lField.sequence($lField.primary && ^aOptions.sequence.bool(true))
      ^if(^aOptions.skipOnUpdate.bool(false) || $lField.primary){
        $self._skipOnUpdate.[$aFieldName](true)
      }
@@ -328,9 +330,12 @@ pfClass
 @new[aData;aSQLOptions]
 ## Вставляем значение в базу
 ## aSQLOptions.ignore(true)
+## Возврашает автосгенерированное значение первичного ключа (last_insert_id) для sequence-полей.
   ^cleanMethodArgument[aData;aSQLOptions]
-  ^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
-  $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
+  $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}]
+  ^if(def $_primaryKey && $_fields.[$_primaryKey].sequence){
+    $result[^CSQL.lastInsertId[]]
+  }
 
 @modify[aPrimaryKeyValue;aData]
 ## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
