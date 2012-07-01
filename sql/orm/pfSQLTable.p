@@ -440,6 +440,8 @@ pfClass
 #       $.[field operator][value]
         $lField[$_fields.[$match.1]]
         $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
+      }(^_fields.contains[$match.1] && $match.2 eq "is"){
+        $_res.[^_res._count[]][^_sqlFieldName[$match.1] is ^if(!def $v || $v eq "null"){null}{not null}]
       }(^_plurals.contains[$match.1]
         || (^_fields.contains[$match.1] && ($match.2 eq "in" || $match.2 eq "!in"))
        ){
