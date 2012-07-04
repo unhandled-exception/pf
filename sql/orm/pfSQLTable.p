@@ -146,6 +146,15 @@ pfClass
     $_plurals.[$lField.plural][$lField]
   }
 
+@addFields[aFields][locals]
+## Добавляет сразу несколько полей
+## aFields[hash]
+  ^cleanMethodArgument[aFields]
+  $result[]
+  ^aFields.foreach[k;v]{
+    ^addField[$k;$v]
+  }
+
 #----- Свойства -----
 
 @GET_TABLE_NAME[]
