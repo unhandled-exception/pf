@@ -222,119 +222,61 @@ pfClass
 ##   aSQLOptions.skipFields — пропустить поля
 ##   + Все опции pfSQL.
  ^cleanMethodArgument[aOptions;aSQLOptions]
-
- $lResultType[^switch(true){
-   ^case(^aOptions.asTable.bool(false)){table}
-   ^case(^aOptions.asHash.bool(false)){hash})
-   ^case[DEFAULT]{$_defaultResultType}
- }]
+ $lResultType[^__getResultType[$aOptions]]
  $result[^CSQL.[$lResultType]{
    ^_selectExpression[
-     ^_asContext[select]{
-       ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
-       ^if(^aOptions.contains[selectFields]){
-         $aOptions.selectFields
-       }{
-         ^if($lResultType eq "hash"){
-           ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}. Выборку можно делать только в таблицу.}
-#             Для хеша добавляем еще одно поле с первичным ключем
-            $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],
-         }
-         $lJoinFields[^_allJoinFields[$aOptions]]
-         ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
-        }
-     }
+     ^__allSelectFieldsExpression[$aOptions;$aSQLOptions]
    ][$lResultType;$aOptions;$aSQLOptions]
  }[
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
     ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
   ][$aSQLOptions]]]
 
+@__getResultType[aOptions]
+  $result[^switch(true){
+    ^case(^aOptions.asTable.bool(false)){table}
+    ^case(^aOptions.asHash.bool(false)){hash})
+    ^case[DEFAULT]{$_defaultResultType}
+  }]
 
-@count[aOptions;aSQLOptions]
-  ^cleanMethodArgument[aOptions;aSQLOptions]
+@count[aConds;aSQLOptions]
+## Возвращает
+  ^cleanMethodArgument[aConds;aSQLOptions]
   $result[^CSQL.int{
-    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aOptions;$aSQLOptions]}
+    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aConds;$aSQLOptions]}
   }[
-    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
+    ^if(^aOptions.contains[limit]){$.limit($aConds.limit)}
+    ^if(^aOptions.contains[offset]){$.offset($aConds.offset)}
   ][$aSQLOptions]]]
 
+@union[*aConds][locals]
+## Выполняет несколько запросов и объединяет их в один результат.
+## Параметр aSQLOptions не поддерживается!
+## Тип результата берем из самого первого условия.
+  ^pfAssert:isTrue($aConds){Надо задать как-минимум одно условие выборки.}
+  $result[]
+  $lResultType[^__getResultType[^hash::create[$aConds.0]]]
 
-@_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
-  ^_asContext[where]{
-    $lGroup[^_allGroup[$aOptions]]
-    $lOrder[^_allOrder[$aOptions]]
-    $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
-  }
-
-  $result[
-       select $aFields
-         from ^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
-              ^_asContext[where]{^_allJoin[$aOptions]}
-        where ^_asContext[where]{^_allWhere[$aOptions]}
-      ^if(def $lGroup){
-        group by $lGroup
-      }
-      ^if(def $lHaving){
-       having $lHaving
-      }
-      ^if(def $lOrder){
-        order by $lOrder
-      }
-      ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
-  ]
-
-@_allFields[aOptions;aSQLOptions]
-  $result[^_builder.selectFields[$_fields;
-    $.tableAlias[$TABLE_ALIAS]
-    ^if(^aSQLOptions.contains[skipFields]){
-      $.skipFields[$aSQLOptions.skipFields]
+  ^aConds.foreach[k;v]{
+    $v[^hash::create[$v]]
+    $lRes[^CSQL.[$lResultType]{
+      ^_selectExpression[
+        ^__allSelectFieldsExpression[$v]
+      ][$lResultType;$v]
+    }[
+       ^if(^v.contains[limit]){$.limit($v.limit)}
+       ^if(^v.contains[offset]){$.offset($v.offset)}
+    ]]
+    ^if($k eq "0"){
+      $result[$lRes]
+    }($lResultType eq "table"){
+      ^result.join[$lRes]
+    }($lResultType eq "hash"){
+      ^result.add[$lRes]
     }
-  ]]
-
-@_allJoinFields[aOptions]
-  $result[]
-
-@_allJoin[aOptions]
-  $result[]
-
-@_allWhere[aOptions][locals]
-## Дополнительное выражение для where
-## (выражение для полей формируется в _fieldsWhere)
-  $lConds[^_buildConditions[$aOptions]]
-  $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
-
-@_allHaving[aOptions]
-  $result[]
-
-@_allGroup[aOptions][locals]
-## aOptions.groupBy
-  ^if(^aOptions.contains[groupBy]){
-    $lGroup[$aOptions.groupBy]
-  }{
-    $lGroup[$_defaultGroupBy]
-  }
-  ^switch(true){
-    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){desc}(^v.lower[] eq "asc"){asc}}}[, ]]}
-    ^case[DEFAULT]{$result[^lGroup.trim[]]}
   }
 
-@_allOrder[aOptions][locals]
-## aOptions.orderBy
-  ^if(^aOptions.contains[orderBy]){
-    $lOrder[$aOptions.orderBy]
-  }(def $_defaultOrderBy){
-    $lOrder[$_defaultOrderBy]
-  }{
-     $lOrder[^if(def $_primaryKey){$PRIMARYKEY asc}]
-   }
-  ^switch(true){
-    ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
-    ^case[DEFAULT]{$result[^lOrder.trim[]]}
-  }
-
-#----- Манипуляция данными -----
+#----- Манипуляции с данными -----
 
 @new[aData;aSQLOptions]
 ## Вставляем значение в базу
@@ -395,6 +337,59 @@ pfClass
 
 
 #----- Private -----
+## Методы с префиксом _all используются для построения частей выражений выборки.
+## Их можно перекрывать в наследниках смело, но не рекомендуется их использовать
+## напрямую во внешнем коде.
+
+@_allFields[aOptions;aSQLOptions]
+  ^cleanMethodArgument[aOptions;aSQLOptions]
+  $result[^_builder.selectFields[$_fields;
+    $.tableAlias[$TABLE_ALIAS]
+    ^if(^aSQLOptions.contains[skipFields]){
+      $.skipFields[$aSQLOptions.skipFields]
+    }
+  ]]
+
+@_allJoinFields[aOptions]
+  $result[]
+
+@_allJoin[aOptions]
+  $result[]
+
+@_allWhere[aOptions][locals]
+## Дополнительное выражение для where
+## (выражение для полей формируется в _fieldsWhere)
+  $lConds[^_buildConditions[$aOptions]]
+  $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
+
+@_allHaving[aOptions]
+  $result[]
+
+@_allGroup[aOptions][locals]
+## aOptions.groupBy
+  ^if(^aOptions.contains[groupBy]){
+    $lGroup[$aOptions.groupBy]
+  }{
+    $lGroup[$_defaultGroupBy]
+  }
+  ^switch(true){
+    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){desc}(^v.lower[] eq "asc"){asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lGroup.trim[]]}
+  }
+
+@_allOrder[aOptions][locals]
+## aOptions.orderBy
+  ^if(^aOptions.contains[orderBy]){
+    $lOrder[$aOptions.orderBy]
+  }(def $_defaultOrderBy){
+    $lOrder[$_defaultOrderBy]
+  }{
+     $lOrder[^if(def $_primaryKey){$PRIMARYKEY asc}]
+   }
+  ^switch(true){
+    ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lOrder.trim[]]}
+  }
 
 @_fieldValue[aField;aValue]
 ## aField — имя или хеш с полем
@@ -469,3 +464,50 @@ pfClass
   $lField[^if(^_plurals.contains[$aFieldName]){$_plurals.[$aFieldName]}{$_fields.[$aFieldName]}]
   $lColumn[^if(^aConds.contains[${aFieldName}Column]){$aConds.[${aFieldName}Column]}{$lField.name}]
   $result[^_sqlFieldName[$lField.name] ^if($aOperator eq "not" || $aOperator eq "!in"){not in}{in} (^_valuesArray[$lField.name;$aValue;$.column[$lColumn]])]
+
+@_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
+  ^_asContext[where]{
+    $lGroup[^_allGroup[$aOptions]]
+    $lOrder[^_allOrder[$aOptions]]
+    $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  }
+
+  $result[
+       select $aFields
+         from ^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
+              ^_asContext[where]{^_allJoin[$aOptions]}
+        where ^_asContext[where]{^_allWhere[$aOptions]}
+      ^if(def $lGroup){
+        group by $lGroup
+      }
+      ^if(def $lHaving){
+       having $lHaving
+      }
+      ^if(def $lOrder){
+        order by $lOrder
+      }
+      ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
+  ]
+
+#----- Вспомогательные методы (deep private :) -----
+## Методы, начинаююшиеся с двух подчеркиваний сугубо внутренние,
+## желательно их не перекрывать и ни при каких условиях не использовать
+## во внешнем коде.
+
+@__allSelectFieldsExpression[aOptions;aSQLOptions]
+  $result[
+    ^_asContext[select]{
+     ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
+     ^if(^aOptions.contains[selectFields]){
+       $aOptions.selectFields
+     }{
+       ^if($lResultType eq "hash"){
+         ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}. Выборку можно делать только в таблицу.}
+#         Для хеша добавляем еще одно поле с первичным ключем
+          $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],
+       }
+       $lJoinFields[^_allJoinFields[$aOptions]]
+       ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+      }
+    }
+  ]
