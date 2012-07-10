@@ -123,8 +123,12 @@ pfClass
   $lField.format[^if(def $aOptions.format){$aOptions.format}]
 
   ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
-     $lField.fieldExpression[$aOptions.fieldExpression]
-     $lField.expression[^if(def $aOptions.expression){$aOptions.expression}{$lField.fieldExpression}]
+       $lField.fieldExpression[$aOptions.fieldExpression]
+       $lField.expression[$aOptions.expression]
+       ^if(!def $lField.expression){
+         $lField.expression[$lField.fieldExpression]
+       }
+     }
      $self._skipOnUpdate.[$aFieldName](true)
      $self._skipOnInsert.[$aFieldName](true)
   }{
