@@ -6,7 +6,7 @@
 pfSQLTable
 
 #@compat 3.4.2
-#@compat_db mysql
+#@compat_db mysql, sqlite
 
 @USE
 pf/types/pfClass.p
@@ -44,9 +44,7 @@ pfClass
   $_fields[^hash::create[]]
   $_plurals[^hash::create[]]
   ^if(^aOptions.contains[fields]){
-    ^aOptions.fields.foreach[k;v]{
-      ^addField[$k;$v]
-    }
+    ^addFields[$aOptions.fields]
   }
 
   $_skipOnInsert[^hash::create[^if(def $aOptions.skipOnInsert){$aOptions.skipOnInsert}]]
@@ -98,17 +96,19 @@ pfClass
 #----- Метаданные -----
 
 @addField[aFieldName;aOptions][locals]
-## aOptions.bdField
-## aOptions.fieldExpression[] — выражение для названия поля
-## aOptions.expression[] — sql-выражение для значения поля (если не определено, то используем fieldExpression)
+## aOptions.bdField[aFieldName] — название поля
+## aOptions.fieldExpression{} — выражение для названия поля
+## aOptions.expression{} — sql-выражение для значения поля (если не определено, то используем fieldExpression)
 ## aOptions.plural[] — название поля для групповой выборки
-## aOptions.processor
-## aOptions.default
-## aOptions.format
-## aOptions.primary(false)
+## aOptions.processor — процессор
+## aOptions.default — значение «по-умолчанию»
+## aOptions.format — формат числового значения
+## aOptions.primary(false) — первичный ключ
 ## aOptions.sequence(true) — автоинкремент (только для первичного ключа)
-## aOptions.skipOnInsert(false)
-## aOptions.skipOnUpdate(false)
+## aOptions.skipOnInsert(false) — пропустить при вставке
+## aOptions.skipOnUpdate(false) — пропустить при обновлении
+## aOptions.label[aFieldName] — текстовое название поля (например, для форм)
+## aOptions.comment — описание поля
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aFieldName){Не задано имя поля таблицы.}
@@ -122,12 +122,14 @@ pfClass
   $lField.default[^if(def $aOptions.default){$aOptions.default}]
   $lField.format[^if(def $aOptions.format){$aOptions.format}]
 
+  $lField.label[^if(def $aOptions.label){$aOptions.label}{$lField.name}]
+  $lField.comment[$aOptions.comment]
+
   ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
-       $lField.fieldExpression[$aOptions.fieldExpression]
-       $lField.expression[$aOptions.expression]
-       ^if(!def $lField.expression){
-         $lField.expression[$lField.fieldExpression]
-       }
+     $lField.fieldExpression[$aOptions.fieldExpression]
+     $lField.expression[$aOptions.expression]
+     ^if(!def $lField.expression){
+       $lField.expression[$lField.fieldExpression]
      }
      $self._skipOnUpdate.[$aFieldName](true)
      $self._skipOnInsert.[$aFieldName](true)
