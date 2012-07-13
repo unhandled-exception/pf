@@ -340,8 +340,9 @@ pfModule
   }
 
 @postAS-IS[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     $result[]
     ^_setResponseHeaders[$aResponse]
     ^if(def $aResponse.download){
@@ -352,8 +353,9 @@ pfModule
   }
 
 @postHTML[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[text/html]
     }
@@ -362,8 +364,9 @@ pfModule
   }
 
 @postXML[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     ^if(!def $aResponse.[content-type]){
      $aResponse.content-type[text/xml]
     }
@@ -372,8 +375,9 @@ pfModule
   }
 
 @postTEXT[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[text/plain]
     }
@@ -382,8 +386,9 @@ pfModule
   }
 
 @postFILE[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     $result[]
     ^if(!def $aResponse.[content-type]){
       $aResponse.content-type[application/octet-stream]
@@ -397,8 +402,9 @@ pfModule
   }
 
 @postREDIRECT[aResponse]
-  $result[$aResponse]
-  ^if(!$_passDefaultPost){
+  ^if($_passDefaultPost){
+    $result[^postDEFAULT[$aResponse]]
+  }{
     $result[]
     ^_setResponseHeaders[$aResponse]
   }

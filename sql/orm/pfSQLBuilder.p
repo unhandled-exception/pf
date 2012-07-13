@@ -15,8 +15,12 @@ pf/tests/pfAssert.p
 pfClass
 
 @create[aOptions]
+## aOptions.quoteStyle[mysql|ansi] — стиль «кавычек» для идентификаторов (default: mysql)
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
+
+  $_quote[]
+  ^_setQuoteStyle[^if(def $aOptions.quoteStyle){^aOptions.quoteStyle.lower[]}]
 
   $_now[^date::now[]]
   $_today[^date::today[]]
@@ -24,6 +28,13 @@ pfClass
 @auto[][lSeparator;lEncloser]
   $_PFSQLBUILDER_CSV_REGEX_[^regex::create[((?:\s*"(?:[^^"]*|"{2})*"\s*(?:,|^$))|\s*"[^^"]*"\s*(?:,|^$)|[^^,]+(?:,|^$)|(?:,))][g]]
   $_PFSQLBUILDER_CSV_QTRIM_REGEX_[^regex::create["(.*)"][]]
+
+@_setQuoteStyle[aStyle]
+  $result[]
+  ^switch[$aStyle]{
+    ^case[ansi]{$_quote["]}
+    ^case[DEFAULT;mysql]{$_quote[`]}
+  }
 
 #----- Работа с полями -----
 
@@ -59,14 +70,17 @@ pfClass
   $result.skipAbsent(^aOptions.skipAbsent.bool(false))
   $result.skipFields[^hash::create[$aOptions.skipFields]]
 
+@quoteIdentifier[aIdent]
+  $result[${_quote}${aIdent}${_quote}]
+
 @sqlFieldName[aField;aTableAlias][locals]
-  $result[^if(def $aTableAlias){`${aTableAlias}`.}`^taint[$aField.dbField]`]
+  $result[^if(def $aTableAlias){^quoteIdentifier[$aTableAlias].}^quoteIdentifier[^taint[$aField.dbField]]]
 
 @selectFields[aFields;aOptions][locals]
 ## Возвращает список полей для выражения select
 ## aOptions.tableAlias
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
 
@@ -75,9 +89,9 @@ pfClass
   ^aFields.foreach[k;v]{
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
     ^if(^v.contains[expression]){
-      $result.[^result._count[]][$v.expression as `$k`]
+      $result.[^result._count[]][$v.expression as ^quoteIdentifier[$k]]
     }{
-       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as `$k`]
+       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as ^quoteIdentifier[$k]]
      }
   }
   $result[^result.foreach[k;v]{$v}[, ]]
@@ -88,7 +102,7 @@ pfClass
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет (нaдо обязательно задать поле aOptions.data)
 ## aOptions.data - хеш с данными
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lData[^if(def $aOptions.data){$aOptions.data}{^hash::create[]}]
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
@@ -97,7 +111,7 @@ pfClass
     ^if(^v.contains[expression]){^continue[]}
     ^if($aOptions.skipAbsent && !^lData.contains[$k] && !(def $v.processor && ^v.processor.pos[auto_] >= 0)){^continue[]}
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
-    $result.[`^result._count[]][^sqlFieldName[$v;$lTableAlias]]
+    $result.[${_quote}^result._count[]][^sqlFieldName[$v;$lTableAlias]]
   }
   $result[^result.foreach[k;v]{$v}[, ]]
 
@@ -107,7 +121,7 @@ pfClass
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.skipNames(false) - не выводить имена полей, только значения (для insert values)
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $aOptions[^_processFieldsOptions[$aOptions]]
   $lAlias[^if(def $aOptions.alias){${aOptions.alias}}]
@@ -122,23 +136,23 @@ pfClass
 
 @fieldValue[aField;aValue][locals]
 ## Возвращает значение поля в sql-формате.
-  ^pfAssert:isTrue(def $aField)[Не задано описание поля.]
+  ^pfAssert:isTrue(def $aField){Не задано описание поля.}
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
       ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-      ^case[now;auto_now]{^if(def $aValue){"^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}"}{"^_now.sql-string[]"}}
-      ^case[cuttime;auto_curtime]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}"}
-      ^case[cutdate;auto_curdate]{"^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}"}
-      ^case[datetime]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}"}
-      ^case[date]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}"}
-      ^case[time]{"^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}"}
-      ^case[json]{"^taint[^json:string[$aValue]]"}
-      ^case[null]{^if(def $aValue){"^taint[$aValue]"}{null}}
+      ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
+      ^case[cuttime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
+      ^case[cutdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
+      ^case[datetime]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}'}
+      ^case[date]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}'}
+      ^case[time]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}'}
+      ^case[json]{'^taint[^json:string[$aValue]]'}
+      ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
-      ^case[uid;auto_uid]{"^taint[^if(def $aValue){$aValue}{^math:uuid[]}"]}
-      ^case[DEFAULT;auto_default]{"^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]"}
+      ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
+      ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{
      ^throw[pfSQLBuilder.bad.value;Ошибка при преобразовании поля ${aField.name} (processor: ^if(def $aField.processor){$aField.processor}{default}^; value type: $aValue.CLASS_NAME);[${exception.type}] ${exception.source}, ${exception.comment}.]
@@ -163,7 +177,7 @@ pfClass
       $result[^lItems.foreach[k;v]{^lValueFunction[$aField;$v]}[, ]]
     }
     ^case[DEFAULT]{
-      ^throw[pfSQLBuilder.bad.array.values;Значениями массива может быть хешем, таблицей или csv-строкой.]
+      ^throw[pfSQLBuilder.bad.array.values;Значениями массива может быть хеш, таблица или csv-строка. (Поле: $aField.name, тип значения: $aValue.CLASS_NAME)]
     }
   }]
   ^if(!def $result && def $lEmptyValue){
@@ -188,8 +202,8 @@ pfClass
 ## aData - данные
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.ignore(true)
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
+  ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
   $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
@@ -205,11 +219,11 @@ pfClass
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.emptySetExpression[выражение, которое надо подставить, если нет данных для обновления]
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
-  ^pfAssert:isTrue(def $aFields)[Не задан список полей.]
-  ^pfAssert:isTrue(def $aWhere)[Не задано выражение для where.]
+  ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
+  ^pfAssert:isTrue(def $aFields){Не задан список полей.}
+  ^pfAssert:isTrue(def $aWhere){Не задано выражение для where.}
   ^cleanMethodArgument[aData;aOptions]
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
-  ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression))[Необходимо задать выражение для пустого update set.]
+  ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression)){Необходимо задать выражение для пустого update set.}
   $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]

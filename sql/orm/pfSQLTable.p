@@ -6,7 +6,7 @@
 pfSQLTable
 
 #@compat 3.4.2
-#@compat_db mysql
+#@compat_db mysql, sqlite
 
 @USE
 pf/types/pfClass.p
@@ -31,31 +31,29 @@ pfClass
 ##   aOptions.skipOnUpdate[$.field(bool)]
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
-  ^pfAssert:isTrue(def $aTableName)[Не задано имя таблицы.]
 
   $_csql[^if(def $aOptions.sql){$aOptions.sql}{$_PFSQLTABLE_CSQL}]
-  ^pfAssert:isTrue(def $_csql)[Не задан объект для работы с SQL-сервером.]
+  ^pfAssert:isTrue(def $_csql){Не задан объект для работы с SQL-сервером.}
 
-  $_tableName[$aTableName]
   $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_PFSQLTABLE_BUILDER}]
 
-  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}{$aTableName}]
-  $_enableTableAlias(false)
-
+  $_tableName[$aTableName]
+  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
 
   $_fields[^hash::create[]]
   $_plurals[^hash::create[]]
   ^if(^aOptions.contains[fields]){
-    ^aOptions.fields.foreach[k;v]{
-      ^addField[$k;$v]
-    }
+    ^addFields[$aOptions.fields]
   }
 
   $_skipOnInsert[^hash::create[^if(def $aOptions.skipOnInsert){$aOptions.skipOnInsert}]]
   $_skipOnUpdate[^hash::create[^if(def $aOptions.skipOnUpdate){$aOptions.skipOnUpdate}]]
 
   $_defaultResultType[^if(^aOptions.allAsTable.bool(false)){table}{hash}]
+
+  $_defaultOrderBy[]
+  $_defaultGroupBy[]
 
   $_now[^date::now[]]
   $_today[^date::today[]]
@@ -98,20 +96,23 @@ pfClass
 #----- Метаданные -----
 
 @addField[aFieldName;aOptions][locals]
-## aOptions.bdField
-## aOptions.fieldExpression[] — выражение для названия поля
-## aOptions.expression[] — sql-выражение для значения поля (если не определено, то используем fieldExpression)
+## aOptions.bdField[aFieldName] — название поля
+## aOptions.fieldExpression{} — выражение для названия поля
+## aOptions.expression{} — sql-выражение для значения поля (если не определено, то используем fieldExpression)
 ## aOptions.plural[] — название поля для групповой выборки
-## aOptions.processor
-## aOptions.default
-## aOptions.format
-## aOptions.primary(false)
-## aOptions.skipOnInsert(false)
-## aOptions.skipOnUpdate(false)
+## aOptions.processor — процессор
+## aOptions.default — значение «по-умолчанию»
+## aOptions.format — формат числового значения
+## aOptions.primary(false) — первичный ключ
+## aOptions.sequence(true) — автоинкремент (только для первичного ключа)
+## aOptions.skipOnInsert(false) — пропустить при вставке
+## aOptions.skipOnUpdate(false) — пропустить при обновлении
+## aOptions.label[aFieldName] — текстовое название поля (например, для форм)
+## aOptions.comment — описание поля
   $result[]
   ^cleanMethodArgument[]
-  ^pfAssert:isTrue(def $aFieldName)[Не задано имя поля таблицы.]
-  ^pfAssert:isTrue(!^_fields.contains[$aFieldName])[Поле «${aFieldName}» в таблице уже существует.]
+  ^pfAssert:isTrue(def $aFieldName){Не задано имя поля таблицы.}
+  ^pfAssert:isTrue(!^_fields.contains[$aFieldName]){Поле «${aFieldName}» в таблице уже существует.}
 
   $lField[^hash::create[]]
 
@@ -121,14 +122,21 @@ pfClass
   $lField.default[^if(def $aOptions.default){$aOptions.default}]
   $lField.format[^if(def $aOptions.format){$aOptions.format}]
 
+  $lField.label[^if(def $aOptions.label){$aOptions.label}{$lField.name}]
+  $lField.comment[$aOptions.comment]
+
   ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
      $lField.fieldExpression[$aOptions.fieldExpression]
-     $lField.expression[^if(def $aOptions.expression){$aOptions.expression}{$lField.fieldExpression}]
+     $lField.expression[$aOptions.expression]
+     ^if(!def $lField.expression){
+       $lField.expression[$lField.fieldExpression]
+     }
      $self._skipOnUpdate.[$aFieldName](true)
      $self._skipOnInsert.[$aFieldName](true)
   }{
      $lField.dbField[^if(def $aOptions.dbField){$aOptions.dbField}{$aFieldName}]
      $lField.primary(^aOptions.primary.bool(false))
+     $lField.sequence($lField.primary && ^aOptions.sequence.bool(true))
      ^if(^aOptions.skipOnUpdate.bool(false) || $lField.primary){
        $self._skipOnUpdate.[$aFieldName](true)
      }
@@ -144,10 +152,26 @@ pfClass
     $_plurals.[$lField.plural][$lField]
   }
 
+@addFields[aFields][locals]
+## Добавляет сразу несколько полей
+## aFields[hash]
+  ^cleanMethodArgument[aFields]
+  $result[]
+  ^aFields.foreach[k;v]{
+    ^addField[$k;$v]
+  }
+
 #----- Свойства -----
 
-@GET_TABLENAME[]
+@GET_TABLE_NAME[]
+  ^pfAssert:isTrue(def $_tableName){Не задано имя таблицы в классе $self.CLASS_NAME}
   $result[$_tableName]
+
+@GET_TABLE_ALIAS[]
+  ^if(!def $_tableAlias){
+    $_tableAlias[$TABLE_NAME]
+  }
+  $result[$_tableAlias]
 
 @GET_FIELDS[]
   $result[$_fields]
@@ -171,7 +195,7 @@ pfClass
 #----- Выборки -----
 
 @get[aPrimaryKeyValue;aOptions]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   $result[^one[$.[$_primaryKey][$aPrimaryKeyValue]]]
 
 @one[aOptions;aSQLOptions]
@@ -193,8 +217,8 @@ pfClass
 ##   aOptions.selectFields{exression} — выражение для списка полей (вместо автогенерации)
 ##   aOptions.where{expression} — выражение для where
 ##   aOptions.having{expression} — выражение для having
-##   aOptions.groupBy{expression} — выражение для groupBy
-##   aOptions.orderBy{expression} — выражение для orderBy
+##   aOptions.orderBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для orderBy
+##   aOptions.groupBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для groupBy
 ## aOptions.limit
 ## aOptions.offset
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
@@ -204,72 +228,129 @@ pfClass
 ##   aSQLOptions.skipFields — пропустить поля
 ##   + Все опции pfSQL.
  ^cleanMethodArgument[aOptions;aSQLOptions]
-
- $lResultType[^switch(true){
-   ^case(^aOptions.asTable.bool(false)){table}
-   ^case(^aOptions.asHash.bool(false)){hash})
-   ^case[DEFAULT]{$_defaultResultType}
- }]
+ $lResultType[^__getResultType[$aOptions]]
  $result[^CSQL.[$lResultType]{
    ^_selectExpression[
-     ^_asContext[select]{
-       ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
-       ^if(^aOptions.contains[selectFields]){
-         $aOptions.selectFields
-       }{
-         ^if($lResultType eq "hash"){
-           ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}. Выборку можно делать только в таблицу.]
-#             Для хеша добавляем еще одно поле с первичным ключем
-            $PRIMARYKEY as `_ORM_HASH_KEY_`,
-         }
-         $lJoinFields[^_allJoinFields[$aOptions]]
-         ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
-        }
-     }
+     ^__allSelectFieldsExpression[$aOptions;$aSQLOptions]
    ][$lResultType;$aOptions;$aSQLOptions]
  }[
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
     ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
   ][$aSQLOptions]]]
 
+@__getResultType[aOptions]
+  $result[^switch(true){
+    ^case(^aOptions.asTable.bool(false)){table}
+    ^case(^aOptions.asHash.bool(false)){hash})
+    ^case[DEFAULT]{$_defaultResultType}
+  }]
 
-@count[aOptions;aSQLOptions]
-  ^cleanMethodArgument[aOptions;aSQLOptions]
+@count[aConds;aSQLOptions]
+## Возвращает
+  ^cleanMethodArgument[aConds;aSQLOptions]
   $result[^CSQL.int{
-    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aOptions;$aSQLOptions]}
+    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aConds;$aSQLOptions]}
   }[
-    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
+    ^if(^aOptions.contains[limit]){$.limit($aConds.limit)}
+    ^if(^aOptions.contains[offset]){$.offset($aConds.offset)}
   ][$aSQLOptions]]]
 
+@union[*aConds][locals]
+## Выполняет несколько запросов и объединяет их в один результат.
+## Параметр aSQLOptions не поддерживается!
+## Тип результата берем из самого первого условия.
+  ^pfAssert:isTrue($aConds){Надо задать как-минимум одно условие выборки.}
+  $result[]
+  $lResultType[^__getResultType[^hash::create[$aConds.0]]]
 
-@_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
-  ^_asContext[where]{
-    $lGroup[^if(^aOptions.contains[groupBy]){$aOptions.groupBy}{^_allGroup[$aOptions]}]
-    $lOrder[^if(^aOptions.contains[orderBy]){$aOptions.orderBy}{^_allOrder[$aOptions]}]
-    $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  ^aConds.foreach[k;v]{
+    $v[^hash::create[$v]]
+    $lRes[^CSQL.[$lResultType]{
+      ^_selectExpression[
+        ^__allSelectFieldsExpression[$v]
+      ][$lResultType;$v]
+    }[
+       ^if(^v.contains[limit]){$.limit($v.limit)}
+       ^if(^v.contains[offset]){$.offset($v.offset)}
+    ]]
+    ^if($k eq "0"){
+      $result[$lRes]
+    }($lResultType eq "table"){
+      ^result.join[$lRes]
+    }($lResultType eq "hash"){
+      ^result.add[$lRes]
+    }
   }
 
-  $result[
-       select $aFields
-         from $_tableName as $_tableAlias
-              ^_asContext[where]{^_allJoin[$aOptions]}
-        where ^_asContext[where]{^_allWhere[$aOptions]}
-      ^if(def $lGroup){
-        group by $lGroup
-      }
-      ^if(def $lHaving){
-       having $lHaving
-      }
-      ^if(def $lOrder){
-        order by $lOrder
-      }
-      ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
-  ]
+#----- Манипуляции с данными -----
+
+@new[aData;aSQLOptions]
+## Вставляем значение в базу
+## aSQLOptions.ignore(true)
+## Возврашает автосгенерированное значение первичного ключа (last_insert_id) для sequence-полей.
+  ^cleanMethodArgument[aData;aSQLOptions]
+  $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}]
+  ^if(def $_primaryKey && $_fields.[$_primaryKey].sequence){
+    $result[^CSQL.lastInsertId[]]
+  }
+
+@modify[aPrimaryKeyValue;aData]
+## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
+  ^cleanMethodArgument[aData]
+  $result[^CSQL.void{
+    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
+      $.skipAbsent(true)
+      $.skipFields[$_skipOnUpdate]
+      $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
+    ]
+  }]
+
+@delete[aPrimaryKeyValue]
+## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
+  $result[^CSQL.void{
+    delete from $TABLE_NAME where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+  }]
+
+
+#----- Групповые операции с данными -----
+
+@modifyAll[aOptions;aData]
+## Изменяем все записи
+## Условие обновления берем из _allWhere
+  ^cleanMethodArgument[aOptions;aData]
+  $result[^CSQL.void{
+    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][
+      ^_allWhere[$aOptions]
+    ][
+      $.skipAbsent(true)
+      $.skipFields[$_skipOnUpdate]
+      $.emptySetExpression[]
+    ]
+  }]
+
+@deleteAll[aOptions]
+## Удаляем все записи из таблицы
+## Условие для удаления берем из _allWhere
+  ^cleanMethodArgument[]
+  $result[^CSQL.void{
+    delete from $TABLE_NAME
+     where ^_allWhere[$aOptions]
+  }]
+
+
+#----- Private -----
+## Методы с префиксом _all используются для построения частей выражений выборки.
+## Их можно перекрывать в наследниках смело, но не рекомендуется их использовать
+## напрямую во внешнем коде.
 
 @_allFields[aOptions;aSQLOptions]
+  ^cleanMethodArgument[aOptions;aSQLOptions]
   $result[^_builder.selectFields[$_fields;
-    $.tableAlias[$_tableAlias]
+    $.tableAlias[$TABLE_ALIAS]
     ^if(^aSQLOptions.contains[skipFields]){
       $.skipFields[$aSQLOptions.skipFields]
     }
@@ -287,76 +368,40 @@ pfClass
   $lConds[^_buildConditions[$aOptions]]
   $result[^if(^aOptions.contains[where]){$aOptions.where}{1=1}^if(def $lConds){ and $lConds}]
 
-@_allGroup[aOptions]
-  $result[]
-
 @_allHaving[aOptions]
   $result[]
 
-@_allOrder[aOptions]
-  $result[^if(def $_primaryKey){$PRIMARYKEY asc}]
+@_allGroup[aOptions][locals]
+## aOptions.groupBy
+  ^if(^aOptions.contains[groupBy]){
+    $lGroup[$aOptions.groupBy]
+  }{
+    $lGroup[$_defaultGroupBy]
+  }
+  ^switch(true){
+    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){desc}(^v.lower[] eq "asc"){asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lGroup.trim[]]}
+  }
 
-
-#----- Манипуляция данными -----
-
-@new[aData;aSQLOptions]
-## Вставляем значение в базу
-## aSQLOptions.ignore(true)
-  ^cleanMethodArgument[aData;aSQLOptions]
-  ^CSQL.void{^_builder.insertStatement[$_tableName;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}
-  $result[^if(def $_primaryKey){^CSQL.lastInsertId[]}]
-
-@modify[aPrimaryKeyValue;aData]
-## Изменяем запись с первичныйм ключем aPrimaryKeyValue в таблице
-  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
-  ^cleanMethodArgument[aData]
-  $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
-      $.skipAbsent(true)
-      $.skipFields[$_skipOnUpdate]
-      $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
-    ]
-  }]
-
-@delete[aPrimaryKeyValue]
-## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue
-  ^pfAssert:isTrue(def $_primaryKey)[Не определен первичный ключ для таблицы ${_tableName}.]
-  ^pfAssert:isTrue(def $aPrimaryKeyValue)[Не задано значение первичного ключа]
-  $result[^CSQL.void{
-    delete from $_tableName where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
-  }]
-
-
-#----- Групповые операции с данными -----
-
-@modifyAll[aOptions;aData]
-## Изменяем все записи
-## Условие обновления берем из _allWhere
-  ^cleanMethodArgument[aOptions;aData]
-  $result[^CSQL.void{
-    ^_builder.updateStatement[$_tableName;$_fields;$aData][
-      ^_allWhere[$aOptions]
-    ][
-      $.skipAbsent(true)
-      $.skipFields[$_skipOnUpdate]
-      $.emptySetExpression[]
-    ]
-  }]
-
-@deleteAll[aOptions]
-## Удаляем все записи из таблицы
-## Условие для удаления берем из _allWhere
-  ^cleanMethodArgument[]
-  $result[^CSQL.void{
-    delete from $_tableName
-     where ^_allWhere[$aOptions]
-  }]
-
-
-#----- Private -----
+@_allOrder[aOptions][locals]
+## aOptions.orderBy
+  ^if(^aOptions.contains[orderBy]){
+    $lOrder[$aOptions.orderBy]
+  }(def $_defaultOrderBy){
+    $lOrder[$_defaultOrderBy]
+  }{
+     $lOrder[^if(def $_primaryKey){$PRIMARYKEY asc}]
+   }
+  ^switch(true){
+    ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
+    ^case[DEFAULT]{$result[^lOrder.trim[]]}
+  }
 
 @_fieldValue[aField;aValue]
+## aField — имя или хеш с полем
+  ^if($aField is string){
+    $aField[$_fields.[$aField]]
+  }
   $result[^_builder.fieldValue[$aField;$aValue]]
 
 @_valuesArray[aField;aValues;aOptions]
@@ -376,12 +421,12 @@ pfClass
   }(^lField.contains[expression]
     && def $lField.expression
    ){
-     $result[$lField.expression^if($__context eq "select"){ as `$aFieldName`}]
+     $result[$lField.expression^if($__context eq "select"){ as ^_builder.quoteIdentifier[$aFieldName]}]
   }{
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
      }
-     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$_tableAlias}]]
+     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$TABLE_ALIAS}]]
    }
 
 @_asContext[aContext;aCode][locals]
@@ -405,6 +450,8 @@ pfClass
 #       $.[field operator][value]
         $lField[$_fields.[$match.1]]
         $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
+      }(^_fields.contains[$match.1] && $match.2 eq "is"){
+        $_res.[^_res._count[]][^_sqlFieldName[$match.1] is ^if(!def $v || $v eq "null"){null}{not null}]
       }(^_plurals.contains[$match.1]
         || (^_fields.contains[$match.1] && ($match.2 eq "in" || $match.2 eq "!in"))
        ){
@@ -423,3 +470,50 @@ pfClass
   $lField[^if(^_plurals.contains[$aFieldName]){$_plurals.[$aFieldName]}{$_fields.[$aFieldName]}]
   $lColumn[^if(^aConds.contains[${aFieldName}Column]){$aConds.[${aFieldName}Column]}{$lField.name}]
   $result[^_sqlFieldName[$lField.name] ^if($aOperator eq "not" || $aOperator eq "!in"){not in}{in} (^_valuesArray[$lField.name;$aValue;$.column[$lColumn]])]
+
+@_selectExpression[aFields;aResultType;aOptions;aSQLOptions][locals]
+  ^_asContext[where]{
+    $lGroup[^_allGroup[$aOptions]]
+    $lOrder[^_allOrder[$aOptions]]
+    $lHaving[^if(^aOptions.contains[having]){$aOptions.having}{^_allHaving[$aOptions]}]
+  }
+
+  $result[
+       select $aFields
+         from ^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
+              ^_asContext[where]{^_allJoin[$aOptions]}
+        where ^_asContext[where]{^_allWhere[$aOptions]}
+      ^if(def $lGroup){
+        group by $lGroup
+      }
+      ^if(def $lHaving){
+       having $lHaving
+      }
+      ^if(def $lOrder){
+        order by $lOrder
+      }
+      ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
+  ]
+
+#----- Вспомогательные методы (deep private :) -----
+## Методы, начинаююшиеся с двух подчеркиваний сугубо внутренние,
+## желательно их не перекрывать и ни при каких условиях не использовать
+## во внешнем коде.
+
+@__allSelectFieldsExpression[aOptions;aSQLOptions]
+  $result[
+    ^_asContext[select]{
+     ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
+     ^if(^aOptions.contains[selectFields]){
+       $aOptions.selectFields
+     }{
+       ^if($lResultType eq "hash"){
+         ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}. Выборку можно делать только в таблицу.}
+#         Для хеша добавляем еще одно поле с первичным ключем
+          $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],
+       }
+       $lJoinFields[^_allJoinFields[$aOptions]]
+       ^_allFields[$aOptions;$aSQLOptions]^if(def $lJoinFields){, $lJoinFields}
+      }
+    }
+  ]
