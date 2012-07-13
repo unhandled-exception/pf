@@ -66,6 +66,7 @@ pfClass
   $_PFSQLTABLE_CSQL[]
   $_PFSQLTABLE_BUILDER[^pfSQLBuilder::create[]]
   $_PFSQLTABLE_COMPARSION_REGEX[^regex::create[^^\s*(\S+)(?:\s+(\S+))?][]]
+  $_PFSQLTABLE_AGR_REGEX[^regex::create[^^\s*(([^^\s(]+)(.*?)?)\s*(?:as\s+(\S+))?\s*^$][i]]
   $_PFSQLTABLE_OPS[
     $.[<][<]
     $.[>][>]
@@ -245,16 +246,6 @@ pfClass
     ^case[DEFAULT]{$_defaultResultType}
   }]
 
-@count[aConds;aSQLOptions]
-## Возвращает
-  ^cleanMethodArgument[aConds;aSQLOptions]
-  $result[^CSQL.int{
-    ^_processAliases{^_selectExpression[count(*)][$lResultType;$aConds;$aSQLOptions]}
-  }[
-    ^if(^aOptions.contains[limit]){$.limit($aConds.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aConds.offset)}
-  ][$aSQLOptions]]]
-
 @union[*aConds][locals]
 ## Выполняет несколько запросов и объединяет их в один результат.
 ## Параметр aSQLOptions не поддерживается!
@@ -282,6 +273,32 @@ pfClass
     }
   }
 
+#----- Агрегации -----
+
+@count[aConds;aSQLOptions][locals]
+## Возвращает количество записей в таблице
+  ^cleanMethodArgument[aConds;aSQLOptions]
+  $result[^CSQL.int{
+    ^_selectExpression[count(*)][;$aConds;$aSQLOptions]
+  }[
+    ^if(^aOptions.contains[limit]){$.limit($aConds.limit)}
+    ^if(^aOptions.contains[offset]){$.offset($aConds.offset)}
+  ][$aSQLOptions]]]
+
+@aggregate[*aConds][locals]
+## Выборки с группировкой
+## ^aggregate[func(expr) as alias;_fields(field1, field2);conditions hash;sqlOptions]
+  $lConds[^__getAgrConds[$aConds]]
+  $lResultType[^__getResultType[$lConds.options]]
+  $result[^CSQL.[$lResultType]{
+    ^_selectExpression[
+      ^_asContext[select]{^__getAgrFields[$lConds.fields]}
+    ][$lResultType;$lConds.options;$lConds.sqlOptions]
+  }[
+     ^if(^lConds.options.contains[limit]){$.limit($lConds.options.limit)}
+     ^if(^lConds.options.contains[offset]){$.offset($lConds.options.offset)}
+   ][$lConds.sqlOptions]]]
+
 #----- Манипуляции с данными -----
 
 @new[aData;aSQLOptions]
@@ -289,7 +306,9 @@ pfClass
 ## aSQLOptions.ignore(true)
 ## Возврашает автосгенерированное значение первичного ключа (last_insert_id) для sequence-полей.
   ^cleanMethodArgument[aData;aSQLOptions]
-  $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}]
+  ^_asContext[update]{
+    $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}]
+  }
   ^if(def $_primaryKey && $_fields.[$_primaryKey].sequence){
     $result[^CSQL.lastInsertId[]]
   }
@@ -300,11 +319,13 @@ pfClass
   ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   ^cleanMethodArgument[aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
-      $.skipAbsent(true)
-      $.skipFields[$_skipOnUpdate]
-      $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
-    ]
+    ^_asContext[update]{
+      ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][$PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]][
+        $.skipAbsent(true)
+        $.skipFields[$_skipOnUpdate]
+        $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
+      ]
+    }
   }]
 
 @delete[aPrimaryKeyValue]
@@ -312,7 +333,9 @@ pfClass
   ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
   ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   $result[^CSQL.void{
-    delete from $TABLE_NAME where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+    ^_asContext[update]{
+      delete from $TABLE_NAME where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+    }
   }]
 
 
@@ -323,13 +346,15 @@ pfClass
 ## Условие обновления берем из _allWhere
   ^cleanMethodArgument[aOptions;aData]
   $result[^CSQL.void{
-    ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][
-      ^_allWhere[$aOptions]
-    ][
-      $.skipAbsent(true)
-      $.skipFields[$_skipOnUpdate]
-      $.emptySetExpression[]
-    ]
+    ^_asContext[update]{
+      ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][
+        ^_allWhere[$aOptions]
+      ][
+        $.skipAbsent(true)
+        $.skipFields[$_skipOnUpdate]
+        $.emptySetExpression[]
+      ]
+    }
   }]
 
 @deleteAll[aOptions]
@@ -337,8 +362,10 @@ pfClass
 ## Условие для удаления берем из _allWhere
   ^cleanMethodArgument[]
   $result[^CSQL.void{
-    delete from $TABLE_NAME
-     where ^_allWhere[$aOptions]
+    ^_asContext[update]{
+      delete from $TABLE_NAME
+       where ^_allWhere[$aOptions]
+    }
   }]
 
 
@@ -413,6 +440,7 @@ pfClass
   $result[^_builder.array[$aField;$aValues;$aOptions $.valueFunction[$_fieldValue]]]
 
 @_sqlFieldName[aFieldName][locals]
+  ^pfAssert:isTrue(^_fields.contains[$aFieldName]){Неизвестное поле «${aFieldName}».}
   $lField[$_fields.[$aFieldName]]
   ^if($__context eq "where"
       && ^lField.contains[fieldExpression]
@@ -426,7 +454,7 @@ pfClass
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
      }
-     $result[^_builder.sqlFieldName[$lField;^if($__context eq "where" || $__context eq "select"){$TABLE_ALIAS}]]
+     $result[^_builder.sqlFieldName[$lField;^if($__context ne "update"){$TABLE_ALIAS}]]
    }
 
 @_asContext[aContext;aCode][locals]
@@ -517,3 +545,46 @@ pfClass
       }
     }
   ]
+
+@__getAgrConds[aConds][locals]
+  $result[$.fields[^hash::create[]] $.options[] $.sqlOptions[]]
+  ^aConds.foreach[k;v]{
+    ^switch[$v.CLASS_NAME]{
+      ^case[string]{
+        $result.fields.[^eval($result.fields)][$v]
+      }
+      ^case[hash]{
+        ^if(!def $result.options){
+          $result.options[$v]
+        }(def $result.options && !def $result.sqlOptions){
+          $result.sqlOptions[$v]
+        }
+      }
+    }
+  }
+  ^if(!def $result.options){$result.options[^hash::create[]]}
+  ^if(!def $result.sqlOptions){$result.sqlOptions[^hash::create[]]}
+
+@__getAgrFields[aFields][locals]
+  $result[^hash::create[]]
+  ^aFields.foreach[k;v]{
+    ^v.match[$_PFSQLTABLE_AGR_REGEX][]{
+      $lField[
+        $.expr[$match.1]
+        $.function[$match.2]
+        $.args[^match.3.trim[both;() ]]
+        $.alias[$match.4]
+      ]
+      ^if(^lField.function.lower[] eq "_fields"){
+        ^if(^lField.args.trim[] eq "*"){
+          $lField.expr[^_allFields[]]
+        }{
+           $lSplit[^lField.args.split[,;lv]]
+           $lField.expr[^lSplit.menu{^if(def $lSplit.piece){^_sqlFieldName[^lSplit.piece.trim[]] as ^_builder.quoteIdentifier[$lSplit.piece]}}[, ]]
+           $lField.alias[]
+         }
+      }
+      $result.[^result._count[]][$lField]
+    }
+  }
+  $result[^result.foreach[k;v]{$v.expr^if(def $v.alias){ as ^_builder.quoteIdentifier[$v.alias]}}[, ]]
