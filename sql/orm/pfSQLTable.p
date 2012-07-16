@@ -449,7 +449,7 @@ pfClass
   }(^lField.contains[expression]
     && def $lField.expression
    ){
-     $result[$lField.expression^if($__context eq "select"){ as ^_builder.quoteIdentifier[$aFieldName]}]
+     $result[$lField.expression]
   }{
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
