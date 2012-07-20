@@ -145,9 +145,9 @@ pfClass
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
       ^case[cuttime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
       ^case[cutdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
-      ^case[datetime]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}'}
-      ^case[date]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}'}
-      ^case[time]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}'}
+      ^case[datetime]{'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}
+      ^case[date]{'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}
+      ^case[time]{'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}
       ^case[json]{'^taint[^json:string[$aValue]]'}
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
