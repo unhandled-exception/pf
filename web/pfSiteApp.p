@@ -27,7 +27,8 @@ pfSiteModule
   ^defReadProperty[appRoot]
 
   $_publicFolder[^if(def $aOptions.publicFolder){$aOptions.publicFolder}{public}]
-  $_viewFolder[^if(def $aOptions.viewsFolder){$aOptions.viewsFolder}{views}]
+  $_viewsFolder[^if(def $aOptions.viewsFolder){$aOptions.viewsFolder}{views}]
+  $templatePath[$_appRoot/$_viewsFolder]
 
   $_serveStatic(^aOptions.serveStatic.bool(false))
   $_publicPath[$_appRoot/$_publicFolder]
