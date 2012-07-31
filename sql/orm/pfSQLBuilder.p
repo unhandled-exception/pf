@@ -152,6 +152,7 @@ pfClass
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
+      ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
       ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{

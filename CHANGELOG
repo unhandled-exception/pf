@@ -10,6 +10,9 @@ CHANGELOG
 1.0
 ---
 
+31.07.2012
+  1. Новый процессор в pfSQLBuilder — inet_ip.
+
 04.07.2012
   1. Новый метод — pfSQLTable.union.
 
