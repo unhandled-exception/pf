@@ -406,7 +406,7 @@ pfClass
     $lGroup[$_defaultGroupBy]
   }
   ^switch(true){
-    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){desc}(^v.lower[] eq "asc"){asc}}}[, ]]}
+    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){ desc}(^v.lower[] eq "asc"){ asc}}}[, ]]}
     ^case[DEFAULT]{$result[^lGroup.trim[]]}
   }
 
