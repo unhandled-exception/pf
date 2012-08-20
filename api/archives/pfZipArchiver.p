@@ -30,7 +30,7 @@ pfClass
 ## aOptions.charset[$request:charset]
   ^cleanMethodArgument[]
   ^_cleanLastError[]
-  $lExec[^file::exec[$_unzipPath;^if(def $aOptions.charset){$aOptions.charset}{$request:charset};-Z1;^pfOS:absolutePath[$aZipFile]]]
+  $lExec[^file::exec[$_unzipPath;$.charset[^if(def $aOptions.charset){$aOptions.charset}{$request:charset}];-Z1;^pfOS:absolutePath[$aZipFile]]]
   ^if($lExec.status){
     ^_error(true)[$lExec.status;$lExec.text;$lExec.stderr]
   }
