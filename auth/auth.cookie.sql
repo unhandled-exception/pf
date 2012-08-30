@@ -1,4 +1,4 @@
-CREATE TABLE  `taurus`.`users` (
+CREATE TABLE  `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `login` varchar(100) NOT NULL DEFAULT '',
   `password` varchar(100) DEFAULT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE  `taurus`.`users` (
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `login_unique` (`login`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+);
 
 CREATE TABLE  `sessions` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -23,5 +23,5 @@ CREATE TABLE  `sessions` (
   `is_persistent` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uid_sid_unique` (`uid`,`sid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+);
 
