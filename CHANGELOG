@@ -10,6 +10,10 @@ CHANGELOG
 1.0
 ---
 
+12.09.2012
+  1. В pfSQLTable добавил контекст «group», который для полей с expression подставляет 
+     имя поле в group by и order by.
+
 31.07.2012
   1. Новый процессор в pfSQLBuilder — inet_ip.
 

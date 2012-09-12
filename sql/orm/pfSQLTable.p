@@ -405,9 +405,11 @@ pfClass
   }{
     $lGroup[$_defaultGroupBy]
   }
-  ^switch(true){
-    ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){ desc}(^v.lower[] eq "asc"){ asc}}}[, ]]}
-    ^case[DEFAULT]{$result[^lGroup.trim[]]}
+  ^_asContext[group]{
+    ^switch(true){
+      ^case($lGroup is hash){$result[^lGroup.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k]^if(^v.lower[] eq "desc"){ desc}(^v.lower[] eq "asc"){ asc}}}[, ]]}
+      ^case[DEFAULT]{$result[^lGroup.trim[]]}
+    }
   }
 
 @_allOrder[aOptions][locals]
@@ -419,9 +421,11 @@ pfClass
   }{
      $lOrder[^if(def $_primaryKey){$PRIMARYKEY asc}]
    }
-  ^switch(true){
-    ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
-    ^case[DEFAULT]{$result[^lOrder.trim[]]}
+  ^_asContext[group]{
+    ^switch(true){
+      ^case($lOrder is hash){$result[^lOrder.foreach[k;v]{^if(^_fields.contains[$k]){^_sqlFieldName[$k] ^if(^v.lower[] eq "desc"){desc}{asc}}}[, ]]}
+      ^case[DEFAULT]{$result[^lOrder.trim[]]}
+    }
   }
 
 @_fieldValue[aField;aValue]
@@ -449,7 +453,11 @@ pfClass
   }(^lField.contains[expression]
     && def $lField.expression
    ){
-     $result[$lField.expression]
+     ^if($__context eq "group"){
+       $result[$lField.name]
+     }{
+        $result[$lField.expression]
+      }
   }{
      ^if(!^lField.contains[dbField]){
        ^throw[pfSQLTable.field.fail;Для поля «${aFieldName}» не задано выражение или имя в базе данных.]
