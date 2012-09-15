@@ -140,7 +140,7 @@ pfClass
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
-      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
+      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
       ^case[cuttime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
