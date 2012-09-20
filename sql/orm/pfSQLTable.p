@@ -19,7 +19,7 @@ pfClass
 @create[aTableName;aOptions][k;v]
 ## aOptions.sql
 ## aOptions.tableAlias
-## aOptions.schema
+## aOptions.schema — название базы данных (можно не указывать).
 ## aOptions.builder
 ## aOptions.allAsTable(false) — по умолчанию возвращать результат в виде таблицы.
 
@@ -37,8 +37,10 @@ pfClass
 
   $_builder[^if(def $aOptions.builder){$aOptions.builder}{$_PFSQLTABLE_BUILDER}]
 
+  $_schema[^aOptions.schema.trim[]]
+
   $_tableName[$aTableName]
-  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
+  $_tableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}(def $_schema){${_schema}_$_tableName}]
   $_primaryKey[^if(def $aOptions.primaryKey){$aOptions.primaryKey}]
 
   $_fields[^hash::create[]]
@@ -163,6 +165,9 @@ pfClass
   }
 
 #----- Свойства -----
+
+@GET_SCHEMA[]
+  $result[$_schema]
 
 @GET_TABLE_NAME[]
   ^pfAssert:isTrue(def $_tableName){Не задано имя таблицы в классе $self.CLASS_NAME}
@@ -307,7 +312,7 @@ pfClass
 ## Возврашает автосгенерированное значение первичного ключа (last_insert_id) для sequence-полей.
   ^cleanMethodArgument[aData;aSQLOptions]
   ^_asContext[update]{
-    $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert]]}]
+    $result[^CSQL.void{^_builder.insertStatement[$TABLE_NAME;$_fields;$aData;^hash::create[$aSQLOptions] $.skipFields[$_skipOnInsert] $.schema[$SCHEMA]]}]
   }
   ^if(def $_primaryKey && $_fields.[$_primaryKey].sequence){
     $result[^CSQL.lastInsertId[]]
@@ -324,6 +329,7 @@ pfClass
         $.skipAbsent(true)
         $.skipFields[$_skipOnUpdate]
         $.emptySetExpression[$PRIMARYKEY = $PRIMARYKEY]
+        $.schema[$SCHEMA]
       ]
     }
   }]
@@ -334,7 +340,7 @@ pfClass
   ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа}
   $result[^CSQL.void{
     ^_asContext[update]{
-      delete from $TABLE_NAME where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+      delete from ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME] where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
     }
   }]
 
@@ -350,6 +356,7 @@ pfClass
       ^_builder.updateStatement[$TABLE_NAME;$_fields;$aData][
         ^_allWhere[$aOptions]
       ][
+        $.schema[$SCHEMA]
         $.skipAbsent(true)
         $.skipFields[$_skipOnUpdate]
         $.emptySetExpression[]
@@ -363,7 +370,7 @@ pfClass
   ^cleanMethodArgument[]
   $result[^CSQL.void{
     ^_asContext[update]{
-      delete from $TABLE_NAME
+      delete from ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME]
        where ^_allWhere[$aOptions]
     }
   }]
@@ -516,7 +523,7 @@ pfClass
 
   $result[
        select $aFields
-         from ^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
+         from ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
               ^_asContext[where]{^_allJoin[$aOptions]}
         where ^_asContext[where]{^_allWhere[$aOptions]}
       ^if(def $lGroup){
