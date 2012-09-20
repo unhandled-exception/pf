@@ -201,13 +201,14 @@ pfClass
 ## aTableName - имя таблицы
 ## aFields - поля
 ## aData - данные
+## aOptions.schema
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.ignore(true)
   ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
   ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
-  $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
+  $result[insert $lOpts into ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
 @updateStatement[aTableName;aFields;aData;aWhere;aOptions][locals]
 ## Строит выражение для update
@@ -217,6 +218,7 @@ pfClass
 ## aWhere - выражение для where
 ##          (для безопасности блок where задается принудительно,
 ##           если нужно иное поведение укажите aWhere[1=1])
+## aOptions.schema
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.emptySetExpression[выражение, которое надо подставить, если нет данных для обновления]
@@ -227,4 +229,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression)){Необходимо задать выражение для пустого update set.}
-  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]
+  $result[update ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]
