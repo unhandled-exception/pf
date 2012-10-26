@@ -51,19 +51,21 @@ pfClass
 ## ]
 ##
 ## Процессоры:
-##   int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-##   double - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-##   bool - 1/0
+##   auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
+##   int, auto_bool - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   bool, auto_bool - 1/0
 ##   datetime - дата и время (если нам передали дату, то делаем sql-string)
 ##   date - дата (если нам передали дату, то делаем sql-string[date])
 ##   time - время (если нам передали дату, то делаем sql-string[time])
-##   now - текущие дата время (если не задано значение поля)
-##   curtime - текущее время (если не задано значение поля)
-##   curdate - текущая дата (если не задано значение поля)
+##   now, auto_now - текущие дата время (если не задано значение поля)
+##   curtime, auto_curtime - текущее время (если не задано значение поля)
+##   curdate, auto_curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
 ##   null - если не задано значение, то возвращает null
 ##   uint_null - преобразуем зачение в целое без знака, если не задано значение, то возвращаем null
-##   uid - уникальный идентификатор (math:uuid)
+##   uid, auto_uid - уникальный идентификатор (math:uuid)
+##   inet_ip — преобразует строку в числовое представление IP
 ##   first_upper - удаляет ведущие пробелы и капитализирует первую букву
 
 @_processFieldsOptions[aOptions]
@@ -145,8 +147,8 @@ pfClass
       ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
-      ^case[cuttime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
-      ^case[cutdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
+      ^case[curtime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
+      ^case[curdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
       ^case[datetime]{'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}
       ^case[date]{'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}
       ^case[time]{'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}
