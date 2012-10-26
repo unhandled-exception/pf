@@ -28,6 +28,7 @@ pfClass
 @auto[][lSeparator;lEncloser]
   $_PFSQLBUILDER_CSV_REGEX_[^regex::create[((?:\s*"(?:[^^"]*|"{2})*"\s*(?:,|^$))|\s*"[^^"]*"\s*(?:,|^$)|[^^,]+(?:,|^$)|(?:,))][g]]
   $_PFSQLBUILDER_CSV_QTRIM_REGEX_[^regex::create["(.*)"][]]
+  $_PFSQLBUILDER_PROCESSOR_FIRST_UPPER[^regex::create[^^\s*(\pL)(.*?)^$][]]
 
 @_setQuoteStyle[aStyle]
   $result[]
@@ -60,9 +61,10 @@ pfClass
 ##   curtime - текущее время (если не задано значение поля)
 ##   curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
-##   null - если не задано значение, то возвращает null.
+##   null - если не задано значение, то возвращает null
 ##   uint_null - преобразуем зачение в целое без знака, если не задано значение, то возвращаем null
 ##   uid - уникальный идентификатор (math:uuid)
+##   first_upper - удаляет ведущие пробелы и капитализирует первую букву
 
 @_processFieldsOptions[aOptions]
   $result[^hash::create[$aOptions]]
@@ -153,6 +155,7 @@ pfClass
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
       ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
+      ^case[first_upper]{'^taint[^if(def $aValue){^aValue.match[$_PFSQLBUILDER_PROCESSOR_FIRST_UPPER][]{^match.1.upper[]$match.2}}(def $aField.default){$aField.default}]'}
       ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{
