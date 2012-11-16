@@ -6,7 +6,7 @@ CREATE TABLE  `users` (
   `is_admin` enum('0','1') NOT NULL DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
+  PRIMARY KEY (`id`),
   UNIQUE KEY `login_unique` (`login`)
 );
 
@@ -21,7 +21,7 @@ CREATE TABLE  `sessions` (
   `is_active` enum('0','1') NOT NULL DEFAULT '1',
   `ip` int(10) unsigned DEFAULT NULL,
   `is_persistent` enum('0','1') NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`) USING BTREE,
+  PRIMARY KEY (`id`),
   UNIQUE KEY `uid_sid_unique` (`uid`,`sid`)
 );
 
