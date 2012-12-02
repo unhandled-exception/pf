@@ -11,8 +11,8 @@ pf/debug/pfRuntime.p
 pfClass
 
 @create[aOptions]
-## aOptions.templateFolder - путь к базовому каталогу с шаблонами 
-## aOptions.force(false) - принудительно отменяет кеширование в стораджах и пр. местах 
+## aOptions.templateFolder - путь к базовому каталогу с шаблонами
+## aOptions.force(false) - принудительно отменяет кеширование в стораджах и пр. местах
 ## aOptions.defaultEnginePattern[(?:pt|htm|html)^$] - шаблон для дефолтного энжина
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
@@ -22,16 +22,16 @@ pfClass
   ^appendPath[^if(def $aOptions.templateFolder){$aOptions.templateFolder}{/../views}]
 
   $_force($aOptions.force)
-  
+
   $_storages[^hash::create[]]
   ^registerStorage[file;pfTempleStorage;$.force($_isForce)]
   $_defaultStorage[file]
 
-  $_engines[^hash::create[]]    
+  $_engines[^hash::create[]]
   $_defaultEnginePattern[^if(def $aOptions.defaultEnginePattern){$aOptions.defaultEnginePattern}{(?:pt|htm|html)^$}]
   ^registerEngine[parser;;pfTempleParserEngine]
-  $_defaultEngine[parser]   
-  
+  $_defaultEngine[parser]
+
   $_globalVars[^hash::create[]]
   $_profiles[^hash::create[]]
 
@@ -74,15 +74,15 @@ pfClass
 @registerStorage[aStorageName;aClassName;aOptions]
 ## aOptions.file - имя файла с классом
 ## aOptions.args - переменные, которые надо передать конструктору стораджа
-  ^cleanMethodArgument[]   
+  ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aStorageName)[Не задано имя стораджа.]
   ^pfAssert:isTrue(def $aClassName)[Не задано имя класса стораджа.]
   $_storages.[$aStorageName][
     $.className[$aClassName]
     $.file[$aOptions.file]
     $.args[$aOptions.args]
-    $.object[]  
-  ]     
+    $.object[]
+  ]
   $result[]
 
 @registerEngine[aEngineName;aPattern;aClassName;aOptions]
@@ -97,12 +97,12 @@ pfClass
     $.className[$aClassName]
     $.file[$aOptions.file]
     $.args[$aOptions.args]
-    $.object[]  
+    $.object[]
   ]
   $result[]
 
 @loadTemplate[aTemplateName;aOptions][lParsed;lStorage]
-## Загружает шаблон                      
+## Загружает шаблон
 ## result: $.body $.path
   ^cleanMethodArgument[]
   $result[^hash::create[]]
@@ -141,13 +141,13 @@ pfClass
 
 @display[aTemplateName;aOptions]
 ## DEPRECATED!
-  $result[^render[$aTemplateName;$aOptions]] 
+  $result[^render[$aTemplateName;$aOptions]]
 
 #----- Private -----
 
-@_getStorage[aStorageName][$lStorage]
+@_getStorage[aStorageName][lStorage]
 ## Возвращает объект стораджа
-  ^if(^_storages.contains[$aStorageName]){   
+  ^if(^_storages.contains[$aStorageName]){
     $lStorage[$_storages.[$aStorageName]]
     ^if(!def $lStorage.object){
       ^if(def $lStorage.file){
@@ -157,11 +157,11 @@ pfClass
     }
     $result[$lStorage.object]
   }{
-     ^throw[pfTemple.runtime;Не зарегистрирован сторадж "$aStorageName".] 
+     ^throw[pfTemple.runtime;Не зарегистрирован сторадж "$aStorageName".]
    }
 
-@_getEngine[aEngineName][lEngine]   
-  ^if(^_engines.contains[$aEngineName]){   
+@_getEngine[aEngineName][lEngine]
+  ^if(^_engines.contains[$aEngineName]){
     $lEngine[$_engines.[$aEngineName]]
     ^if(!def $lEngine.object){
       ^if(def $lEngine.file){
@@ -171,7 +171,7 @@ pfClass
     }
     $result[$lEngine.object]
   }{
-     ^throw[pfTemple.runtime;Не зарегистрирован энжин "$aEngineName".] 
+     ^throw[pfTemple.runtime;Не зарегистрирован энжин "$aEngineName".]
    }
 
 @_findEngine[aTemplateName;aEngineName][lEngineName;k;v]
@@ -181,7 +181,7 @@ pfClass
       $lEngineName[$k]
       ^break[]
     }
-  }         
+  }
   ^if(def $aEngineName){$lEngineName[$aEngineName]}
   ^if(!def $lEngineName){$lEngineName[$_defaultEngine]}
   ^if(def $lEngineName){
@@ -227,7 +227,7 @@ pfClass
 
 
 @load[aTemplateName;aOptions][lPath;lFile;v;i;c]
-## Возвращает шаблон    
+## Возвращает шаблон
 ## aOptions.base[] - базовый путь в котором начинается поиск шаблона
 ## aOptions.force(false)
 ## result: $.body $.path
@@ -246,13 +246,13 @@ pfClass
         ^break[]
       }
     }
-  }                             
-  
+  }
+
 # Загружаем файл или достаем его из кеша
   ^if(def $lPath){
     $result.path[$lPath]
     ^if((!$_isForce || !$aOptions.force) && ^_cache.contains[$lPath]){
-      $result.body[$_cache.[$lPath]]            
+      $result.body[$_cache.[$lPath]]
     }{
        $lFile[^file::load[text;$lPath]]
        $result.body[$lFile.text]
@@ -261,7 +261,7 @@ pfClass
        }
      }
   }{
-     ^throw[template.not.found;Шаблон "$aTemplateName" не найден.] 
+     ^throw[template.not.found;Шаблон "$aTemplateName" не найден.]
    }
 
 @flushCache[]
@@ -281,7 +281,7 @@ pfClass
 @create[aTemple;aOptions]
 ## aTemple - ссылка на объект темпла, которому принадлежит энжин
   ^pfAssert:isTrue($aTemple is pfTemple)[Не передан объект pfTemple.]
-  $_temple[$aTemple]  
+  $_temple[$aTemple]
 
 @GET_TEMPLE[]
   $result[$_temple]
@@ -304,7 +304,7 @@ pfTempleEngine
 ## aTemple - ссылка на объект темпла, которому принадлежит энжин
   ^cleanMethodArgument[]
   ^BASE:create[$aTemple;$aOptions]
-  
+
 @render[aTemplate;aOptions][lPattern]
 ## aTemplate[$.body $.path]
 ## aOptions.vars[]
@@ -315,25 +315,25 @@ pfTempleEngine
   $result[^lPattern.__process__[$.global[$TEMPLE.VARS] $.local[$aOptions.vars]]]
 
 @_compileToPattern[aTemplate;aBaseName][lBases;lClass;lParent;lTemplateName]
-  $result[^_buildClassName[$aTemplate.path]] 
-  
+  $result[^_buildClassName[$aTemplate.path]]
+
 # Обрабатываем наследование
   $lBases[^aTemplate.body.match[^^#@base\s+(.+)^$][gmi]]
   ^if($lBases > 1){^throw[template.base.fail;У шаблона "$aTemplate.path" может быть только один предок.]}
   ^if($lBases){
-    $lTemplateName[^lBases.1.trim[both; ]]         
+    $lTemplateName[^lBases.1.trim[both; ]]
     ^if($lTemplateName eq ^file:basename[$aTemplate.path]){^throw[template.base.fail;Шаблон "$aTemplate.path" не может быть собственным предком.]}
     $lParent[^_compileToPattern[^TEMPLE.loadTemplate[$lTemplateName;$.base[^file:dirname[$aTemplate.path]]];$lParent]]
   }
-           
-# Компилируем текущий шаблон  
+
+# Компилируем текущий шаблон
   ^_buildClass[$result;$lParent;$aTemplate]
 
-@_buildClassName[aFileName] 
+@_buildClassName[aFileName]
   $result[^math:uid64[]]
 
 @_buildClass[aClassName;aBaseName;aTemplate][lClass;lImports;lTempl;lBase;lTemplateName;lImportName]
-## Формирует пустой класс aClassName с предком aBaseName 
+## Формирует пустой класс aClassName с предком aBaseName
 $result[]
 
 # Компилируем базовый клас с учетом наследования
@@ -345,9 +345,9 @@ $aClassName
 ^@__create__[]
 
 }[$.file[$aTemplate.file]]
-  
+
   $lClass[^reflection:create[$aClassName;__create__]]
-  ^_applyImports[$aTemplate;$lClass]  
+  ^_applyImports[$aTemplate;$lClass]
 
 # Компилируем тело шаблона в класс
   ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
@@ -383,7 +383,7 @@ pfClass
 ## aOptions.file
   ^if(!def $aOptions){$aOptions[^hash::create[]]}
   $__temple[$aOptions.temple]
-  $__FILE[$aOptions.file]  
+  $__FILE[$aOptions.file]
   $__GLOBAL[]
   $__LOCAL[]
 
@@ -398,7 +398,7 @@ pfClass
 
 @GET_TEMPLET[]
   $result[$__temple]
-    
+
 @__process__[aOptions]
 ## aOptions.global
 ## aOptions.local
@@ -410,12 +410,12 @@ pfClass
   $__LOCAL[]
 
 @__main__[]
-  ^throw[template.empty;Не задано тело шаблона.]  
+  ^throw[template.empty;Не задано тело шаблона.]
 
 @compact[]
-## Вызывает принуительную сборку мусора.                   
-  $result[]  
+## Вызывает принуительную сборку мусора.
+  $result[]
   ^pfRuntime:compact[]
-  
+
 @include[aTemplateName;aOptions]
   $result[^__temple.render[$aTemplateName;$aOptions]]
