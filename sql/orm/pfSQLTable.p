@@ -99,7 +99,7 @@ pfClass
 #----- Метаданные -----
 
 @addField[aFieldName;aOptions][locals]
-## aOptions.bdField[aFieldName] — название поля
+## aOptions.dbField[aFieldName] — название поля
 ## aOptions.fieldExpression{} — выражение для названия поля
 ## aOptions.expression{} — sql-выражение для значения поля (если не определено, то используем fieldExpression)
 ## aOptions.plural[] — название поля для групповой выборки
@@ -107,7 +107,7 @@ pfClass
 ## aOptions.default — значение «по-умолчанию»
 ## aOptions.format — формат числового значения
 ## aOptions.primary(false) — первичный ключ
-## aOptions.sequence(true) — автоинкремент (только для первичного ключа)
+## aOptions.sequence(true) — последовательность формирует БД (автоинкремент; только для первичного ключа)
 ## aOptions.skipOnInsert(false) — пропустить при вставке
 ## aOptions.skipOnUpdate(false) — пропустить при обновлении
 ## aOptions.label[aFieldName] — текстовое название поля (например, для форм)
