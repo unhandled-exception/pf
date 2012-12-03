@@ -18,20 +18,20 @@ pfCollection
 #----- Constructor -----
 
 @create[aValues;aOptions]
-## Создает коллекцию. 
+## Создает коллекцию.
 ## aValues - таблица, хэш или коллекция, содержимое которой копируется в новую коллекцию.
   ^clear[]
   ^reset[]
   $_firstIndex(-1)
-  $_lastIndex(-1)             
+  $_lastIndex(-1)
   ^BASE:create[$aValues;$aOptions]
-                                 
+
 
 @reset[]
   $result[]
-  ^BASE:reset[]  
+  ^BASE:reset[]
   $_indexes[]
-  
+
 @clear[]
 ## Удаляет все элементы из коллекции
   $result[]
@@ -42,17 +42,17 @@ pfCollection
 
 @GET_count[]
 ## Возвращает количество элементов в коллекции.
-  $result(^_array._count[])                     
+  $result(^_array._count[])
 
 @GET_DEFAULT[aIndex]
   ^if(^aIndex.int(-1) >= 0){
     $result[^at[$aIndex]]
   }{
-     $result[]                  
+     $result[]
   }
-  
+
 @GET_indexes[]
-## Возвращает таблицу с единственной колонкой "index", 
+## Возвращает таблицу с единственной колонкой "index",
 ## в которой перечислены все доступные индексы.
   ^if(!def $_indexes){
     ^_generateIndexes[]
@@ -78,13 +78,13 @@ pfCollection
   ^pfAssert:isTrue(^contains[$aIndex])[Элемента с номером $aIndex нет в коллеции.]
   $result[$_array.[$aIndex]]
 
-@add[aItem][result;$lIndex]
+@add[aItem][result;lIndex]
 ## Добавляем элемент в коллекцию
   $result[]
   ^if(!$count){$_firstIndex(0)}
   $_array.[^eval($lastIndex + 1)][$aItem]
   ^_lastIndex.inc[]
-  ^reset[]                   
+  ^reset[]
 
 @addRange[aCollection][result;it]
 ## Добавляет коллекцию aCollection в конец текуще коллекции
@@ -107,7 +107,7 @@ pfCollection
     ^reset[]
     ^_recountFirstLastIndexes[]
   }
-  
+
 @optimize[][result;lNew;it]
 ## Оптимизирует коллекцию, удаляя пробелы в нумерации. [1,4,18] -> [0,1,2]
   $result[]
@@ -122,14 +122,14 @@ pfCollection
   ^reset[]
 
 @reverse[][result;lNew;it]
-## Меняет порядок элементов на обратный  
+## Меняет порядок элементов на обратный
   $result[]
   ^if($count){
   	$lNew[^hash::create[]]
     ^foreach[it]{
     	$lNew.[^eval($count - $lNew)][$it]
     }
-    $_array[$lNew] 
+    $_array[$lNew]
     ^_recountFirstLastIndexes[]
   }
   ^reset[]
@@ -141,19 +141,19 @@ pfCollection
   ^pfAssert:isTrue($count > 0)[Список пустой.]
   ^indexes.offset[set]($_currentIndex)
   $result[^at[$indexes.index]]
-  
+
 
 #----- Private -----
 
-@_generateIndexes[]   
+@_generateIndexes[]
   $result[]
   $_indexes[^_array._keys[index]]
-  ^_indexes.sort($_indexes.index)[asc] 
+  ^_indexes.sort($_indexes.index)[asc]
 
 @_recountFirstLastIndexes[]
   $result[]
   $_firstIndex(-1)
-  $_lastIndex(-1)             
+  $_lastIndex(-1)
   ^if($count > 0){
     $_firstIndex(0)
     $_lastIndex(0)

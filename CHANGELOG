@@ -10,6 +10,19 @@ CHANGELOG
 1.0
 ---
 
+20.09.2012
+  1. Добавил поддержку имени схемы (базы данных) в ORM.
+
+15.09.2012
+  1. Изменил форматирование double-значений в pfSQLBuilder с %f на %.16g (http://www.parser.ru/forum/?id=77473).
+
+12.09.2012
+  1. В pfSQLTable добавил контекст «group», который для полей с expression подставляет
+     имя поле в group by и order by.
+
+31.07.2012
+  1. Новый процессор в pfSQLBuilder — inet_ip.
+
 04.07.2012
   1. Новый метод — pfSQLTable.union.
 

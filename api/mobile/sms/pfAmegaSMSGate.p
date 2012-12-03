@@ -13,7 +13,7 @@ pf/io/pfCFile.p
 @BASE
 pfClass
 
-@create[aOptions]      
+@create[aOptions]
 ## aOptions.user[]
 ## aOptions.password[]
 ## aOptions.url[https://beeline.amega-inform.ru/sendsms/]
@@ -31,9 +31,9 @@ pfClass
   $_comment[$aOptions.comment]
   $_clientIP[$aOptions.ip]
   $_timeout(^aOptions.timeout.int(30))
-  
+
   $_requestCharset[windows-1251]
-  $_responseCharset[utf-8]      
+  $_responseCharset[utf-8]
   $_maxMessageLength(480)
 
 @send[aMessage;aOptions][lResp]
@@ -52,20 +52,20 @@ pfClass
       $.charset[$_requestCharset]
       $.response-charset[$_responseCharset]
       $.any-status(false)
-      $.form[      
+      $.form[
         $.action[post_sms]
         $.user[$_user]
-        $.pass[$_password]          
+        $.pass[$_password]
         $.message[$aMessage]
         ^if(def $_clientIP){$.CLIENTADR[$_clientIP]}
         ^if(def $_comment){$.comment[$_clientIP]}
         ^if(def $aOptions.codename){
           $.phl_codename[$aOptions.codename]
         }{
-           $.target[$aOptions.phones] 
+           $.target[$aOptions.phones]
          }
       ]
-    ]]                      
+    ]]
     $result[^_parseResponse[$lResp.text]]
   }{
      ^if(^exception.type.match[^^(?:http|cfile)\.][n]){
@@ -75,7 +75,7 @@ pfClass
 
 @status[aType;aOptions][lResp]
 ## $aType[sms|group|period] - информация о статусе сообщений для одной смс, группы или за период
-## sms - aOptions.smsID 
+## sms - aOptions.smsID
 ## group - aOptions.groupID
 ## period - aOptions.from && aOptions.to
 ## result[hash] - результат разбора xml-ответа сервиса
@@ -87,10 +87,10 @@ pfClass
       $.charset[$_requestCharset]
       $.response-charset[$_responseCharset]
       $.any-status(false)
-      $.form[      
+      $.form[
         $.action[status]
         $.user[$_user]
-        $.pass[$_password]          
+        $.pass[$_password]
         ^if(def $_clientIP){$.CLIENTADR[$_clientIP]}
         ^if(def $_comment){$.comment[$_clientIP]}
 
@@ -98,7 +98,7 @@ pfClass
           ^case[sms]{
             ^pfAssert:isTrue(^aOptions.smsID.int[] >= 0)[Неверный идентификатор смс.]
             $.sms_id[$aOptions.smsID]
-          }          
+          }
           ^case[group]{
             ^pfAssert:isTrue(^aOptions.groupID.int[] >= 0)[Неверный идентификатор группы.]
             $.sms_group_id[$aOptions.groupID]
@@ -120,7 +120,7 @@ pfClass
        ^throw[${self.CLASS_NAME}.fail;Ошибка при работе с смс-шлюзом;${exception.type}: $exception.comment]
      }
    }
-  
+
 
 @session[aCode]
 ## Организует единую сессию для работы с сервисом.
@@ -132,14 +132,14 @@ pfClass
 ## aDate - [строка|date]
   ^if(!($aDate is date)){
     $aDate[^date::create[^date::create[$aDate]]]
-  }                                          
+  }
   $result[^aDate.day.format[%02d].^aDate.month.format[%02d].^aDate.year.format[%04d] ^aDate.hour.format[%02d]:^aDate.minute.format[%02d]:^aDate.second.format[%02d]]
 
-@_parseResponse[aResponse][lDoc;lList;lNode;lSubList;$lSubNode;lItem;i;k;n;lID]
+@_parseResponse[aResponse][lDoc;lList;lNode;lSubList;lSubNode;lItem;i;k;n;lID]
 ## $.result[$.result[$.groupID $.<sms_id1> $.<sms_id2> ...] $.errors[$.0 $.1 ...] $.messages[$.id $.smstype $.field1 $.field2 [..]]]
   $result[$.validXML(true) $.result[^hash::create[]] $.errors[^hash::create[]] $.messages[^hash::create[]]]
   ^try{
-    $lDoc[^xdoc::create{$aResponse}]  
+    $lDoc[^xdoc::create{$aResponse}]
     $lList[$lDoc.documentElement.childNodes]
     ^for[i](0;$lList - 1){
       $lNode[$lList.$i]
@@ -163,9 +163,9 @@ pfClass
             $result.errors.[$k][$lSubNode.firstChild.nodeValue]]
           }
         }
-        ^case[MESSAGES]{   
-##        Для секции MESSAGE запихиваем в хеш все поля, 
-##        при этом названия тегов переводим в нижний регистр.          
+        ^case[MESSAGES]{
+##        Для секции MESSAGE запихиваем в хеш все поля,
+##        при этом названия тегов переводим в нижний регистр.
           $lSubList[^lNode.getElementsByTagName[MESSAGE]]
           ^for[k](0;$lSubList - 1){
             $lSubNode[$lSubList.[$k]]
@@ -175,7 +175,7 @@ pfClass
               $.smstype[^lSubNode.getAttribute[SMSTYPE]]
             ]
             ^for[n](0;$lSubNode.childNodes - 1){
-              $lItem[$lSubNode.childNodes.$n] 
+              $lItem[$lSubNode.childNodes.$n]
               ^if($lItem.nodeType == $xdoc:ELEMENT_NODE){
                 $result.messages.[$lID].[^lItem.nodeName.lower[]][$lItem.firstChild.nodeValue]
               }
@@ -184,12 +184,11 @@ pfClass
         }
       }
     }
-    
+
   }{
      ^if($exception.type eq "xml"){
        $result.validXML(false)
        $exception.handled(true)
      }
    }
-  
-  
+

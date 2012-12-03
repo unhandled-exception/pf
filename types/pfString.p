@@ -18,15 +18,12 @@ pfString
 ## а заодно отрезает все пробельные символы в начале строки.
 ## $type[upper/lower/first]
 ## http://www.spearance.ru/parser3/change_case/
-	^if(def $str && def $type){
-		$result[^switch[^type.lower[]]{
-			^case[upper]{^str.upper[]}
-			^case[lower]{^str.lower[]}
-			^case[first]{^str.match[^^\s*(\pL)(.*?)^$][i]{^if(def $match.1){^match.1.upper[]}^if(def $match.2){^match.2.lower[]}}}
-			^case[DEFAULT]{$str}
-		}]
-		
-	}
+	$result[^switch[^type.lower[]]{
+		^case[upper]{^str.upper[]}
+		^case[lower]{^str.lower[]}
+		^case[first]{^str.match[^^\s*(\pL)(.*?)^$][i]{^if(def $match.1){^match.1.upper[]}^if(def $match.2){^match.2.lower[]}}}
+		^case[DEFAULT]{$str}
+	}]
 
 @rsplit[text;regex;options][table_split]
 ## Разбивает строку по регулярным выражениям

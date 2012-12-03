@@ -28,6 +28,7 @@ pfClass
 @auto[][lSeparator;lEncloser]
   $_PFSQLBUILDER_CSV_REGEX_[^regex::create[((?:\s*"(?:[^^"]*|"{2})*"\s*(?:,|^$))|\s*"[^^"]*"\s*(?:,|^$)|[^^,]+(?:,|^$)|(?:,))][g]]
   $_PFSQLBUILDER_CSV_QTRIM_REGEX_[^regex::create["(.*)"][]]
+  $_PFSQLBUILDER_PROCESSOR_FIRST_UPPER[^regex::create[^^\s*(\pL)(.*?)^$][]]
 
 @_setQuoteStyle[aStyle]
   $result[]
@@ -50,19 +51,22 @@ pfClass
 ## ]
 ##
 ## Процессоры:
-##   int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-##   double - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-##   bool - 1/0
+##   auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
+##   int, auto_bool - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   bool, auto_bool - 1/0
 ##   datetime - дата и время (если нам передали дату, то делаем sql-string)
 ##   date - дата (если нам передали дату, то делаем sql-string[date])
 ##   time - время (если нам передали дату, то делаем sql-string[time])
-##   now - текущие дата время (если не задано значение поля)
-##   curtime - текущее время (если не задано значение поля)
-##   curdate - текущая дата (если не задано значение поля)
+##   now, auto_now - текущие дата время (если не задано значение поля)
+##   curtime, auto_curtime - текущее время (если не задано значение поля)
+##   curdate, auto_curdate - текущая дата (если не задано значение поля)
 ##   json - сереиализует значение в json
-##   null - если не задано значение, то возвращает null.
+##   null - если не задано значение, то возвращает null
 ##   uint_null - преобразуем зачение в целое без знака, если не задано значение, то возвращаем null
-##   uid - уникальный идентификатор (math:uuid)
+##   uid, auto_uid - уникальный идентификатор (math:uuid)
+##   inet_ip — преобразует строку в числовое представление IP
+##   first_upper - удаляет ведущие пробелы и капитализирует первую букву
 
 @_processFieldsOptions[aOptions]
   $result[^hash::create[$aOptions]]
@@ -140,18 +144,20 @@ pfClass
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
-      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%f}]}
+      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
-      ^case[cuttime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
-      ^case[cutdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
-      ^case[datetime]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[]}'}
-      ^case[date]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[date]}'}
-      ^case[time]{'^if($aValue is date){^taint[$aValue]}{^aValue.sql-string[time]}'}
+      ^case[curtime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
+      ^case[curdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
+      ^case[datetime]{'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}
+      ^case[date]{'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}
+      ^case[time]{'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}
       ^case[json]{'^taint[^json:string[$aValue]]'}
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
+      ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
+      ^case[first_upper]{'^taint[^if(def $aValue){^aValue.match[$_PFSQLBUILDER_PROCESSOR_FIRST_UPPER][]{^match.1.upper[]$match.2}}(def $aField.default){$aField.default}]'}
       ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{
@@ -200,13 +206,14 @@ pfClass
 ## aTableName - имя таблицы
 ## aFields - поля
 ## aData - данные
+## aOptions.schema
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.ignore(true)
   ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
   ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
-  $result[insert $lOpts into $aTableName (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
+  $result[insert $lOpts into ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
 @updateStatement[aTableName;aFields;aData;aWhere;aOptions][locals]
 ## Строит выражение для update
@@ -216,6 +223,7 @@ pfClass
 ## aWhere - выражение для where
 ##          (для безопасности блок where задается принудительно,
 ##           если нужно иное поведение укажите aWhere[1=1])
+## aOptions.schema
 ## aOptions.skipAbsent(false) - пропустить поля, данных для которых нет
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
 ## aOptions.emptySetExpression[выражение, которое надо подставить, если нет данных для обновления]
@@ -226,4 +234,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression)){Необходимо задать выражение для пустого update set.}
-  $result[update $aTableName set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]
+  $result[update ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]

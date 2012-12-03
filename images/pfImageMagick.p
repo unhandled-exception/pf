@@ -1,12 +1,12 @@
 # PF Library
 
 #@info Класс для работы с консольными скриптами ImageMagick.
-#@author Oleg Volchkov <oleg@volchkov.net>                                                                                                          
+#@author Oleg Volchkov <oleg@volchkov.net>
 #@web http://oleg.volchkov.net
 
 #@compat 3.2.2
 
-#@doc 
+#@doc
 #/doc
 
 @CLASS
@@ -25,16 +25,16 @@ pfClass
 ## aOptions.scriptPath[/../bin] - путь к скриптам ImageMagick
   ^cleanMethodArgument[]
   ^BASE:create[]
-  
+
   $_throwPrfeix[$self.CLASS_NAME]
   $_scriptPath[^if(def $aOptions.scriptPath && -d $aOptions.scriptPath){^aOptions.scriptPath.trim[end;/]}{/../bin}]
 
 #----- Public -----
-  
+
 @identify[aImageFileName][lExec]
 ## Возвращает хеш с информацией об изображении
   ^pfAssert:isTrue(-f $aImageFileName)[Файл "$aImageFileName" не найден на сервере.]
-  
+
   $lExec[^file::exec[$_scriptPath/identify;;-format;height: %h\nwidth: %w\ntype: %m\nquality: %Q\ndepth: %q\nxResolution: %x\nyResolution: %y\ncompressionType: %C\ndisposeMethod: %D\ncolorSpace: %r\n%[EXIF:*];-quiet;-units;PixelsPerInch;-ping;$request:document-root/$aImageFileName]]
   ^if(!$lExec.status){
     $result[^_parseIdentifyResponse[$lExec.text]]
@@ -42,13 +42,13 @@ pfClass
      ^throw[${_throwPrfeix}.exec.error;Ошибка при выполнении скрипта;$lExec.stderr]
    }
 
-@normalize[aImageFileName;aOptions][$lExec;lArgs]
+@normalize[aImageFileName;aOptions][lExec;lArgs]
 ## Конверирует изображение для оптимального хранения на сервере.
 ## aOptions.quality(85) - качество компресии
 ## aOptions.newFileName -  новое имя файла. Если не задано, то переписываем оригинальный файл.
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(-f $aImageFileName)[Файл "$aImageFileName" не найден на сервере.]
-  
+
   $lArgs[^table::create{arg}]
   ^lArgs.append{-quality}
   ^lArgs.append{^aOptions.quality.int(85)}
@@ -58,13 +58,13 @@ pfClass
   ^lArgs.append{-alpha}
   ^lArgs.append{off}
   ^lArgs.append{$request:document-root/$aImageFileName}
- 
+
   ^if(def $aOptions.newFileName){
     ^lArgs.append{$request:document-root/$aOptions.newFileName}
   }{
      ^lArgs.append{$request:document-root/$aImageFileName}
    }
-   
+
   $lExec[^file::exec[$_scriptPath/convert;;$lArgs]]
   ^if(!$lExec.status){
     $result(true)
@@ -83,7 +83,7 @@ pfClass
   ^pfAssert:isTrue(def $aPreviewFileName)[Не задано имя для превьюшки.]
   ^pfAssert:isTrue($aImageFileName ne $aPreviewFileName)[Имя файла и превьюшки не могут совпадать.]
   ^pfAssert:isTrue(def $aOptions.width || def $aOptions.height)[Не определены размеры превьюшки]
- 
+
   $lArgs[^table::create{arg}]
 
   ^lArgs.append{-strip}
@@ -103,8 +103,8 @@ pfClass
   }{
      ^throw[${_throwPrfeix}.exec.error;Ошибка при выполнении скрипта;$lExec.stderr]
    }
-   
-   
+
+
 @applyWatermark[aImageFileName;aWatermarkFileName;aOptions]
 ## aWatermarkFileName[]
 ## aOptions.position[center] - позиция watermark'a на картинке.
@@ -115,7 +115,7 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(-f $aImageFileName)[Файл "$aImageFileName" не найден на сервере.]
   ^pfAssert:isTrue(-f $aWatermarkFileName)[Файл "$aOptions.watermarkFileName" не найден на сервере.]
-  
+
   $lArgs[^table::create{arg}]
   ^switch[$aOptions.method]{
     ^case[DEFAULT;dissolve]{
@@ -123,7 +123,7 @@ pfClass
       ^lArgs.append{^aOptions.opacity.int(25)%}
     }
   }
-  
+
   ^lArgs.append{-gravity}
   ^switch[$aOptions.position]{
     ^case[DEFAULT;center]{^lArgs.append{Center}}
@@ -136,7 +136,7 @@ pfClass
     ^case[bottom-left]{^lArgs.append{SouthWest}}
     ^case[bottom-right]{^lArgs.append{SouthEast}}
   }
-  
+
   ^lArgs.append{$request:document-root/$aWatermarkFileName}
   ^lArgs.append{$request:document-root/$aImageFileName}
   ^lArgs.append{$request:document-root/$aImageFileName}
@@ -171,5 +171,5 @@ pfClass
     $result.aspectRatio($result.width/$result.height)
     ^if(!$result.quality){$result.quality(100)}
   }
-  
+
 #  ^pfAssert:fail[^result.foreach[k;v]{^if($v is hash){^v.foreach[k1;v1]{${k}: $k1 -> $v1}[^#0a]}{$k -> $v}}[^#0a]]
