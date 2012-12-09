@@ -55,7 +55,7 @@ pfClass
       ^case[float;double;decimal;numeric]{
         $lData.processor[double]
         ^if(def $lType.format){
-          $lData.format[^lType.format.match[^^(\d+)\,(\d+)^$][]{%^eval($match.1+$match.2).${match.2}f}]
+          $lData.format[^lType.format.match[^^(\d+)\,(\d+)^$][]{%${match.1}.${match.2}f}]
         }
       }
       ^case[date]{$lData.processor[date]}
