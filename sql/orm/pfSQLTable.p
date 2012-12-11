@@ -134,8 +134,10 @@ pfClass
      ^if(!def $lField.expression){
        $lField.expression[$lField.fieldExpression]
      }
-     $self._skipOnUpdate.[$aFieldName](true)
-     $self._skipOnInsert.[$aFieldName](true)
+     ^if(!def $lField.fieldExpression){
+       $self._skipOnUpdate.[$aFieldName](true)
+       $self._skipOnInsert.[$aFieldName](true)
+     }
   }{
      $lField.dbField[^if(def $aOptions.dbField){$aOptions.dbField}{$aFieldName}]
      $lField.primary(^aOptions.primary.bool(false))
@@ -143,7 +145,7 @@ pfClass
      ^if(^aOptions.skipOnUpdate.bool(false) || $lField.primary){
        $self._skipOnUpdate.[$aFieldName](true)
      }
-     ^if(^aOptions.skipOnInsert.bool(false) || $lField.primary){
+     ^if(^aOptions.skipOnInsert.bool(false) || $lField.sequence){
        $self._skipOnInsert.[$aFieldName](true)
      }
      ^if($lField.primary && !def $_primaryKey){
