@@ -129,12 +129,13 @@ pfClass
   $lField.comment[$aOptions.comment]
 
   ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
+     ^if(def $aOptions.dbField){$lField.dbField[$aOptions.dbField]}
      $lField.fieldExpression[$aOptions.fieldExpression]
      $lField.expression[$aOptions.expression]
      ^if(!def $lField.expression){
        $lField.expression[$lField.fieldExpression]
      }
-     ^if(!def $lField.fieldExpression){
+     ^if(!def $lField.dbField){
        $self._skipOnUpdate.[$aFieldName](true)
        $self._skipOnInsert.[$aFieldName](true)
      }

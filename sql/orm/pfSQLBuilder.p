@@ -78,7 +78,7 @@ pfClass
   $result[${_quote}${aIdent}${_quote}]
 
 @sqlFieldName[aField;aTableAlias][locals]
-  $result[^if(^aField.contains[expression] && ^aField.contains[fieldExpression]){$aField.fieldExpression}{^if(def $aTableAlias){^quoteIdentifier[$aTableAlias].}^quoteIdentifier[^taint[$aField.dbField]]}]
+  $result[^if(def $aTableAlias){^quoteIdentifier[$aTableAlias].}^quoteIdentifier[^taint[$aField.dbField]]]
 
 @selectFields[aFields;aOptions][locals]
 ## Возвращает список полей для выражения select
@@ -112,7 +112,7 @@ pfClass
   $lTableAlias[^if(def $aOptions.tableAlias){$aOptions.tableAlias}]
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
-    ^if(^v.contains[expression] && !^v.contains[fieldExpression]){^continue[]}
+    ^if(^v.contains[expression] && !^v.contains[dbField]){^continue[]}
     ^if($aOptions.skipAbsent && !^lData.contains[$k] && !(def $v.processor && ^v.processor.pos[auto_] >= 0)){^continue[]}
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
     $result.[${_quote}^result._count[]][^sqlFieldName[$v;$lTableAlias]]
@@ -132,7 +132,7 @@ pfClass
 
   $result[^hash::create[]]
   ^aFields.foreach[k;v]{
-    ^if(^aOptions.skipFields.contains[$k] || (^v.contains[expression] && !^v.contains[fieldExpression])){^continue[]}
+    ^if(^aOptions.skipFields.contains[$k] || (^v.contains[expression] && !^v.contains[dbField])){^continue[]}
     ^if($aOptions.skipAbsent && !^aData.contains[$k] && !(def $v.processor && ^v.processor.pos[auto_] >= 0)){^continue[]}
     $result.[^result._count[]][^if(!$aOptions.skipNames){^sqlFieldName[$v;$lAlias] = }^fieldValue[$v;^if(^aData.contains[$k]){$aData.[$k]}]]
   }
