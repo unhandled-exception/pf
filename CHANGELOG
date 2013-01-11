@@ -10,6 +10,10 @@ CHANGELOG
 1.0
 ---
 
+11.01.2013
+  1. pfSQLBuilder: процессоры date, time, datetime при отсутствии значения возвращают null.
+  2. pfSQLBuilder: переписал код округления числа для процессора double.
+
 11.12.2012
   1. Добавил класс для генерации класса-моедли по данным DDL из БД — sql/orm/service/pfTableModelGenerator.
 

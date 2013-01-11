@@ -144,14 +144,14 @@ pfClass
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
       ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
-      ^case[double;auto_double]{^eval(^if(^aField.contains[default]){^aValue.double($aField.default)}{^aValue.double[]})[^if(def $aField.format){$aField.format}{%.16g}]}
+      ^case[double;auto_double]{^if(^aField.contains[default]){$lValue(^aValue.double($aField.default))}{$lValue(^aValue.double[])}^lValue.format[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
       ^case[curtime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
       ^case[curdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
-      ^case[datetime]{'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}
-      ^case[date]{'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}
-      ^case[time]{'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}
+      ^case[datetime]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{null}}
+      ^case[date]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}{null}}
+      ^case[time]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}{null}}
       ^case[json]{'^taint[^json:string[$aValue]]'}
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
