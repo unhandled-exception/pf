@@ -10,6 +10,8 @@ pf/tests/pfAssert.p
 pfClass
 
 @create[aTableName;aOptions]
+## aOptions.sql
+## aOptions.schema
   ^cleanMethodArgument[]
   ^pfAssert:isTrue($aOptions.sql is pfMySQL)[Не задан объект дл доступа к СУБД.]
   ^BASE:create[]
@@ -17,8 +19,9 @@ pfClass
   $_sql[$aOptions.sql]
   ^defReadProperty[CSQL;_sql]
 
+  $_schema[$aOptions.schema]
   $_tableName[$aTableName]
-  ^if(!def $_tableName || !^CSQL.table{show tables like "$_tableName"}){
+  ^if(!def $_tableName || !^CSQL.table{show tables ^if(def $_schema){from `$_schema`} like "$_tableName"}){
     ^throw[table.not.found]
   }
 
@@ -26,7 +29,7 @@ pfClass
 
 @_getFields[][locals]
   $result[^hash::create[]]
-  $lDDL[^CSQL.table{describe `$_tableName`}]
+  $lDDL[^CSQL.table{describe ^if(def $_schema){`$_schema`.}`$_tableName`}]
   $lHasPrimary(^lDDL.select($lDDL.Key eq "PRI") == 1)
   $self._primary[]
 
@@ -93,6 +96,7 @@ pfClass
   $result[
   ^@CLASS
   ${_tableName}
+  # Table ^if(def $_schema){`$_schema`.}`$_tableName`
 
   ^@USE
   pf/sql/orm/pfSQLTable.p

@@ -10,6 +10,9 @@ CHANGELOG
 1.0
 ---
 
+21.01.2013
+  1. Добавил поддержку схемы БД в pfTableModelGenerator.
+
 11.01.2013
   1. pfSQLBuilder: процессоры date, time, datetime при отсутствии значения возвращают null.
   2. pfSQLBuilder: переписал код округления числа для процессора double.
