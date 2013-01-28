@@ -182,6 +182,9 @@ pfClass
   }
   $result[$_tableAlias]
 
+@GET_TABLE_EXPRESSION[]
+  $result[^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]]
+
 @GET_FIELDS[]
   $result[$_fields]
 
