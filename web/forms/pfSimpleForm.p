@@ -9,8 +9,6 @@ pfSimpleForm
 
 @USE
 pf/types/pfClass.p
-pf/tests/pfAssert.p
-pf/sql/orm/pfSQLBuilder.p
 
 @BASE
 pfClass
