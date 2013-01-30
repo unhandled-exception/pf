@@ -112,6 +112,7 @@ pfClass
 ## aOptions.skipOnUpdate(false) — пропустить при обновлении
 ## aOptions.label[aFieldName] — текстовое название поля (например, для форм)
 ## aOptions.comment — описание поля
+## aOptions.widget — название html-виджета для редактирования поля.
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aFieldName){Не задано имя поля таблицы.}
@@ -127,6 +128,7 @@ pfClass
 
   $lField.label[^if(def $aOptions.label){$aOptions.label}{$lField.name}]
   $lField.comment[$aOptions.comment]
+  $lField.widget[$aOptions.widget]
 
   ^if(^aOptions.contains[fieldExpression] || ^aOptions.contains[expression]){
      ^if(def $aOptions.dbField){$lField.dbField[$aOptions.dbField]}
