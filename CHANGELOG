@@ -14,6 +14,7 @@ CHANGELOG
   1. Добавил поле widget для полей моедли в pfSQLTable.
   2. Написал генератор html-форм по модели — pfTableFormGenerator.
      [Этот класс не более чем пример генератора кода. :)]
+  3. Новый метод — pfSQLTable.cleanFormData.
 
 28.01.2013
   1. Добавил поле pfSQLBuilder.TABLE_EXPRESSION с полным именем таблицы и алиасом для подстановки

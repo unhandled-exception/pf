@@ -169,6 +169,19 @@ pfClass
     ^addField[$k;$v]
   }
 
+@cleanFormData[aFormData]
+## Возвращает хеш с полями, для которых разрешены html-виджеты.
+  ^cleanMethodArgument[aFormData]
+  $result[^hash::create[]]
+  ^aFormData.foreach[k;v]{
+    ^if(^_fields.contains[$k]
+        && $_fields.[$k].widget ne "none"
+    ){
+      $result.[$k][$v]
+    }
+  }
+
+
 #----- Свойства -----
 
 @GET_SCHEMA[]
