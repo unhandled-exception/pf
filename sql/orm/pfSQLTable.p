@@ -151,7 +151,7 @@ pfClass
      ^if(^aOptions.skipOnInsert.bool(false) || $lField.sequence){
        $self._skipOnInsert.[$aFieldName](true)
      }
-     ^if($lField.primary && !def $_primaryKey){
+     ^if(def $lField.primary && !def $_primaryKey){
        $self._primaryKey[$aFieldName]
      }
    }
@@ -258,7 +258,7 @@ pfClass
  $lResultType[^__getResultType[$aOptions]]
  $result[^CSQL.[$lResultType]{
    ^_selectExpression[
-     ^__allSelectFieldsExpression[$aOptions;$aSQLOptions]
+     ^__allSelectFieldsExpression[$lResultType;$aOptions;$aSQLOptions]
    ][$lResultType;$aOptions;$aSQLOptions]
  }[
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
@@ -284,7 +284,7 @@ pfClass
     $v[^hash::create[$v]]
     $lRes[^CSQL.[$lResultType]{
       ^_selectExpression[
-        ^__allSelectFieldsExpression[$v]
+        ^__allSelectFieldsExpression[$lResultType;$v]
       ][$lResultType;$v]
     }[
        ^if(^v.contains[limit]){$.limit($v.limit)}
@@ -564,14 +564,14 @@ pfClass
 ## желательно их не перекрывать и ни при каких условиях не использовать
 ## во внешнем коде.
 
-@__allSelectFieldsExpression[aOptions;aSQLOptions]
+@__allSelectFieldsExpression[aResultType;aOptions;aSQLOptions]
   $result[
     ^_asContext[select]{
      ^if(def $aSQLOptions.selectОptions){$aSQLOptions.selectОptions}
      ^if(^aOptions.contains[selectFields]){
        $aOptions.selectFields
      }{
-       ^if($lResultType eq "hash"){
+       ^if($aResultType eq "hash"){
          ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}. Выборку можно делать только в таблицу.}
 #         Для хеша добавляем еще одно поле с первичным ключем
           $PRIMARYKEY as ^_builder.quoteIdentifier[_ORM_HASH_KEY_],

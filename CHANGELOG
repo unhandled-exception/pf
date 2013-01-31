@@ -10,6 +10,10 @@ CHANGELOG
 1.0
 ---
 
+31.01.2013
+  1. Исправил ошибку в классе pfSQLTable: в метод __allSelectFieldsExpression не передавался resultType,
+     а это приводило к потере первичного ключа при выборке в хеш.
+
 30.01.2013
   1. Добавил поле widget для полей моедли в pfSQLTable.
   2. Написал генератор html-форм по модели — pfTableFormGenerator.
