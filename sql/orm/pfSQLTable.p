@@ -329,7 +329,7 @@ pfClass
 
 @new[aData;aSQLOptions]
 ## Вставляем значение в базу
-## aSQLOptions.ignore(true)
+## aSQLOptions.ignore(false)
 ## Возврашает автосгенерированное значение первичного ключа (last_insert_id) для sequence-полей.
   ^cleanMethodArgument[aData;aSQLOptions]
   ^_asContext[update]{
@@ -354,6 +354,20 @@ pfClass
       ]
     }
   }]
+
+@newOrModify[aData;aSQLOptions]
+## Аналог мускулевского "insert on duplicate key update"
+## Пытаемся создать новую запись, а если она существует, то обновляем данные.
+## Работает только для таблиц с первичным ключем.
+  $result[]
+  ^cleanMethodArgument[aSQLOptions]
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^CSQL.safeInsert{
+     $result[^new[$aData;$aSQLOptions]]
+  }{
+      ^modify[$aData.[$_primaryKey];$aData]
+      $result[$aData.[$_primaryKey]]
+   }
 
 @delete[aPrimaryKeyValue]
 ## Удаляем запись из таблицы с первичныйм ключем aPrimaryKeyValue

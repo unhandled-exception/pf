@@ -208,7 +208,7 @@ pfClass
 ## aData - данные
 ## aOptions.schema
 ## aOptions.skipFields[$.field[] ...] — хеш с полями, которые надо исключить из выражения
-## aOptions.ignore(true)
+## aOptions.ignore(false)
   ^pfAssert:isTrue(def $aTableName){Не задано имя таблицы.}
   ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
