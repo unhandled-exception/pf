@@ -84,8 +84,8 @@ pfClass
       <label for="f-$aField.name" class="control-label">$aField.label</label>
       <div class="controls">
         <select name="$aField.name" id="f-$aField.name" class="input-xxlarge" placeholder="">
-          <option value=""></option
-^#          <option value="" ^^if(^$${aOptions.argName}.$aField.name eq ""){selected="true"}></option
+          <option value=""></option>
+^#          <option value="" ^^if(^$${aOptions.argName}.$aField.name eq ""){selected="true"}></option>
         </select>
       </div>
     </div>]
