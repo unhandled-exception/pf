@@ -118,7 +118,7 @@ ORM-классы
       $client[^ct.get[$clientID]]
                                 
     # Метод get возвращает хеш со всеми полями, которые мы задали через метод addField
-      $client.title - $client.url - $client.phone - $client.createdAt - $client.updated_at
+      $client.title - $client.url - $client.phone - $client.createdAt - $client.updatedAt
                                 
     # Если нам надо удалить клиента, 
     # то вызываем метод ^ct.delete[$clientID]
