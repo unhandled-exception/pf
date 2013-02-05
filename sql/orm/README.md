@@ -38,7 +38,7 @@ ORM-классы
       `name` VARCHAR(200) NULL ,
       `is_active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 ,
       PRIMARY KEY (`id`) ,
-      UNIQUE INDEX `login_unique` (`login` ASC) );
+      UNIQUE INDEX `name_unique` (`name` ASC) );
 
 У нас есть клиенты (clients) и менеджеры (`auth_users`), которые работают с клиентом (`clients_to_users`). У клиента может быть несколько менеджеров одновременно.
 
