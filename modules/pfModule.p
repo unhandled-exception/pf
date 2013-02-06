@@ -101,7 +101,7 @@ pfClass
 
 @assignModule[aName;aOptions]
 ## Добавляет модуль aName
-## aOptions.class - имя класса
+## aOptions.class - имя класса (если не задано, то пробуем его взять из имени файла)
 ## aOptions.file - файл с текстом класса
 ## aOptions.source - строка с текстом класса (если определена, то плюем на file)
 ## aOptions.compile(0) - откомпилировать модуль сразу 
@@ -126,7 +126,9 @@ pfClass
 
 #  Добавляем в хэш с модулями данные о модуле
    $_MODULES.[$aName][
-       $.class[$aOptions.class]
+       $.file[$aOptions.file]
+       $.source[$aOptions.source]
+       $.class[^if(!def $aOptions.class && def $aOptions.file){^file:justname[$aOptions.file]}{$aOptions.class}]
 
        ^if($aOptions.factory is junction){
          $.factory[$aOptions.factory]
@@ -135,9 +137,6 @@ pfClass
           $.factory[]
           $.hasFactory(0)
         }
-
-       $.file[$aOptions.file]
-       $.source[$aOptions.source]
        
        $.args[^if(def $aOptions.args){$aOptions.args}{^hash::create[]} $.parentModule[$self]]
        $.object[]
