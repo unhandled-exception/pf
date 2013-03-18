@@ -528,9 +528,10 @@ pfClass
       ^if(^_fields.contains[$match.1] && !def $match.2 || ^_PFSQLTABLE_OPS.contains[$match.2]){
 #       $.[field operator][value]
         $_res.[^_res._count[]][^_sqlFieldName[$match.1] $_PFSQLTABLE_OPS.[$match.2] ^_fieldValue[$lField;$v]]
-      }($match.2 eq "range"){
+      }($match.2 eq "range" || $match.2 eq "!range"){
 #       $.[field range][$.from $.to]
-        $_res.[^_res._count[]][^_sqlFieldName[$match.1] between ^_fieldValue[$lField;$v.from] and ^_fieldValue[$lField;$v.to]]
+#       $.[field !range][$.from $.to]
+        $_res.[^_res._count[]][^if(^match.2.left(1) eq "!"){not }^(^_sqlFieldName[$match.1] between ^_fieldValue[$lField;$v.from] and ^_fieldValue[$lField;$v.to])]
       }(^_fields.contains[$match.1] && $match.2 eq "is"){
         $_res.[^_res._count[]][^_sqlFieldName[$match.1] is ^if(!def $v || $v eq "null"){null}{not null}]
       }(^_plurals.contains[$match.1]
