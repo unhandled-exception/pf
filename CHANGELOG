@@ -13,6 +13,7 @@ CHANGELOG
 18.03.2013
   1. Добавил возможность задать алиасы полям, при использовании в методе pfSQLTable.aggregate псевдофункции _fields.
      Т.е. можно написать: ^t.aggregate[_fields(field_1 as field1)].
+  2. Добавил в pfSQLTable оператор range для проверки вхождения значения поля в диапазон при выборках.
 
 31.01.2013
   1. Исправил ошибку в классе pfSQLTable: в метод __allSelectFieldsExpression не передавался resultType,
