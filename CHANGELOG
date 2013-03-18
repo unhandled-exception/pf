@@ -10,13 +10,17 @@ CHANGELOG
 1.0
 ---
 
+18.03.2013
+  1. Добавил возможность задать алиасы полям, при использовании в методе pfSQLTable.aggregate псевдофункции _fields.
+     Т.е. можно написать: ^t.aggregate[_fields(field_1 as field1)].
+
 31.01.2013
   1. Исправил ошибку в классе pfSQLTable: в метод __allSelectFieldsExpression не передавался resultType,
      а это приводило к потере первичного ключа при выборке в хеш.
   2. Новый метод pfSQLTable.newOrModify.
 
 30.01.2013
-  1. Добавил поле widget для полей моедли в pfSQLTable.
+  1. Добавил поле widget для полей модели в pfSQLTable.
   2. Написал генератор html-форм по модели — pfTableFormGenerator.
      [Этот класс не более чем пример генератора кода. :)]
   3. Новый метод — pfSQLTable.cleanFormData.

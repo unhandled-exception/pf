@@ -313,7 +313,7 @@ pfClass
 
 @aggregate[*aConds][locals]
 ## Выборки с группировкой
-## ^aggregate[func(expr) as alias;_fields(field1, field2);conditions hash;sqlOptions]
+## ^aggregate[func(expr) as alias;_fields(field1, field2 as alias2);_fields(*);conditions hash;sqlOptions]
   $lConds[^__getAgrConds[$aConds]]
   $lResultType[^__getResultType[$lConds.options]]
   $result[^CSQL.[$lResultType]{
@@ -630,7 +630,7 @@ pfClass
           $lField.expr[^_allFields[]]
         }{
            $lSplit[^lField.args.split[,;lv]]
-           $lField.expr[^lSplit.menu{^if(def $lSplit.piece){^_sqlFieldName[^lSplit.piece.trim[]] as ^_builder.quoteIdentifier[$lSplit.piece]}}[, ]]
+           $lField.expr[^lSplit.menu{^lSplit.piece.match[$_PFSQLTABLE_AGR_REGEX][]{^if(def $match.1){^_sqlFieldName[$match.1] as ^_builder.quoteIdentifier[^if(def $match.4){$match.4}{$match.1}]}}}[, ]]
            $lField.alias[]
          }
       }
