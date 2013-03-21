@@ -218,6 +218,8 @@ pfClass
     $result[^_sqlFieldName[$lField]]
   }
 
+@TABLE_AS[aAlias]
+  $result[^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME]^if(def $aAlias){ as ^_builder.quoteIdentifier[$aAlias]}]
 
 #----- Выборки -----
 
