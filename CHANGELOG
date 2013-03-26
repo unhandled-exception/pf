@@ -2,13 +2,17 @@ PF Library
 Copyright (c) Oleg Volchkov
 -------------------------------------
 
-CHANGELOG
+Changelog
 =========
 
-Основной репозиторий: http://code.volchkov.net/parser3-pf/src
+hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
+Веб-интерфейс репозитория: http://code.volchkov.net/parser3-pf/src
 
 1.0
 ---
+
+26.03.2013
+  1. Добавил метод вычисления расстояния Левенштейна — pfString:levenshteinDistance.
 
 18.03.2013
   1. Добавил возможность задать алиасы полям, при использовании в методе pfSQLTable.aggregate псевдофункции _fields.
