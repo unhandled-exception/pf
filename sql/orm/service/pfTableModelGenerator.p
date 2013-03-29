@@ -48,7 +48,7 @@ pfClass
     ^switch[^lType.type.lower[]]{
       ^case[int;integer;smallint;mediumint]{$lData.processor[int]}
       ^case[tinyint]{
-        $lData.processor[$lType.format]
+        $lData.processor[int]
         ^if(^lType.format.int(0) == 1
             || ^lDDL.Field.pos[is_] == 0){
           $lData.processor[bool]
