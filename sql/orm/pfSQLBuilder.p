@@ -52,7 +52,8 @@ pfClass
 ##
 ## Процессоры:
 ##   auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
-##   int, auto_bool - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   uint, auto_uint - целое число без знака, если не задан default, то приведение делаем без значения по-умолчанию
+##   int, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
 ##   double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
 ##   bool, auto_bool - 1/0
 ##   datetime - дата и время (если нам передали дату, то делаем sql-string)
@@ -143,7 +144,8 @@ pfClass
   ^pfAssert:isTrue(def $aField){Не задано описание поля.}
   ^try{
     $result[^switch[^if(def $aField.processor){^aField.processor.lower[]}]{
-      ^case[int;auto_int]{^eval(^if(^aField.contains[default]){^aValue.int($aField.default)}{^aValue.int[]})[^if(def $aField.format){$aField.format}{%d}]}
+      ^case[uint;auto_uint]{^try{$lVal($aValue)}{^if(^aField.contains[default]){$exception.handled(true) $lVal($aField.default)}}^lVal.format[^if(def $aField.format){$aField.format}{%u}]}
+      ^case[int;auto_int]{^try{$lVal($aValue)}{^if(^aField.contains[default]){$exception.handled(true) $lVal($aField.default)}}^lVal.format[^if(def $aField.format){$aField.format}{%d}]}
       ^case[double;auto_double]{^if(^aField.contains[default]){$lValue(^aValue.double($aField.default))}{$lValue(^aValue.double[])}^lValue.format[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
       ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
@@ -154,7 +156,7 @@ pfClass
       ^case[time]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}{null}}
       ^case[json]{'^taint[^json:string[$aValue]]'}
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
-      ^case[uint_null]{^if(^aValue.int(-1) >= 0){^aValue.int[]}{null}}
+      ^case[uint_null]{^if(def $aValue){$lVal($aValue)^lVal.format[%u]}{null}}
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
       ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
       ^case[first_upper]{'^taint[^if(def $aValue){^aValue.match[$_PFSQLBUILDER_PROCESSOR_FIRST_UPPER][]{^match.1.upper[]$match.2}}(def $aField.default){$aField.default}]'}

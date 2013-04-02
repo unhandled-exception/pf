@@ -54,7 +54,7 @@ ORM-классы
       ^BASE:create[clients;aOptions]
       $_tableAlias[c]
                                     
-      ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+      ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
       ^addField[address]
@@ -75,7 +75,7 @@ ORM-классы
 Если не нравится «батарея» методов addField, то можно записать описание полей чуть короче:
 
     ^addFields[
-      $.clientID[$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+      $.clientID[$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
       $.title[$.default[__ Новый клиент __]]
       $.phone[]
       $.address[]
@@ -137,12 +137,12 @@ ORM-классы
 
 В нашей табличке есть четыре поля с процессорами:
 
-    ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+    ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
     ^addField[title;$.default[__ Новый клиент __]]
     ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
     ^addField[updatedAt;$.dbField[updated_at] $.processor[auto_now]]
 
-Поле clientID первичный целочисленный ключ (`auto_increment`) и для него мы задаем процессор «int», т.е. преобразование значения в целое число. Для поля title не задан процессор, но задано значение по-умолчанию (default), которое подставляется если поле не определено. Для полей createdAt и updatedAt заданы процессоры auto_now, которые подставляют в поле текущие дату и время, если явно не задано значение поля. Поскольку поле createdAt не надо менять при обновлении записи, то для него мы задали параметр $.skipOnUpdate(true) (есть еще ключик skipOnInsert, который отменяет изменение поля при вставке записи — его можно было использовать для поля updatedAt, если мы хотим при создании новой записи получить значение null в поле `updated_at`).
+Поле clientID первичный целочисленный ключ (`auto_increment`) и для него мы задаем процессор «uint», т.е. преобразование значения в целое число без знака. Для поля title не задан процессор, но задано значение по-умолчанию (default), которое подставляется если поле не определено. Для полей createdAt и updatedAt заданы процессоры auto_now, которые подставляют в поле текущие дату и время, если явно не задано значение поля. Поскольку поле createdAt не надо менять при обновлении записи, то для него мы задали параметр $.skipOnUpdate(true) (есть еще ключик skipOnInsert, который отменяет изменение поля при вставке записи — его можно было использовать для поля updatedAt, если мы хотим при создании новой записи получить значение null в поле `updated_at`).
 
 Мы можем передать методу modify обект date — `^ct.modify[$.updatedAt[^date::now[]]]` — и класс автоматически вызовет метод sql-date при подстановке значения поля в запрос. Процессоры с префиксом auto_ «умеют» подставлять осмысленные данные, если не задано значение поля.
 
@@ -151,7 +151,8 @@ ORM-классы
 Стандартные процессоры:
 
      auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
-     int, auto_bool - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+     uint, auto_uint - целое число без знака, если не задан default, то приведение делаем без значения по-умолчанию
+     int, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
      double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
      bool, auto_bool - 1/0
      datetime - дата и время (если нам передали дату, то делаем sql-string)
@@ -297,8 +298,8 @@ ORM-классы
         $.allAsTable(true)
         $.tableAlias[cu]
       ]
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[int]]
-      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[uint]]
+      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[uint]]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
 
 В этой табличке у нас составной первичный ключ, поэтому мы не указываем ни одному полю ключ primary. В конструкторе базового класса указываем, что возвращать результаты метод all будет в виде таблицы (хеш без уникального первичного ключа построить не получится). Для этой таблички не будет работать методы get, modify и delete, но вместо них можно использовать one, modifyAll и deleteAll.
@@ -412,8 +413,8 @@ ORM-классы
         $.tableAlias[cu]
       ]
                               
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[int]]
-      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[uint]]
+      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[uint]]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
       ^addField[name;$.fieldExpression[au.name]]
       ^addField[isActive;$.fieldExpression[au.is_active] $.processor[bool]]
@@ -449,7 +450,7 @@ ORM-классы
         $.tableAlias[c]
       ]
                                               
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.primary(true) $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.primary(true) $.processor[uint]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
       ^addField[address]
@@ -545,7 +546,7 @@ ORM-классы
     @create[aTableName;aOptions]
       ^BASE:create[$aTableName;$aOptions]
                                       
-      ^addField[id;$.primary(true) $.processor[int]]
+      ^addField[id;$.primary(true) $.processor[uint]]
       ...
       ^addField[isActive;$.dbField[is_active] $.processor[bool] $.default(1)]
                                       

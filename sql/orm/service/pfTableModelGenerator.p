@@ -46,9 +46,9 @@ pfClass
 
     $lType[^_parseType[$lDDL.Type]]
     ^switch[^lType.type.lower[]]{
-      ^case[int;integer;smallint;mediumint]{$lData.processor[int]}
+      ^case[int;integer;smallint;mediumint]{$lData.processor[^if($lType.unsigned){uint}{int}]}
       ^case[tinyint]{
-        $lData.processor[int]
+        $lData.processor[^if($lType.unsigned){uint}{int}]
         ^if(^lType.format.int(0) == 1
             || ^lDDL.Field.pos[is_] == 0){
           $lData.processor[bool]
@@ -84,6 +84,9 @@ pfClass
     $result.type[$match.1]
     $result.format[^match.2.trim[both;()]]
     $result.options[$match.3]
+    ^if(^result.options.match[unsigned][in]){
+      $result.unsigned(true)
+    }
   }
 
 @_makeName[aName]
