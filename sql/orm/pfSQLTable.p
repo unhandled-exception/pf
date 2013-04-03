@@ -68,7 +68,7 @@ pfClass
   $_PFSQLTABLE_CSQL[]
   $_PFSQLTABLE_BUILDER[^pfSQLBuilder::create[]]
   $_PFSQLTABLE_COMPARSION_REGEX[^regex::create[^^\s*(\S+)(?:\s+(\S+))?][]]
-  $_PFSQLTABLE_AGR_REGEX[^regex::create[^^\s*(([^^\s(]+)(.*?)?)\s*(?:as\s+(\S+))?\s*^$][i]]
+  $_PFSQLTABLE_AGR_REGEX[^regex::create[^^\s*(([^^\s(]+)(.*?))\s*(?:as\s+([^^\s\)]+))?\s*^$][i]]
   $_PFSQLTABLE_OPS[
     $.[<][<]
     $.[>][>]
