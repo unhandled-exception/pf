@@ -42,6 +42,9 @@ pfClass
     ^if($lDDL.Key eq "PRI" && $lHasPrimary){
       $lData.primary(true)
       $self._primary[$lName]
+      ^if(!^lDDL.Extra.match[auto_increment][in]){
+        $lData.sequence(false)
+      }
     }
 
     $lType[^_parseType[$lDDL.Type]]
