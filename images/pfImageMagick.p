@@ -46,6 +46,7 @@ pfClass
 ## Конверирует изображение для оптимального хранения на сервере.
 ## aOptions.quality(85) - качество компресии
 ## aOptions.newFileName -  новое имя файла. Если не задано, то переписываем оригинальный файл.
+## aOptions.keepProfiles(false) - сохранить цветовые профили
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(-f $aImageFileName)[Файл "$aImageFileName" не найден на сервере.]
 
@@ -54,7 +55,11 @@ pfClass
   ^lArgs.append{^aOptions.quality.int(85)}
   ^lArgs.append{-compress}
   ^lArgs.append{JPEG}
-  ^lArgs.append{-strip}
+
+  ^if(!^aOptions.keepProfiles.bool(false)){
+    ^lArgs.append{-strip}
+  }
+
   ^lArgs.append{-alpha}
   ^lArgs.append{off}
   ^lArgs.append{$request:document-root/$aImageFileName}
@@ -77,7 +82,8 @@ pfClass
 ## aOptions.width(100) - максимальная ширина.
 ## aOptions.height(100) - Максимальная высота.
 ## aOptions.proportional(true) - пропорционально меням размер?
-## aOptions.force(false)
+## aOptions.keepProfiles(false) - сохранить цветовые профили
+## aOptions.keepColorspace(false) - сохранить цветовое пространство
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(-f $aImageFileName)[Файл "$aImageFileName" не найден на сервере.]
   ^pfAssert:isTrue(def $aPreviewFileName)[Не задано имя для превьюшки.]
@@ -86,11 +92,15 @@ pfClass
 
   $lArgs[^table::create{arg}]
 
-  ^lArgs.append{-strip}
+  ^if(!^aOptions.keepProfiles.bool(false)){
+    ^lArgs.append{-strip}
+  }
+  ^if(!^aOptions.keepColorspace.bool(false)){
+    ^lArgs.append{-colorspace}
+    ^lArgs.append{RGB}
+  }
   ^lArgs.append{-format}
   ^lArgs.append{jpeg}
-  ^lArgs.append{-colorspace}
-  ^lArgs.append{RGB}
   ^lArgs.append{-resize}
   ^lArgs.append{^aOptions.width.int(100)x^aOptions.height.int(100)^if(!^aOptions.proportional.bool(true)){!}}
 
