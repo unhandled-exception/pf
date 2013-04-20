@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+20.04.2013
+  1. Добавил несколько новых опций в pfCFile, исправил ошибку при обработке параметра $.compressed d pfCFile:load.
+
 15.04.2013
   1. В pfTableModelGenerator для первичных ключей без авто-инкремента в описание поля добавляется атрибут $.sequence(false).
 
