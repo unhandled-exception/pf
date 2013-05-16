@@ -11,6 +11,25 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+16.05.2013
+  1. Добавил в pfClass методы для добавления декораторов функциям:
+      @decorateMethod[aFunctionName;aDecoratorFunction;aObject][locals]
+      ## Назначает декоратор для метода/функции
+      ## aFunctionName — имя функции, которую мы декорируем
+      ## aDecoratorFunction — ссылка на функцию-декоратор (junction, а не строка с именем)
+      ##   Сигнатура функции-декоратора:
+      ##     @wrap_function[aFunction;aArgs;aOptions]
+      ##       aFunction — ссылка на оригинальную функцию
+      ##       aArgs — аргументы с которыми фнукцию вызвали (аналогично *aArgs)
+      ##       aOptions.object — ссылка на объект, содержащий задекорированную функцию
+      ##       aOptions.functionName — имя задекорированной функции
+      ## aObject — контекст функции, которую мы декорируем (объект или класс; если не задан, то $self)
+
+      @regexpDecorateMethod[aFunctionRegexp;aDecoratorFunction;aObject][locals]
+      ## Декорирует все функции, подпадающие под регулярное выражение.
+      ## aFunctionRegexp — регулярное выражение для поиска функций.
+      ## Остальные параметры аналогично decorateMethod.
+
 20.04.2013
   1. Добавил несколько новых опций в pfCFile, исправил ошибку при обработке параметра $.compressed d pfCFile:load.
 
