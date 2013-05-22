@@ -13,6 +13,7 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 
 22.05.2013
   1. В pfTableModelGenerator добавил $.label и $.widget для полей.
+  2. Поправил ошибки в «декораторах» pfClass.decorateMethod и pfClass.regexpDecorateMethod.
 
 16.05.2013
   1. Добавил в pfClass методы для добавления декораторов функциям:

@@ -166,9 +166,9 @@ pf/tests/pfAssert.p
   ^if(!($obj.[$aFunctionName] is junction)){^throw[pfClass.decorate.fail;Функция $aFunctionName не найдена.]}
   ^if(!($aDecoratorFunction is junction)){^throw[pfClass.decorate.fail;Фукция-декоратор для $aFunctionName имеет тип $aDecoratroFunction.CLASS_NAME]}
   $wrapperName[DECORATOR_$aFunctionName_^math:uid64[]]
-  $obj.CLASS.[${wrapperName}_FUNCTION][$aDecoratorFunction]
-  $obj.CLASS.[${wrapperName}_ORIGINAL][^reflection:method[$obj.CLASS;$aFunctionName]]
-  ^process[$obj.CLASS]{@${aFunctionName}[*args]
+  $obj.[${wrapperName}_FUNCTION][$aDecoratorFunction]
+  $obj.[${wrapperName}_ORIGINAL][^reflection:method[$obj;$aFunctionName]]
+  ^process[$obj]{@${aFunctionName}[*args]
     ^$result[^^self.[${wrapperName}_FUNCTION][^$self.[${wrapperName}_ORIGINAL]^;^$args^;^$.object[^$self] ^$.functionName[$aFunctionName]]]
   }
 
@@ -179,11 +179,10 @@ pf/tests/pfAssert.p
   $result[]
   $obj[^if(def $aObject){$aObject}{$self}]
   $m[^reflection:methods[$obj.CLASS_NAME]]
-  $nf[^hash::create[]]
-  ^m.foreach[k;v]{
+  $lForeach[^reflection:method[$m;foreach]]
+  ^lForeach[k;v]{
     ^if(^k.match[$aFunctionRegexp]){
-      ^obj.decorate[$k;$aDecoratorFunction;$obj]
-      $nf.[$k][funct]
+      ^obj.decorateMethod[$k;$aDecoratorFunction;$obj]
     }
   }
 
