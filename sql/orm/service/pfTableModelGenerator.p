@@ -39,14 +39,6 @@ pfClass
 
     ^if($lDDL.Field ne $lName){$lData.dbField[$lDDL.Field]}
 
-    ^if($lDDL.Key eq "PRI" && $lHasPrimary){
-      $lData.primary(true)
-      $self._primary[$lName]
-      ^if(!^lDDL.Extra.match[auto_increment][in]){
-        $lData.sequence(false)
-      }
-    }
-
     $lType[^_parseType[$lDDL.Type]]
     ^switch[^lType.type.lower[]]{
       ^case[int;integer;smallint;mediumint]{$lData.processor[^if($lType.unsigned){uint}{int}]}
@@ -69,12 +61,29 @@ pfClass
       ^case[time]{$lData.processor[time]}
     }
 
+    ^if($lDDL.Key eq "PRI" && $lHasPrimary){
+      $lData.primary(true)
+      $self._primary[$lName]
+      ^if(!^lDDL.Extra.match[auto_increment][in]){
+        $lData.sequence(false)
+      }
+      $lData.widget[none]
+    }
+
     ^if($lName eq "createdAt"){
       $lData.processor[auto_now]
       $lData.skipOnUpdate(true)
+      $lData.widget[none]
     }
     ^if($lName eq "updatedAt"){
       $lData.processor[auto_now]
+      $lData.widget[none]
+    }
+    ^if($lName eq "isActive"){
+      $lData.widget[none]
+    }
+    ^if(!def $lData.widget){
+      $lData.label[]
     }
 
     $result.[$lName][$lData]
