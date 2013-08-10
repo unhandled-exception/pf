@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+10.08.2013
+  1. Перенес класс pfSQLBuilder в файл sql/orm/pfSQLTable.p.
+
 22.05.2013
   1. В pfTableModelGenerator добавил $.label и $.widget для полей.
   2. Поправил ошибки в «декораторах» pfClass.decorateMethod и pfClass.regexpDecorateMethod.
