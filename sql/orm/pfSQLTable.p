@@ -239,8 +239,9 @@ pfClass
    }
 
 @all[aOptions;aSQLOptions][locals]
-## aOptions.asTable(false) — возвращаем хеш
-## aOptions.asHash(true) — возвращаем таблицу
+## aOptions.asTable(false) — возвращаем таблицу
+## aOptions.asHash(false) — возвращаем хеш (ключ хеша — первичный ключ таблицы)
+## aOptions.asHashOn[fieldName] — возвращаем хеш таблиц, ключем которого будет fieldName
 ## Выражения для контроля выборки (код в фигурных скобках):
 ##   aOptions.selectFields{exression} — выражение для списка полей (вместо автогенерации)
 ##   aOptions.where{expression} — выражение для where
@@ -265,6 +266,10 @@ pfClass
     ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
     ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
   ][$aSQLOptions]]]
+
+ ^if($result is table && def $aOptions.asHashOn){
+   $result[^result.hash[$aOptions.asHashOn;$.type[table] $.distinct(true)]]
+ }
 
 @__getResultType[aOptions]
   $result[^switch(true){
