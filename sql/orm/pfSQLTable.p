@@ -820,14 +820,14 @@ pfClass
 @array[aField;aValue;aOptions][locals]
 ## Строит массив значений
 ## aValue[table|hash|csv-string]
-## aOptions.column[primaryKey] — имя колонки в таблице
+## aOptions.column[$aField.name] — имя колонки в таблице
 ## aOptions.emptyValue[null] — значение массива, если в aValue нет данных
 ## aOptions.valueFunction[fieldValue] — функция форматирования значения поля
   ^cleanMethodArgument[]
   $result[]
   $lValueFunction[^if(^aOptions.contains[valueFunction]){$aOptions.valueFunction}{$fieldValue}]
   $lEmptyValue[^if(^aOptions.contains[emptyValue]){$aOptions.emptyValue}{null}]
-  $lColumn[^if(def $aOptions.column){$aOptions.column}{primaryKey}]
+  $lColumn[^if(def $aOptions.column){$aOptions.column}{$aField.name}]
   ^switch(true){
     ^case($aValue is hash){$result[^aValue.foreach[k;v]{^lValueFunction[$aField;$k]}[, ]]}
     ^case($aValue is table){$result[^aValue.menu{^lValueFunction[$aField;$aValue.[$lColumn]]}[, ]]}
