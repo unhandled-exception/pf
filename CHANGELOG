@@ -10,6 +10,10 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 
 1.0
 ---
+
+21.08.2013
+  1. Мелкая оптимизация: заменил внутри pfSQLBuilder вызовы метода quoteIdentifier на прямое использование $_quote.
+
 13.08.2013
   1. Добавил опцию asHashOn[fieldName] в pfSQLTable.all.
 

@@ -730,7 +730,7 @@ pfClass
   $result[${_quote}${aIdent}${_quote}]
 
 @sqlFieldName[aField;aTableAlias][locals]
-  $result[^if(def $aTableAlias){^quoteIdentifier[$aTableAlias].}^quoteIdentifier[^taint[$aField.dbField]]]
+  $result[^if(def $aTableAlias){${_quote}${aTableAlias}${_quote}.}${_quote}^taint[$aField.dbField]${_quote}]
 
 @selectFields[aFields;aOptions][locals]
 ## Возвращает список полей для выражения select
@@ -745,9 +745,9 @@ pfClass
   ^aFields.foreach[k;v]{
     ^if(^aOptions.skipFields.contains[$k]){^continue[]}
     ^if(^v.contains[expression]){
-      $result.[^result._count[]][$v.expression as ^quoteIdentifier[$k]]
+      $result.[^result._count[]][$v.expression as ${_quote}${k}${_quote}]]
     }{
-       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as ^quoteIdentifier[$k]]
+       $result.[^result._count[]][^sqlFieldName[$v;$lTableAlias] as ${_quote}${k}${_quote}]]
      }
   }
   $result[^result.foreach[k;v]{$v}[, ]]
@@ -866,7 +866,7 @@ pfClass
   ^pfAssert:isTrue(def $aFields){Не задан список полей.}
   ^cleanMethodArgument[aData;aOptions]
   $lOpts[^if(^aOptions.ignore.bool(false)){ignore}]
-  $result[insert $lOpts into ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
+  $result[insert $lOpts into ^if(def $aOptions.schema){${_quote}${aOptions.schema}${_quote}.}${_quote}${aTableName}${_quote} (^fieldsList[$aFields;^hash::create[$aOptions] $.data[$aData]]) values (^setExpression[$aFields;$aData;^hash::create[$aOptions] $.skipNames(true)])]
 
 @updateStatement[aTableName;aFields;aData;aWhere;aOptions][locals]
 ## Строит выражение для update
@@ -887,4 +887,4 @@ pfClass
 
   $lSetExpression[^setExpression[$aFields;$aData;$aOptions]]
   ^pfAssert:isTrue(def $lSetExpression || (!def $lSetExpression && def $aOptions.emptySetExpression)){Необходимо задать выражение для пустого update set.}
-  $result[update ^if(def $aOptions.schema){^quoteIdentifier[$aOptions.schema].}^quoteIdentifier[$aTableName] set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]
+  $result[update ^if(def $aOptions.schema){${_quote}${aOptions.schema}${_quote}.}${_quote}${aTableName}${_quote} set ^if(def $lSetExpression){$lSetExpression}{$aOptions.emptySetExpression} where $aWhere]
