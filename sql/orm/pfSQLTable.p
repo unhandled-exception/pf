@@ -805,7 +805,7 @@ pfClass
       ^case[datetime]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{null}}
       ^case[date]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}{null}}
       ^case[time]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}{null}}
-      ^case[json]{'^taint[^json:string[$aValue]]'}
+      ^case[json]{^if(def $aValue){'^taint[^json:string[$aValue]]'}{null}}
       ^case[null]{^if(def $aValue){'^taint[$aValue]'}{null}}
       ^case[uint_null]{^if(def $aValue){$lVal($aValue)^lVal.format[%u]}{null}}
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
