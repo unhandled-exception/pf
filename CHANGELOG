@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+27.08.2013
+  1. Добавил поддержку полей с ip-адресами в pfTableModelGenerator. Для них генерируется выражение с inet_ntoa.
+
 21.08.2013
   1. Мелкая оптимизация: заменил внутри pfSQLBuilder вызовы метода quoteIdentifier на прямое использование $_quote.
   2. Процессор json в pfSQLBuilder возвращает null, если не задано значение.

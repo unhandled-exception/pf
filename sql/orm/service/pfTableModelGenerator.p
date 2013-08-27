@@ -82,6 +82,14 @@ pfClass
     ^if($lName eq "isActive"){
       $lData.widget[none]
     }
+    ^if(^lName.match[IP^$][n] || $lName eq "ip"){
+      ^if(!def $lData.dbField){
+        $lData.dbField[$lName]
+      }
+      $lData.processor[inet_ip]
+      $lData.expression[inet_ntoa(^^_builder.quoteIdentifier[^$TABLE_ALIAS].^^_builder.quoteIdentifier[$lData.dbField])]
+    }
+
     ^if(!def $lData.widget){
       $lData.label[]
     }
@@ -105,6 +113,7 @@ pfClass
   $aName[^aName.lower[]]
   $result[^aName.match[_(\w)][g]{^match.1.upper[]}]
   $result[^result.match[Id^$][][ID]]
+  $result[^result.match[Ip^$][][IP]]
 
 @generate[aOptions]
   ^cleanMethodArgument[]
