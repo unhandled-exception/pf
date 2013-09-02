@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+02.09.2013
+  1. Добавил метод динамического импорта — ^import[template/name.pt] — в парсеровский шаблон для pfTemple.
+
 28.08.2013
   1. Добавил базовую версию класса-генератора контролера для модели (sql/orm/service/pfTableControllerGenerator).
 
