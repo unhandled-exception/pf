@@ -11,6 +11,51 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+02.09.2013
+  1. Добавил метод динамического импорта — ^import[template/name.pt] — в парсеровский шаблон для pfTemple.
+
+28.08.2013
+  1. Добавил базовую версию класса-генератора контролера для модели (sql/orm/service/pfTableControllerGenerator).
+
+27.08.2013
+  1. Добавил поддержку полей с ip-адресами в pfTableModelGenerator. Для них генерируется выражение с inet_ntoa.
+
+21.08.2013
+  1. Мелкая оптимизация: заменил внутри pfSQLBuilder вызовы метода quoteIdentifier на прямое использование $_quote.
+  2. Процессор json в pfSQLBuilder возвращает null, если не задано значение.
+
+13.08.2013
+  1. Добавил опцию asHashOn[fieldName] в pfSQLTable.all.
+
+10.08.2013
+  1. Перенес класс pfSQLBuilder в файл sql/orm/pfSQLTable.p.
+
+22.05.2013
+  1. В pfTableModelGenerator добавил $.label и $.widget для полей.
+  2. Поправил ошибки в «декораторах» pfClass.decorateMethod и pfClass.regexpDecorateMethod.
+
+16.05.2013
+  1. Добавил в pfClass методы для добавления декораторов функциям:
+      @decorateMethod[aFunctionName;aDecoratorFunction;aObject][locals]
+      ## Назначает декоратор для метода/функции
+      ## aFunctionName — имя функции, которую мы декорируем
+      ## aDecoratorFunction — ссылка на функцию-декоратор (junction, а не строка с именем)
+      ##   Сигнатура функции-декоратора:
+      ##     @wrap_function[aFunction;aArgs;aOptions]
+      ##       aFunction — ссылка на оригинальную функцию
+      ##       aArgs — аргументы с которыми фнукцию вызвали (аналогично *aArgs)
+      ##       aOptions.object — ссылка на объект, содержащий задекорированную функцию
+      ##       aOptions.functionName — имя задекорированной функции
+      ## aObject — контекст функции, которую мы декорируем (объект или класс; если не задан, то $self)
+
+      @regexpDecorateMethod[aFunctionRegexp;aDecoratorFunction;aObject][locals]
+      ## Декорирует все функции, подпадающие под регулярное выражение.
+      ## aFunctionRegexp — регулярное выражение для поиска функций.
+      ## Остальные параметры аналогично decorateMethod.
+
+20.04.2013
+  1. Добавил несколько новых опций в pfCFile, исправил ошибку при обработке параметра $.compressed d pfCFile:load.
+
 15.04.2013
   1. В pfTableModelGenerator для первичных ключей без авто-инкремента в описание поля добавляется атрибут $.sequence(false).
 

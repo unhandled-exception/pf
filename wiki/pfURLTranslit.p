@@ -57,7 +57,7 @@ pfClass
   $result[^result.match[(?:ь|ъ)][g][]]
 
   $result[^result.replace[$_letters]]
-  $result[^result.match[j{2,}][g][]]
+  $result[^result.match[j{2,}][g][j]]
 
   $result[^result.match[[^^${lSlash}0-9a-z_\-]+][g][]]
 

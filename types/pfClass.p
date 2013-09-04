@@ -16,14 +16,14 @@ pf/tests/pfAssert.p
 
 @auto[aFilespec]
   $[__PFROOT__][^aFilespec.match[^^(?:^taint[regex][$request:document-root])(.*?)(/types/pfClass.p)^$][]{$match.1}]
-  
+
 #----- Properties -----
 
 @GET_isDynamic[]
 ## Возвращает true, если класс создан динамически
   $result(^reflection:dynamical[])
-  
-@GET_isStatic[]  
+
+@GET_isStatic[]
 ## Возвращает true, если класс создан статически
   $result(!^reflection:dynamical[])
 
@@ -39,7 +39,7 @@ pf/tests/pfAssert.p
     ^if(!def $lName){$lName[aOptions]}
     ^if(!def $caller.[$lName] || ($caller.[$lName] is string && !def ^caller.[$lName].trim[])){$caller.[$lName][^hash::create[]]}
   }
-  
+
 @defProperty[aPropertyName;aVarName;aType][lVarName]
 ## Добавляет в объект свойство с именем aPropertyName
 ## ссылающееся на переменную $aVarName[_$aPropertyName].
@@ -77,7 +77,7 @@ pf/tests/pfAssert.p
 @equals[aObject]
 ## Возвращает true, если текущий объект равен aObject.
   $result(false)
-  
+
 @typeOf[aValue][lDone]
 ## Возвращает строку с типом переменной aValue
   ^unsafe{
@@ -85,7 +85,7 @@ pf/tests/pfAssert.p
       $result[$aValue.CLASS_NAME]
     }
   }
-  
+
   ^if(!def $result){
 	  $result[^switch(true){
       ^case($aValue is "string"){string}
@@ -124,7 +124,7 @@ pf/tests/pfAssert.p
 @foreach[aKeyName;aValueName;aCode;aSeparator][lFields;lKey;lValue]
 ## Обходит все поля объекта.
   $lFields[^reflection:fields[^if(^reflection:dynamical[]){$self}{$CLASS}]]
-  $result[^lFields.foreach[lKey;lValue]{$caller.[$aKeyName][$lKey]$caller.[$aValueName][$lValue]$aCode}[$aSeparator]] 
+  $result[^lFields.foreach[lKey;lValue]{$caller.[$aKeyName][$lKey]$caller.[$aValueName][$lValue]$aCode}[$aSeparator]]
 
 @alias[aName;aMethod]
 ## Создает алиас для метода.
@@ -133,20 +133,58 @@ pf/tests/pfAssert.p
   $result[]
 
 @try-finally[aCode;aCatchCode;aFinallyCode][lFinallyProcessed]
-## Оператор try-catch-finally. Гарантированно выполняет блок 
+## Оператор try-catch-finally. Гарантированно выполняет блок
 ## finally даже если в коде или обработчике ошибок произошло исключение.
 ## Блок finally можно опустить.
   $lFinallyProcessed(false)
-  $result[^try{^try{$aCode}{$aCatchCode}}{$lFinallyProcessed(true)$aFinallyCode}^if(!$lFinallyProcessed){$aFinallyCode}]  
+  $result[^try{^try{$aCode}{$aCatchCode}}{$lFinallyProcessed(true)$aFinallyCode}^if(!$lFinallyProcessed){$aFinallyCode}]
 
 @unsafe[aCode;aCatchCode]
 ## Выполняет код и принудительно обрабатывает все exceptions.
 ## В случае ошибки может дополнительно выполнить aCatchCode.
-  $result[^try{$aCode}{$exception.handled(true)$aCatchCode}]  
+  $result[^try{$aCode}{$exception.handled(true)$aCatchCode}]
 
 @unless[aCond;aFalseCode;aTrueCode]
 ## if наоборот.
   $result[^if(!$aCond){$aFalseCode}{$aTrueCode}]
+
+#----- Декораторы -----
+
+@decorateMethod[aFunctionName;aDecoratorFunction;aObject][locals]
+## Назначает декоратор для метода/функции
+## aFunctionName — имя функции, которую мы декорируем
+## aDecoratorFunction — ссылка на функцию-декоратор (junction, а не строка с именем)
+##   Сигнатура функции-декоратора:
+##     @wrap_function[aFunction;aArgs;aOptions]
+##       aFunction — ссылка на оригинальную функцию
+##       aArgs — аргументы с которыми фнукцию вызвали (аналогично *aArgs)
+##       aOptions.object — ссылка на объект, содержащий задекорированную функцию
+##       aOptions.functionName — имя задекорированной функции
+## aObject — контекст функции, которую мы декорируем (объект или класс; если не задан, то $self)
+  $result[]
+  $obj[^if(def $aObject){$aObject}{$self}]
+  ^if(!($obj.[$aFunctionName] is junction)){^throw[pfClass.decorate.fail;Функция $aFunctionName не найдена.]}
+  ^if(!($aDecoratorFunction is junction)){^throw[pfClass.decorate.fail;Фукция-декоратор для $aFunctionName имеет тип $aDecoratroFunction.CLASS_NAME]}
+  $wrapperName[DECORATOR_$aFunctionName_^math:uid64[]]
+  $obj.[${wrapperName}_FUNCTION][$aDecoratorFunction]
+  $obj.[${wrapperName}_ORIGINAL][^reflection:method[$obj;$aFunctionName]]
+  ^process[$obj]{@${aFunctionName}[*args]
+    ^$result[^^self.[${wrapperName}_FUNCTION][^$self.[${wrapperName}_ORIGINAL]^;^$args^;^$.object[^$self] ^$.functionName[$aFunctionName]]]
+  }
+
+@regexpDecorateMethod[aFunctionRegexp;aDecoratorFunction;aObject][locals]
+## Декорирует все функции, подпадающие под регулярное выражение.
+## aFunctionRegexp — регулярное выражение для поиска функций.
+## Остальные параметры аналогично decorateMethod.
+  $result[]
+  $obj[^if(def $aObject){$aObject}{$self}]
+  $m[^reflection:methods[$obj.CLASS_NAME]]
+  $lForeach[^reflection:method[$m;foreach]]
+  ^lForeach[k;v]{
+    ^if(^k.match[$aFunctionRegexp]){
+      ^obj.decorateMethod[$k;$aDecoratorFunction;$obj]
+    }
+  }
 
 #----- Private -----
 
@@ -161,4 +199,3 @@ pf/tests/pfAssert.p
 #@__fromString[aString]
 #@__asXML[aOptions]
 #@__fromXML[aXML;aOptions]
- 
