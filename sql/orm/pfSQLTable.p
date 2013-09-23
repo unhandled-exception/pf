@@ -168,6 +168,10 @@ pfClass
     ^addField[$k;$v]
   }
 
+@hasField[aFieldName]
+## Проверяет наличие поля в таблице
+  $result(def $aFieldName && ^_fields.contains[$aFieldName])
+
 @cleanFormData[aFormData]
 ## Возвращает хеш с полями, для которых разрешены html-виджеты.
   ^cleanMethodArgument[aFormData]
@@ -385,6 +389,22 @@ pfClass
     }
   }]
 
+@shift[aPrimaryKeyValue;aFieldName;aValue][locals]
+## Увеличивает или уменьшает значение счетчика в поле aFieldName на aValue
+## aValue(1) — положитетельное или отрицательное число
+## По-умолчанию увеличивает значение поля на единицу
+  ^pfAssert:isTrue(def $_primaryKey){Не определен первичный ключ для таблицы ${TABLE_NAME}.}
+  ^pfAssert:isTrue(def $aPrimaryKeyValue){Не задано значение первичного ключа.}
+  ^pfAssert:isTrue(^hasField[$aFieldName]){Не найдено поле "$aFieldName" в таблице.}
+  $aValue(^if(def $aValue){$aValue}{1})
+  $lFieldName[^_builder.sqlFieldName[$_fields.[$aFieldName]]]]
+  $result[^CSQL.void{
+    ^_asContext[update]{
+      update ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME]
+         set $lFieldName = $lFieldName ^if($aValue < 0){-}{+} ^_fieldValue[$_fields.[$aFieldName]](^math:abs($aValue))
+       where $PRIMARYKEY = ^_fieldValue[$_fields.[$_primaryKey];$aPrimaryKeyValue]
+    }
+  }]
 
 #----- Групповые операции с данными -----
 
@@ -415,7 +435,6 @@ pfClass
        where ^_allWhere[$aOptions]
     }
   }]
-
 
 #----- Private -----
 ## Методы с префиксом _all используются для построения частей выражений выборки.
@@ -705,7 +724,7 @@ pfClass
 ##   auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
 ##   uint, auto_uint - целое число без знака, если не задан default, то приведение делаем без значения по-умолчанию
 ##   int, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-##   double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+##   double, auto_double - целое число, если не задан default, то приведение делаем без значения по-умолчанию
 ##   bool, auto_bool - 1/0
 ##   datetime - дата и время (если нам передали дату, то делаем sql-string)
 ##   date - дата (если нам передали дату, то делаем sql-string[date])

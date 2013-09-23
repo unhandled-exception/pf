@@ -153,7 +153,7 @@ ORM-классы
      auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
      uint, auto_uint - целое число без знака, если не задан default, то приведение делаем без значения по-умолчанию
      int, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-     double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+     double, auto_double - целое число, если не задан default, то приведение делаем без значения по-умолчанию
      bool, auto_bool - 1/0
      datetime - дата и время (если нам передали дату, то делаем sql-string)
      date - дата (если нам передали дату, то делаем sql-string[date])
@@ -643,8 +643,8 @@ ORM-классы
     ^addField[dayIdent;
       $.expression{
         case
-          when cl.created_at >= "^_today.sql-string[]" then "today"
-          when cl.created_at >= date_sub("^_today.sql-string[]", interval 1 day) then "yesterday"
+          when $createdAt >= "^_today.sql-string[]" then "today"
+          when $createdAt >= date_sub("^_today.sql-string[]", interval 1 day) then "yesterday"
           else "a long time ago"
         end               
       } 

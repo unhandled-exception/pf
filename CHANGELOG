@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+23.09.2013
+  1. Новые методы pfSQLTable.hasField, pfSQLTable.shift.
+
 02.09.2013
   1. Добавил метод динамического импорта — ^import[template/name.pt] — в парсеровский шаблон для pfTemple.
 
