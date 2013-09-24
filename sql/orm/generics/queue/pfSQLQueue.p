@@ -26,6 +26,11 @@ pfSQLTable
 
   $_defaultOrderBy[$.taskID[asc]]
 
+@fetchOne[aOptions]
+## Достает из базы ровно одну задачу
+  $result[^fetch[^hash::create[$aOptions] $.limit(1)]]
+  $result[^result._at[first]]
+
 @fetch[aOptions][locals]
 ## Достает из базы задачи и сдвигает время очередной обработки.
 ## aOptions — параметры как для pfSQLTable.all
