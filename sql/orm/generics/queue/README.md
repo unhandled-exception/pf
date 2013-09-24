@@ -60,9 +60,8 @@ pfSQLQueue
             $.subject[$v.subject]
             $.text[$v.body]
           ]
+          ^queue.accept[$v.taskID]
         }
-    #   Удаляем из очереди задачи
-        ^queue.accept[$tasks]
       }{
     #    Если произошла ошибка, то ничего страшного — отправим при следующем вызове.
          $exception.handled(true)
