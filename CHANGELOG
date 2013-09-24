@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+24.09.2013
+  1. Новый класс для работы с очередью задач в MySQL — pf/sql/orm/generics/queue/pfSQLQueue.
+
 23.09.2013
   1. Новые методы pfSQLTable.hasField, pfSQLTable.shift.
 
