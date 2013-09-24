@@ -15,6 +15,8 @@ pfSQLTable
   ^BASE:create[$aTableName;$aOptions]
   ^pfAssert:isTrue($CSQL is pfMySQL)[Очередь поддерживает работу только с MySQL.]
 
+  $_defaultResultType[table]
+
   ^addFields[
     $.taskID[$.dbField[task_id] $.plural[tasks] $.primary(true) $.widget[none]]
     $.taskType[$.dbField[task_type] $.default(^aOptions.defaultTaskType.int(0)) $.processor[uint] $.label[]]
@@ -28,11 +30,11 @@ pfSQLTable
 
 @fetchOne[aOptions]
 ## Достает из базы ровно одну задачу
-  $result[^fetch[^hash::create[$aOptions] $.limit(1)]]
+  $result[^fetch[^hash::create[$aOptions] $.limit(1) $.asHash(true)]]
   $result[^result._at[first]]
 
 @fetch[aOptions][locals]
-## Достает из базы задачи и сдвигает время очередной обработки.
+## Достает из базы таблицу с задачами и сдвигает время очередной обработки.
 ## aOptions — параметры как для pfSQLTable.all
 ## aOptions.limit(1)
   ^cleanMethodArgument[]
