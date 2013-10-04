@@ -535,8 +535,12 @@ pfClass
 @_asContext[aContext;aCode][locals]
   $lOldContext[$self.__context]
   $self.__context[$aContext]
-  $result[$aCode]
-  $self.__context[$lOldContext]
+  ^try{
+    $result[$aCode]
+  }{}{
+#   Возвращаем старый контекст, даже если был exception
+    $self.__context[$lOldContext]
+  }
 
 @_buildConditions[aConds;aOP][locals]
 ## Строим выражение для сравнения
