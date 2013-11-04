@@ -34,6 +34,9 @@ pfSiteModule
   $_serveStatic(^aOptions.serveStatic.bool(false))
   $_publicPath[$_appRoot/$_publicFolder]
 
+  $_now[^date::now[]]
+  $_today[^date::today[]]
+
 
 #----- Events -----
 
