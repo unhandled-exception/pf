@@ -29,6 +29,7 @@ pfSiteModule
   $_publicFolder[^if(def $aOptions.publicFolder){$aOptions.publicFolder}{public}]
   $_viewsFolder[^if(def $aOptions.viewsFolder){$aOptions.viewsFolder}{views}]
   $templatePath[$_appRoot/$_viewsFolder]
+  ^TEMPLET.appendPath[/]
 
   $_serveStatic(^aOptions.serveStatic.bool(false))
   $_publicPath[$_appRoot/$_publicFolder]
