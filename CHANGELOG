@@ -11,6 +11,14 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+05.11.2013
+  1. Добавил в pfModule.compileModule код для совместимости с Парсером до 3.4.3, который не поддерживает
+     ключ replace в ^use.
+
+04.11.2013
+  1. Добавил в pfSiteApp переменные _today и _now.
+  2. Добавил рутовый путь для шаблонизатора в pfSiteApp.
+
 24.09.2013
   1. Новый класс для работы с очередью задач в MySQL — pf/sql/orm/generics/queue/pfSQLQueue.
 

@@ -189,7 +189,15 @@ pfClass
         ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
       }{
         ^if(def $_MODULES.[$aName].file){
-          ^use[$_MODULES.[$aName].file]
+          ^try{
+            ^use[$_MODULES.[$aName].file;$.replace(true)]
+          }{
+#           Для совместимости с парсером до 3.4.3, который не поддерживает ключ replace в use.
+            ^if($exception.type eq "parser.runtime"){
+              ^use[$_MODULES.[$aName].file]
+              $exception.handled(true)
+            }
+          }
         }
        }
       $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args $.appendSlash[$appendSlash]]]
