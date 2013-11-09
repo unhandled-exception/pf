@@ -314,6 +314,10 @@ pfClass
 @count[aConds;aSQLOptions][locals]
 ## Возвращает количество записей в таблице
   ^cleanMethodArgument[aConds;aSQLOptions]
+# Убираем из запроса параметры orderBy и having, потому что они ссылаются
+# на поля выборки, которых нет при вызове select count(*).
+# Если нужны сложные варианты используйте aggregate.
+  $aConds[^hash::create[$aConds] $.orderBy[] $.having[]]
   $result[^CSQL.int{
     ^_selectExpression[count(*)][;$aConds;$aSQLOptions]
   }[
