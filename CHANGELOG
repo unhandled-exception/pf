@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+12.11.2013
+  1. Новый класс — api/pdf/pdfkit/pfPDFKit — для генерации pdf-файлов из html'я через wkhtmltopdf.
+
 05.11.2013
   1. Добавил в pfModule.compileModule код для совместимости с Парсером до 3.4.3, который не поддерживает
      ключ replace в ^use.

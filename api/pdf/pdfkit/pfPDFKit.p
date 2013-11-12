@@ -24,7 +24,7 @@ pfClass
 
   $_stylesheets[^hash::create[]]
 
-  $_defaultOptions[
+  $_options[
     $.quiet(true)
     $.disable_smart_shrinking(false)
     $.page_size[A4]
@@ -36,7 +36,7 @@ pfClass
     $.encoding[$response:charset]
     $.output_format[pdf]
   ]
-  ^defProperty[defaultOptions]
+  ^defProperty[options]
 
   $_metaPrefix[pdfkit-]
   ^defProperty[metaPrefix]
@@ -71,7 +71,7 @@ pfClass
   $lDestFile[$aOptions.toFile]
   ^pfAssert:isTrue(-d ^file:dirname[$lDestFile]){${CLASS_NAME}: Необходимо создать папку "^file:dirname[$lDestFile]".}
 
-  $lArgs[^hash::create[$_defaultOptions]]
+  $lArgs[^hash::create[$_options]]
   ^if(def $lText){
     ^lArgs.add[^_findOptionsInMeta[$lText]]
     $lText[^_appendStylesheets[$lText]]
