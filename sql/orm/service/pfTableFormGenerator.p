@@ -2,8 +2,8 @@
 pfTableFormGenerator
 
 ## Генерирует «заготовку» формы по модели
-## Этот класс — пример написания генераторов кода и заточен под библиотеку Бутстрап
-## и мой подход к работе с шаблонами, поэтому не надо ждать от него универсаьности.
+## Этот класс — пример написания генераторов кода и заточен под библиотеку Бутстрап 2
+## и мой подход к работе с шаблонами, поэтому не надо ждать от него универсальности.
 
 ## Виджеты:
 ##   none — без виджета (пропускаем поле)
@@ -28,7 +28,7 @@ pfClass
 
 @generate[aModel;aOptions][locals]
 ## aOptions.argName
-  ^pfAssert:isTrue($aModel is pfSQLTable)[Модель должна быть наследником pfSQLTable.]
+  ^pfAssert:isTrue($aModel is pfSQLTable)[Модель "$aModel.CLASS_NAME" должна быть наследником pfSQLTable.]
   $aOptions[^hash::create[$aOptions]]
   $aOptions.argName[^if(def $aOptions.agrName){$aOptions.argName}{$_defaultArgName}]
   $result[^hash::create[]]

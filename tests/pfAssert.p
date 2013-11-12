@@ -1,13 +1,10 @@
 # PF Library
-# Units Test Suite
-# Copyright (c) 2006-2007 Oleg Volchkov
-
-#@module   Assert Class
-#@author   Oleg Volchkov <oleg@volchkov.net>
-#@web      http://oleg.volchkov.net
 
 @CLASS
 pfAssert
+
+@OPTIONS
+static
 
 #----- Static constructor -----
 
@@ -15,11 +12,6 @@ pfAssert
   $_isEnabled(true)
   $_exceptionName[assert.fail]
   $_passExceptionName[assert.pass]
-  
-#----- Constructor -----
-
-@create[]
-  ^fail[pfAssert нельзя использовать динамически.]
 
 #----- Properties -----
 
@@ -29,22 +21,25 @@ pfAssert
 @SET_enabled[aValue]
   $_isEnabled($aValue)
 
-#----- Private -----
-
 #----- Public -----
 
 @isTrue[aCondition;aComment][result]
   ^if($enabled && !$aCondition){
     ^throw[$_exceptionName;isTrue;^if(def $aComment){$aComment}{Assertion failed exception.}]
   }
-  
+
 @isFalse[aCondition;aComment][result]
   ^if($enabled && $aCondition){
     ^throw[$_exceptionName;isFalse;^if(def $aComment){$aComment}{Assertion failed exception.}]
   }
-  
+
 @fail[aComment][result]
   ^if($enabled){
+    $aComment[^switch[$aComment.CLASS_NAME]{
+      ^case[int;double;string]{$aComment}
+      ^case[date]{^aComment.sql-string[]}
+      ^case[DEFAULT]{^json:string[$aComment;$.indent(true)]}
+    }]
     ^throw[$_exceptionName;Fail;^if(def $aComment){$aComment}{Assertion failed exception.}]
   }
 
