@@ -188,6 +188,7 @@ pfAuthBase
     ^if($_secureCookie){
 		  $.secure(true)
 		}
+		$.httponly(true)
 	]
 }
   
@@ -197,5 +198,9 @@ pfAuthBase
 
 @_deleteParam[aName]
   ^if(def $aName){
-    $cookie:[$aName][$.value[] $.expires[session]]
+    $cookie:[$aName][
+      $.value[]
+      $.expires[session]
+      $.httponly(true)
+    ]
   }

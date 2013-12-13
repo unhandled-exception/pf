@@ -15,6 +15,7 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
   1. Сделал публичными методы класса pfSQLTable: fieldValue, valuesArray, sqlFieldName, asContext.
      Эти методы нужны для построения собственных условиях в наследниках _allWhere при джоинах.
      Временно оставил алиасы для совместимости со старым кодом.
+  2. Добавил $.httponly(true) при записи кук в pfAuthCookie.
 
 12.11.2013
   1. Новый класс — api/pdf/pdfkit/pfPDFKit — для генерации pdf-файлов из html'я через wkhtmltopdf.
