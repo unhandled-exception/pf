@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+17.01.2014
+  1. Добавил методы pfModule.linkFor и pfSiteModule.redirectFor.
+
 13.12.2013
   1. Сделал публичными методы класса pfSQLTable: fieldValue, valuesArray, sqlFieldName, asContext.
      Эти методы нужны для построения собственных условиях в наследниках _allWhere при джоинах.
