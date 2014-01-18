@@ -379,7 +379,7 @@ pfModule
      $aResponse.content-type[text/xml]
     }
     ^_setResponseHeaders[$aResponse]
-    $result[^untaint[optimized-xml]{$aResponse.body}]
+    $result[^untaint[xml]{$aResponse.body}]
   }
 
 @postTEXT[aResponse]
