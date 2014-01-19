@@ -135,7 +135,7 @@ pfClass
 ## aOptions.force(false) - принудительно перекомпилировать шаблон и отменить кеширование
 ## aOptions.engine[] - принудительно рендрит щаблон с помощью конкретного энжина
   ^cleanMethodArgument[]
-  $lEngine[^_findEngine[$aTemplateName;$aOptions.engine]]
+  $lEngine[^findEngine[$aTemplateName;$aOptions.engine]]
   $lTemplate[^loadTemplate[$aTemplateName;$.force($_force || $aOptions.force)]]
   $result[^lEngine.render[$lTemplate;$.vars[$aOptions.vars] $.force($_force || $aOptions.force)]]
 
@@ -174,7 +174,7 @@ pfClass
      ^throw[pfTemple.runtime;Не зарегистрирован энжин "$aEngineName".]
    }
 
-@_findEngine[aTemplateName;aEngineName][lEngineName;k;v]
+@findEngine[aTemplateName;aEngineName][lEngineName;k;v]
 ## Ищет энжин для шаблона по имени или по типу энжина.
   ^_engines.foreach[k;v]{
     ^if($k eq $aEngineName || ^aTemplateName.match[^if(def $v.pattern){$v.pattern}{$_defaultEnginePattern}][n]){
@@ -291,6 +291,9 @@ pfClass
 ## aOptions.vars[]
   ^_abstractMethod[]
 
+@applyImports[aTemplate;lClass]
+  $result[]
+
 #---------------------------------------------------------------------------------------------------
 
 
@@ -347,12 +350,12 @@ $aClassName
 }[$.file[$aTemplate.file]]
 
   $lClass[^reflection:create[$aClassName;__create__]]
-  ^_applyImports[$aTemplate;$lClass]
+  ^applyImports[$aTemplate;$lClass]
 
 # Компилируем тело шаблона в класс
   ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
 
-@_applyImports[aTemplate;lClass][lImports;lBase;lTemplateName;lImportName;lTempl]
+@applyImports[aTemplate;lClass][lImports;lBase;lTemplateName;lImportName;lTempl]
 ## Ищем и компилируем импорты
   $result[]
 
@@ -365,7 +368,7 @@ $aClassName
     ^if($lImportName eq $lTemplateName){^throw[temlate.import.fail;Нельзя импортировать шаблон "$aTemplate.path" самого в себя.]}
     $lTempl[^TEMPLE.loadTemplate[$lImportName;$.base[$lBase]]]
 
-    ^_applyImports[$lTempl;$lClass]
+    ^applyImports[$lTempl;$lClass]
   }
 
   ^process[$lClass.CLASS]{^taint[as-is][$aTemplate.body]}[$.main[__main__] $.file[$aTemplate.path]]
@@ -419,3 +422,12 @@ pfClass
 
 @include[aTemplateName;aOptions]
   $result[^__temple.render[$aTemplateName;$aOptions]]
+
+@import[aTemplateName][locals]
+  $result[]
+  $lTempl[^__temple.loadTemplate[$aTemplateName;^if(def $__FILE){$.base[^file:dirname[$__FILE]]}]]
+  $lEngine[^__temple.findEngine[$aTemplateName]]
+  ^if(def $lEngine){
+    ^lEngine.applyImports[$lTempl;$CLASS]
+  }
+  ^process[$CLASS]{^taint[as-is][$lTempl.body]}[$.main[__main__] $.file[$lTempl.path]]

@@ -15,7 +15,7 @@ pfClass
 
 @create[aOptions]
 ## Конструктор класса
-## aOptions.mountPoint[/] - место монтирования. Нужно передавать только в головной модуль, 
+## aOptions.mountPoint[/] - место монтирования. Нужно передавать только в головной модуль,
 ##                          поскольку метод assignModule будт вычислять точку монтирования самостоятельно.
 ## aOptions.parentModule - ссылка на объект-контейнер.
 ## aOptions.appendSlash(false) - нужно ли добавлять к урлам слеш.
@@ -25,23 +25,27 @@ pfClass
   $_name[$aOptions.name]
 
   $_parentModule[$aOptions.parentModule]
-  
-  $_MODULES[^hash::create[]]  
+
+  $_MODULES[^hash::create[]]
   $_mountPoint[^if(def $aOptions.mountPoint){$aOptions.mountPoint}{/}]
   $uriPrefix[$_mountPoint]
-  $_localUriPrefix[]  
+  $_localUriPrefix[]
 
-  $_router[]   
+  $_router[]
   $_appendSlash(^aOptions.appendSlash.bool(true))
 
-  $_action[]      
+  $_action[]
   $_activeModule[]
   $_request[]
+
+# Метод goTo оставлен для совместимости с очень старым кодом,
+# но может быть удален в любой момент.
+  ^alias[goTo;$redirectTo]
 
 @auto[]
   $_pfModuleCheckDotRegex[^regex::create[\.[^^/]+?/+^$][n]]
   $_pfModuleRepeatableSlashRegex[^regex::create[/+][g]]
-  
+
 #----- Properties -----
 
 @GET_mountPoint[]
@@ -50,17 +54,17 @@ pfClass
 @GET_uriPrefix[]
   $result[$_uriPrefix]
 
-@SET_uriPrefix[aUriPrefix]  
+@SET_uriPrefix[aUriPrefix]
   $_uriPrefix[^aUriPrefix.trim[right;/.]/]
   $_uriPrefix[^_uriPrefix.match[$_pfModuleRepeatableSlashRegex][][/]]
 
 @GET_localUriPrefix[]
   $result[$_localUriPrefix]
 
-@SET_localUriPrefix[aLocalUriPrefix]  
+@SET_localUriPrefix[aLocalUriPrefix]
   $_localUriPrefix[^aLocalUriPrefix.trim[right;/]]
   $_localUriPrefix[^_localUriPrefix.match[$_pfModuleRepeatableSlashRegex][][/]]
-  
+
 @GET_action[]
   $result[$_action]
 
@@ -69,7 +73,7 @@ pfClass
 
 @GET_request[]
   $result[$_request]
-  
+
 @GET_MODULES[]
   $result[$_MODULES]
 
@@ -101,32 +105,34 @@ pfClass
 
 @assignModule[aName;aOptions]
 ## Добавляет модуль aName
-## aOptions.class - имя класса
+## aOptions.class - имя класса (если не задано, то пробуем его взять из имени файла)
 ## aOptions.file - файл с текстом класса
 ## aOptions.source - строка с текстом класса (если определена, то плюем на file)
-## aOptions.compile(0) - откомпилировать модуль сразу 
+## aOptions.compile(0) - откомпилировать модуль сразу
 ## aOptions.args - опции, которые будут переданы конструктору.
 
 ## Experimental:
 ## aOptions.faсtory - метод, который будет вызван для создания модуля
-##                    Если определен, то при компиляции модуля вызывается код, 
-##                    который задан в этой переменной. Предполагается, что в качестве 
+##                    Если определен, то при компиляции модуля вызывается код,
+##                    который задан в этой переменной. Предполагается, что в качестве
 ##                    кода выступает метод, который возвращает экземпляр.
 ##                    Если определена $aOptions.args, то эта переменная будет
 ##                    передана методу в качестве единственного параметра.
 ##                    Пример:
 ##                     ^addModule[test;$.factory[$moduleFactory] $.args[test]]
-##                      
+##
 ##                     @moduleFactory[aArgs]
 ##                       $result[^pfModule::create[$aArgs]]
-##       
+##
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aName)[Не задано имя для модуля.]
   $aName[^aName.lower[]]
 
 #  Добавляем в хэш с модулями данные о модуле
    $_MODULES.[$aName][
-       $.class[$aOptions.class]
+       $.file[$aOptions.file]
+       $.source[$aOptions.source]
+       $.class[^if(!def $aOptions.class && def $aOptions.file){^file:justname[$aOptions.file]}{$aOptions.class}]
 
        ^if($aOptions.factory is junction){
          $.factory[$aOptions.factory]
@@ -136,21 +142,18 @@ pfClass
           $.hasFactory(0)
         }
 
-       $.file[$aOptions.file]
-       $.source[$aOptions.source]
-       
        $.args[^if(def $aOptions.args){$aOptions.args}{^hash::create[]} $.parentModule[$self]]
        $.object[]
-       
+
        $.isCompiled(0)
-       $.makeAction(^aOptions.makeAction.int(1))   
+       $.makeAction(^aOptions.makeAction.int(1))
        $.mountPoint[${_mountPoint}$aName/]
    ]
 
 #  Перекрываем uriPrefix, который пришел к нам в $aOptions.args.
 #  Возможно и не самое удачное решение, но позволяет сохранить цепочку.
    $_MODULES.[$aName].args.mountPoint[$_MODULES.[$aName].mountPoint]
-        
+
    ^if(^aOptions.compile.int(0)){
      ^compileModule[$aName]
    }
@@ -166,14 +169,14 @@ pfClass
         ^compileModule[$lName]
       }
       $result[$_MODULES.[$lName].object]
-    }                     
+    }
   }
 
 @compileModule[aName][lFactory]
 ## Компилирует модуль
 ## Если модуль задан не в виде ссылки на файл, а в виде строки (source),
 ## то компилируем ее, не обращая при этом, внимания на файл.
-## Если для модуля есть фабрика, то зовем именно ее. 
+## Если для модуля есть фабрика, то зовем именно ее.
   $result[]
   $aName[^aName.lower[]]
   ^if($_MODULES.[$aName]){
@@ -184,17 +187,25 @@ pfClass
       }{
          $_MODULES.[$aName].object[^lFactory[]]
        }
-      $_MODULES.[$aName].isCompiled(1)  
+      $_MODULES.[$aName].isCompiled(1)
     }{
       ^if(def $_MODULES.[$aName].source){
         ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
       }{
         ^if(def $_MODULES.[$aName].file){
-          ^use[$_MODULES.[$aName].file]
+          ^try{
+            ^use[$_MODULES.[$aName].file;$.replace(true)]
+          }{
+#           Для совместимости с парсером до 3.4.3, который не поддерживает ключ replace в use.
+            ^if($exception.type eq "parser.runtime"){
+              ^use[$_MODULES.[$aName].file]
+              $exception.handled(true)
+            }
+          }
         }
        }
       $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args $.appendSlash[$appendSlash]]]
-      $_MODULES.[$aName].isCompiled(1)  
+      $_MODULES.[$aName].isCompiled(1)
      }
   }{
      ^throw[pfModule.compile;Module "$aName" not found.]
@@ -203,17 +214,17 @@ pfClass
 @dispatch[aAction;aRequest;aOptions][lProcessed]
 ## Производим обработку экшна
 ## aAction    Действие, которое необходимо выполнить
-## aRequest   Параметры экшна      
+## aRequest   Параметры экшна
 ## aOptions.prefix
   ^cleanMethodArgument[aRequest]
   ^cleanMethodArgument[]
   $result[]
- 
+
   $lAction[^if(def $aAction){^aAction.trim[both;/.]}]
 
   $lProcessed[^processRequest[$lAction;$aRequest;$aOptions]]
   $lProcessed.action[^lProcessed.action.lower[]]
-  
+
   $_action[$lProcessed.action]
   $_request[$lProcessed.request]
 
@@ -238,25 +249,25 @@ pfClass
 @rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
 ## $result.action - новый экшн.
-## $result.args - параметры, которые надо добавить к аргументам и передать обработчику. 
+## $result.args - параметры, которые надо добавить к аргументам и передать обработчику.
 ## $result.prefix - локальный префикс, который необходимо передать диспетчеру
-## Стандартный обработчик проходит по карте преобразований и ищет подходящий шаблон, 
-## иначе возвращает оригинальный экшн. 
+## Стандартный обработчик проходит по карте преобразований и ищет подходящий шаблон,
+## иначе возвращает оригинальный экшн.
   $result[^router.route[$aAction;$.args[$aRequest]]]
   ^if(!$result){
     $result[$.action[$aAction] $.args[] $.prefix[]]
-  }                                 
+  }
   ^if(!def $result.args){$result.args[^hash::create[]]}
-    
+
 @processAction[aAction;aRequest;aLocalPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
 ## Производит вызов экшна.
-## aOptions.prefix - префикс, сформированный в processRequest.                                    
+## aOptions.prefix - префикс, сформированный в processRequest.
   $lAction[$aAction]
   $lRequest[$aRequest]
   ^if(def $aLocalPrefix){$localUriPrefix[$aLocalPrefix]}
   ^if(def $aOptions.prefix){$uriPrefix[$aOptions.prefix]}
 
-# Формируем специальную переменную $CALLER, чтобы передать текущий контекст 
+# Формируем специальную переменную $CALLER, чтобы передать текущий контекст
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
 # получить доступ к контейнеру.
 # [На самом деле у нас теперь есть свойство PARENT].
@@ -264,20 +275,20 @@ pfClass
 
 # Если у нас в первой части экшна имя модуля, то передаем управление ему
   $lModule[^_findModule[$aAction]]
-  ^if(def $lModule){  
-#   Если у нас есть экшн, совпадающий с именем модуля, то зовем его. 
+  ^if(def $lModule){
+#   Если у нас есть экшн, совпадающий с именем модуля, то зовем его.
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     $_activeModule[$lModule]
     ^if(^hasAction[$lModule]){
       $_action[^lAction.match[^^^taint[regex][$lModule] (.*)][x]{^match.1.lower[]}]
       $result[^self.[^_makeActionName[$lModule]][$lRequest]]
       $_action[$lAction]
-    }{            
+    }{
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
          $.prefix[$uriPrefix/^if(def $aLocalPrefix){$aLocalPrefix/}{$lModule/}]
-       ]]                                                  
+       ]]
      }
-  }{                          
+  }{
 #   Если модуля нет, то пытаемся найти и запустить экш из нашего модуля
 #   Если не получится, то зовем onDEFAULT, а если и это не получится,
 #   то выбрасываем эксепшн.
@@ -292,34 +303,48 @@ pfClass
 @processResponse[aResponse;aAction;aRequest;aOptions]
 ## Производит постобработку результата выполнения экшна.
   $result[$aResponse]
-     
-@linkTo[aAction;aOptions;aAnchor][lReverse]
+
+#----- Links and redirects -----
+
+@linkTo[aAction;aOptions;aAnchor][locals]
 ## Формирует ссылку на экшн, выполняя бэкрезолв путей.
-## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)     
+## aOptions - объект, который поддерживает свойство $aOptions.fields (хеш, таблица и пр.)
   ^cleanMethodArgument[]
   $lReverse[^router.reverse[$aAction;$aOptions.fields]]
   ^if($lReverse){
     $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aAnchor;$lReverse.reversePrefix]]
   }{
      $result[^_makeLinkURI[$aAction;$aOptions.fields;$aAnchor]]
-   }                                                          
+   }
 
 @redirectTo[aAction;aOptions;aAnchor]
-## Редирект на экшн. Реализация остается за программистом
+## Редирект на экшн. Реализация в потомках.
   $result[]
 
-@goTo[aAction;aOptions;aAnchor]
-## DEPRECATED!
-## Редирект на экшн. Реализация остается за программистом
-  $result[^redirectTo[$aAction;$aOptions;$aAnchor]]
-  
+@linkFor[aAction;aObject;aOptions][locals]
+## Формирует ссылку на объект
+## aObject[<hash>]
+## aOptions.form — поля, которые надо добавить к объекту/маршруту
+## aOptions.anchor — «якорь»
+  ^cleanMethodArgument[]
+  $lReverse[^router.reverse[$aAction;$aObject;$.form[$aOptions.form] $.onlyPatternVars(true)]]
+  ^if($lReverse){
+    $result[^_makeLinkURI[$lReverse.path;$lReverse.args;$aOptions.anchor;$lReverse.reversePrefix]]
+  }{
+     $result[^_makeLinkURI[$aAction;$aOptions.form;$aAnchor]]
+   }
+
+@redirectFor[aAction;aObject;aOptions]
+## Редирект на объект. Реализация в потомках.
+  $result[]
+
 #----- Private -----
-   
+
 @_makeLinkURI[aAction;aOptions;aAnchor;aPrefix]
 ## Формирует url для экшна
-## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor 
+## $uriPrefix$aAction?aOptions.foreach[key=value][&]#aAnchor
   ^cleanMethodArgument[]
-  ^if(def $aAction){$aAction[^aAction.trim[both;/.]]} 
+  ^if(def $aAction){$aAction[^aAction.trim[both;/.]]}
 
   $result[${uriPrefix}^if(def $aPrefix){^aPrefix.trim[both;/]/}{^if(def $localUriPrefix){$localUriPrefix/}}^if(def $aAction){^taint[uri][$aAction]^if($_appendSlash){/}}]
   ^if($_appendSlash && def $result && ^result.match[$_pfModuleCheckDotRegex]){$result[^result.trim[end;/]]}
@@ -340,15 +365,15 @@ pfClass
   }{
      $result[onINDEX]
    }
-  
+
 @_makeSpecialName[aStr][lFirst]
-## Возвращает aStr в которой первая буква прописная    
+## Возвращает aStr в которой первая буква прописная
   $lFirst[^aStr.left(1)]
-  $result[^lFirst.upper[]^aStr.mid(1)] 
+  $result[^lFirst.upper[]^aStr.mid(1)]
 
 @_findModule[aAction][k;v]
 ## Ищет модуль по имени экшна
-  $result[]     
+  $result[]
   ^if(def $aAction){
     ^_MODULES.foreach[k;v]{
       ^if(^aAction.match[^^^taint[regex][$k] (/|^$)][ixn]){

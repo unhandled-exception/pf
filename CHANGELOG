@@ -2,13 +2,126 @@ PF Library
 Copyright (c) Oleg Volchkov
 -------------------------------------
 
-CHANGELOG
+Changelog
 =========
 
-Основной репозиторий: http://code.volchkov.net/parser3-pf/src
+hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
+Веб-интерфейс репозитория: http://code.volchkov.net/parser3-pf/src
 
 1.0
 ---
+
+18.01.2014
+  1. В pfSiteModule.postXML теперь для тела ответа делается untaint[xml] (раньше был optimized-xml).
+     Если в каком-то месте нужно старое поведение, то выполните untaint явно перед возвратом тела из экшна.
+
+17.01.2014
+  1. Добавил методы pfModule.linkFor и pfSiteModule.redirectFor.
+
+13.12.2013
+  1. Сделал публичными методы класса pfSQLTable: fieldValue, valuesArray, sqlFieldName, asContext.
+     Эти методы нужны для построения собственных условиях в наследниках _allWhere при джоинах.
+     Временно оставил алиасы для совместимости со старым кодом.
+  2. Добавил $.httponly(true) при записи кук в pfAuthCookie.
+
+12.11.2013
+  1. Новый класс — api/pdf/pdfkit/pfPDFKit — для генерации pdf-файлов из html'я через wkhtmltopdf.
+
+05.11.2013
+  1. Добавил в pfModule.compileModule код для совместимости с Парсером до 3.4.3, который не поддерживает
+     ключ replace в ^use.
+
+04.11.2013
+  1. Добавил в pfSiteApp переменные _today и _now.
+  2. Добавил рутовый путь для шаблонизатора в pfSiteApp.
+
+24.09.2013
+  1. Новый класс для работы с очередью задач в MySQL — pf/sql/orm/generics/queue/pfSQLQueue.
+
+23.09.2013
+  1. Новые методы pfSQLTable.hasField, pfSQLTable.shift.
+
+02.09.2013
+  1. Добавил метод динамического импорта — ^import[template/name.pt] — в парсеровский шаблон для pfTemple.
+
+28.08.2013
+  1. Добавил базовую версию класса-генератора контролера для модели (sql/orm/service/pfTableControllerGenerator).
+
+27.08.2013
+  1. Добавил поддержку полей с ip-адресами в pfTableModelGenerator. Для них генерируется выражение с inet_ntoa.
+
+21.08.2013
+  1. Мелкая оптимизация: заменил внутри pfSQLBuilder вызовы метода quoteIdentifier на прямое использование $_quote.
+  2. Процессор json в pfSQLBuilder возвращает null, если не задано значение.
+
+13.08.2013
+  1. Добавил опцию asHashOn[fieldName] в pfSQLTable.all.
+
+10.08.2013
+  1. Перенес класс pfSQLBuilder в файл sql/orm/pfSQLTable.p.
+
+22.05.2013
+  1. В pfTableModelGenerator добавил $.label и $.widget для полей.
+  2. Поправил ошибки в «декораторах» pfClass.decorateMethod и pfClass.regexpDecorateMethod.
+
+16.05.2013
+  1. Добавил в pfClass методы для добавления декораторов функциям:
+      @decorateMethod[aFunctionName;aDecoratorFunction;aObject][locals]
+      ## Назначает декоратор для метода/функции
+      ## aFunctionName — имя функции, которую мы декорируем
+      ## aDecoratorFunction — ссылка на функцию-декоратор (junction, а не строка с именем)
+      ##   Сигнатура функции-декоратора:
+      ##     @wrap_function[aFunction;aArgs;aOptions]
+      ##       aFunction — ссылка на оригинальную функцию
+      ##       aArgs — аргументы с которыми фнукцию вызвали (аналогично *aArgs)
+      ##       aOptions.object — ссылка на объект, содержащий задекорированную функцию
+      ##       aOptions.functionName — имя задекорированной функции
+      ## aObject — контекст функции, которую мы декорируем (объект или класс; если не задан, то $self)
+
+      @regexpDecorateMethod[aFunctionRegexp;aDecoratorFunction;aObject][locals]
+      ## Декорирует все функции, подпадающие под регулярное выражение.
+      ## aFunctionRegexp — регулярное выражение для поиска функций.
+      ## Остальные параметры аналогично decorateMethod.
+
+20.04.2013
+  1. Добавил несколько новых опций в pfCFile, исправил ошибку при обработке параметра $.compressed d pfCFile:load.
+
+15.04.2013
+  1. В pfTableModelGenerator для первичных ключей без авто-инкремента в описание поля добавляется атрибут $.sequence(false).
+
+02.04.2013
+  1. Добавил процессор uint в pfSQLBuilder, добавил в генератор модели обработку атрибута unsigned.
+     Если в ваших моделях первичные ключи беззнаковые целые, то лучше поменять для них процессор на uint.
+
+26.03.2013
+  1. Добавил метод вычисления расстояния Левенштейна — pfString:levenshteinDistance.
+
+18.03.2013
+  1. Добавил возможность задать алиасы полям, при использовании в методе pfSQLTable.aggregate псевдофункции _fields.
+     Т.е. можно написать: ^t.aggregate[_fields(field_1 as field1)].
+  2. Добавил в pfSQLTable оператор range (!range) для проверки вхождения значения поля в диапазон при выборках.
+
+31.01.2013
+  1. Исправил ошибку в классе pfSQLTable: в метод __allSelectFieldsExpression не передавался resultType,
+     а это приводило к потере первичного ключа при выборке в хеш.
+  2. Новый метод pfSQLTable.newOrModify.
+
+30.01.2013
+  1. Добавил поле widget для полей модели в pfSQLTable.
+  2. Написал генератор html-форм по модели — pfTableFormGenerator.
+     [Этот класс не более чем пример генератора кода. :)]
+  3. Новый метод — pfSQLTable.cleanFormData.
+
+28.01.2013
+  1. Добавил поле pfSQLBuilder.TABLE_EXPRESSION с полным именем таблицы и алиасом для подстановки
+     в выражения.
+
+21.01.2013
+  1. Добавил поддержку схемы БД в pfTableModelGenerator.
+
+11.01.2013
+  1. pfSQLBuilder: процессоры date, time, datetime при отсутствии значения возвращают null.
+  2. pfSQLBuilder: переписал код округления числа для процессора double.
 
 11.12.2012
   1. Добавил класс для генерации класса-моедли по данным DDL из БД — sql/orm/service/pfTableModelGenerator.

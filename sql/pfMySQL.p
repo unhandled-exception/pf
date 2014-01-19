@@ -35,11 +35,19 @@ pfSQL
 @commit[aOptions]
 ## Комитит транзакцию.
   $result[]
-  ^void{commit}  
+  ^void{commit}
   ^if(!$isNaturalTransactions){
     ^void{set autocommit=1}
   }
-    
+
+@rollback[aOptions]
+## Откатывает транзакцию.
+  $result[]
+  ^void{rollback}
+  ^if(!$isNaturalTransactions){
+    ^void{set autocommit=1}
+  }
+
 #--- DATE functions ---
 
 @today[]
@@ -116,5 +124,4 @@ pfSQL
       ^throw[pfMySQL;Unknown join type '$sType']
     }
   }
-  
-  
+

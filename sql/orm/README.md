@@ -38,7 +38,7 @@ ORM-классы
       `name` VARCHAR(200) NULL ,
       `is_active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 ,
       PRIMARY KEY (`id`) ,
-      UNIQUE INDEX `login_unique` (`login` ASC) );
+      UNIQUE INDEX `name_unique` (`name` ASC) );
 
 У нас есть клиенты (clients) и менеджеры (`auth_users`), которые работают с клиентом (`clients_to_users`). У клиента может быть несколько менеджеров одновременно.
 
@@ -54,7 +54,7 @@ ORM-классы
       ^BASE:create[clients;aOptions]
       $_tableAlias[c]
                                     
-      ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+      ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
       ^addField[address]
@@ -75,7 +75,7 @@ ORM-классы
 Если не нравится «батарея» методов addField, то можно записать описание полей чуть короче:
 
     ^addFields[
-      $.clientID[$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+      $.clientID[$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
       $.title[$.default[__ Новый клиент __]]
       $.phone[]
       $.address[]
@@ -118,7 +118,7 @@ ORM-классы
       $client[^ct.get[$clientID]]
                                 
     # Метод get возвращает хеш со всеми полями, которые мы задали через метод addField
-      $client.title - $client.url - $client.phone - $client.createdAt - $client.updated_at
+      $client.title - $client.url - $client.phone - $client.createdAt - $client.updatedAt
                                 
     # Если нам надо удалить клиента, 
     # то вызываем метод ^ct.delete[$clientID]
@@ -137,12 +137,12 @@ ORM-классы
 
 В нашей табличке есть четыре поля с процессорами:
 
-    ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[int]]
+    ^addField[clientID;$.dbField[client_id] $.plural[clients] $.primary(true) $.processor[uint]]
     ^addField[title;$.default[__ Новый клиент __]]
     ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
     ^addField[updatedAt;$.dbField[updated_at] $.processor[auto_now]]
 
-Поле clientID первичный целочисленный ключ (`auto_increment`) и для него мы задаем процессор «int», т.е. преобразование значения в целое число. Для поля title не задан процессор, но задано значение по-умолчанию (default), которое подставляется если поле не определено. Для полей createdAt и updatedAt заданы процессоры auto_now, которые подставляют в поле текущие дату и время, если явно не задано значение поля. Поскольку поле createdAt не надо менять при обновлении записи, то для него мы задали параметр $.skipOnUpdate(true) (есть еще ключик skipOnInsert, который отменяет изменение поля при вставке записи — его можно было использовать для поля updatedAt, если мы хотим при создании новой записи получить значение null в поле `updated_at`).
+Поле clientID первичный целочисленный ключ (`auto_increment`) и для него мы задаем процессор «uint», т.е. преобразование значения в целое число без знака. Для поля title не задан процессор, но задано значение по-умолчанию (default), которое подставляется если поле не определено. Для полей createdAt и updatedAt заданы процессоры auto_now, которые подставляют в поле текущие дату и время, если явно не задано значение поля. Поскольку поле createdAt не надо менять при обновлении записи, то для него мы задали параметр $.skipOnUpdate(true) (есть еще ключик skipOnInsert, который отменяет изменение поля при вставке записи — его можно было использовать для поля updatedAt, если мы хотим при создании новой записи получить значение null в поле `updated_at`).
 
 Мы можем передать методу modify обект date — `^ct.modify[$.updatedAt[^date::now[]]]` — и класс автоматически вызовет метод sql-date при подстановке значения поля в запрос. Процессоры с префиксом auto_ «умеют» подставлять осмысленные данные, если не задано значение поля.
 
@@ -151,8 +151,9 @@ ORM-классы
 Стандартные процессоры:
 
      auto_default - если не задано значение, то возвращает field.default (поведение по-умолчанию)
-     int, auto_bool - целое число, если не задан default, то приведение делаем без значения по-умолчанию
-     double, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+     uint, auto_uint - целое число без знака, если не задан default, то приведение делаем без значения по-умолчанию
+     int, auto_int - целое число, если не задан default, то приведение делаем без значения по-умолчанию
+     double, auto_double - целое число, если не задан default, то приведение делаем без значения по-умолчанию
      bool, auto_bool - 1/0
      datetime - дата и время (если нам передали дату, то делаем sql-string)
      date - дата (если нам передали дату, то делаем sql-string[date])
@@ -219,6 +220,15 @@ ORM-классы
     $.[clientID is][] => client_id is null
     $.[clientID is][12345] => client_id is not null
 
+Если нам надо проверить входит ли значение поля в некоторый диапазон, то используем оператор range, который формирует sql-выражение between. Значением может быть хеш или объект с полями from и to. Диапазо открытый, т.е. границы проверяются на <= и >=.
+
+    # select from clients where created_at between "2000-01-01" and "2012-03-18"
+      $.[createdAt range][$.from["2000-01-01"] $.to[$_today]]
+      
+    # Негативная проверка
+    # select from clients where not(created_at between "2000-01-01" and "2012-03-18")
+      $.[createdAt !range][$.from["2000-01-01"] $.to[$_today]]
+
 Если мы хотим одновременно проверить на равенство несколько значений (множество), то можно воспользоваться оператором in:
 
     # select ... from clients where client_id in (13, 14, 25)
@@ -228,12 +238,16 @@ ORM-классы
     # select ... from clients where client_id not in (13, 14, 25)
       ^ct.all[$.[clientID !in][13,14,25]]
 
-
 В качестве значения поля для оператора in могут выступать строкы, хеш или таблица. Строка должна быть в csv-формате: значения разделяются запятыми, а в качестве ограничителей можно использовать двойные кавычки (если значение содержит кавычки то их надо удвоить; пример: `слово, "два слова", "слово, запятая", "фраза ""с кавычками"""`). Если значение поля хеш, то в качестве значений используются ключи хеша. Для таблиц имя колонки должно соответствовать имени поля, но можно задать произвольное название колонки, указав параметр с именем поля и суффиксом «Column», которое содержит название колонки с данными. Хеши и таблицы удобно использовать для подстановки результатов других выборок (подробности описаны ниже).
 
       ^ct.all[$.[clientID in][$.13[] $.14[] $.15[]]]
       ^ct.all[$.[clientID in][^table::{clientID ...}]]
       ^ct.all[$.[clientID in][^table::{id ...}] $.clientIDColumn[id]]
+
+Для того чтобы записать несколько условий с одним и тем же оператором добавьте после любой идентификатор, например число:
+
+     $.[clientID != (1)][15]
+     $.[clientID != (2)][12]
 
 ### Сортировка результата
 
@@ -284,8 +298,8 @@ ORM-классы
         $.allAsTable(true)
         $.tableAlias[cu]
       ]
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[int]]
-      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[uint]]
+      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[uint]]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
 
 В этой табличке у нас составной первичный ключ, поэтому мы не указываем ни одному полю ключ primary. В конструкторе базового класса указываем, что возвращать результаты метод all будет в виде таблицы (хеш без уникального первичного ключа построить не получится). Для этой таблички не будет работать методы get, modify и delete, но вместо них можно использовать one, modifyAll и deleteAll.
@@ -399,8 +413,8 @@ ORM-классы
         $.tableAlias[cu]
       ]
                               
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[int]]
-      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.processor[uint]]
+      ^addField[userID;$.plural[users] $.dbField[user_id] $.processor[uint]]
       ^addField[createdAt;$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true)]
       ^addField[name;$.fieldExpression[au.name]]
       ^addField[isActive;$.fieldExpression[au.is_active] $.processor[bool]]
@@ -436,7 +450,7 @@ ORM-классы
         $.tableAlias[c]
       ]
                                               
-      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.primary(true) $.processor[int]]
+      ^addField[clientID;$.plural[clients] $.dbField[client_id] $.primary(true) $.processor[uint]]
       ^addField[title;$.default[__ Новый клиент __]]
       ^addField[phone]
       ^addField[address]
@@ -507,10 +521,13 @@ ORM-классы
 
 Писать каждый раз имена полей и алиасы не очень удобно, но можно сильно упростить работу, воспользовавшись встроенной функцией `_fields`. Тогда запрос на выборку двух полей будет короче:
 
-    # Табличка с полями clientID/title.
+    # Табличка с полями clientID/title
       ^ct.aggregate[_fields(clientID, title)]
+
+    # Полям можно задать алиасы
+      ^ct.aggregate[_fields(clientID, title as Title)]
       
-    # Если нам надо получить все поля, то вместо имен указывааем звездочку:
+    # Если нам надо получить все поля, то вместо имен указывааем звездочку
       ^ct.aggregate[_fields(*)]
       
     # А теперь добавим поле с названием клиента в верхнем регистре
@@ -529,7 +546,7 @@ ORM-классы
     @create[aTableName;aOptions]
       ^BASE:create[$aTableName;$aOptions]
                                       
-      ^addField[id;$.primary(true) $.processor[int]]
+      ^addField[id;$.primary(true) $.processor[uint]]
       ...
       ^addField[isActive;$.dbField[is_active] $.processor[bool] $.default(1)]
                                       
@@ -626,8 +643,8 @@ ORM-классы
     ^addField[dayIdent;
       $.expression{
         case
-          when cl.created_at >= "^_today.sql-string[]" then "today"
-          when cl.created_at >= date_sub("^_today.sql-string[]", interval 1 day) then "yesterday"
+          when $createdAt >= "^_today.sql-string[]" then "today"
+          when $createdAt >= date_sub("^_today.sql-string[]", interval 1 day) then "yesterday"
           else "a long time ago"
         end               
       } 

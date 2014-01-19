@@ -188,6 +188,8 @@ pfModule
   ^if(!^lVars.contains[ACTION]){$lVars.ACTION[$action]}
   ^if(!^lVars.contains[linkTo]){$lVars.linkTo[$linkTo]}
   ^if(!^lVars.contains[redirectTo]){$lVars.redirectTo[$redirectTo]}
+  ^if(!^lVars.contains[linkFor]){$lVars.linkFor[$linkFor]}
+  ^if(!^lVars.contains[redirectFor]){$lVars.redirectFor[$redirectFor]}
 
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
     $.vars[$lVars]
@@ -209,6 +211,12 @@ pfModule
 
 @redirectTo[aAction;aOptions;aAnchor;aIsPermanent]
   ^throw[^if(^aIsPermanent.bool(false)){$_permanentRedirectExceptionName}{$_redirectExceptionName};$action;^if(^aAction.match[^^https?://][n]){$aAction}{^linkTo[$aAction;$aOptions;$aAnchor]}]
+
+@redirectFor[aAction;aObject;aOptions]
+## aOptions - аналогично linkFor
+## aOptions.permanent(false)
+  ^cleanMethodArgument[]
+  ^throw[^if(^aOptions.permanent.bool(false)){$_permanentRedirectExceptionName}{$_redirectExceptionName};$action;^if(^aAction.match[^^https?://][n]){$aAction}{^linkFor[$aAction;$aObject;$aOptions]}]
 
 
 #----- Методы менеджера -----
@@ -371,7 +379,7 @@ pfModule
      $aResponse.content-type[text/xml]
     }
     ^_setResponseHeaders[$aResponse]
-    $result[^untaint[optimized-xml]{$aResponse.body}]
+    $result[^untaint[xml]{$aResponse.body}]
   }
 
 @postTEXT[aResponse]

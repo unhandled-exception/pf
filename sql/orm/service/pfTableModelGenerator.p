@@ -10,6 +10,8 @@ pf/tests/pfAssert.p
 pfClass
 
 @create[aTableName;aOptions]
+## aOptions.sql
+## aOptions.schema
   ^cleanMethodArgument[]
   ^pfAssert:isTrue($aOptions.sql is pfMySQL)[Не задан объект дл доступа к СУБД.]
   ^BASE:create[]
@@ -17,8 +19,9 @@ pfClass
   $_sql[$aOptions.sql]
   ^defReadProperty[CSQL;_sql]
 
+  $_schema[$aOptions.schema]
   $_tableName[$aTableName]
-  ^if(!def $_tableName || !^CSQL.table{show tables like "$_tableName"}){
+  ^if(!def $_tableName || !^CSQL.table{show tables ^if(def $_schema){from `$_schema`} like "$_tableName"}){
     ^throw[table.not.found]
   }
 
@@ -26,7 +29,7 @@ pfClass
 
 @_getFields[][locals]
   $result[^hash::create[]]
-  $lDDL[^CSQL.table{describe `$_tableName`}]
+  $lDDL[^CSQL.table{describe ^if(def $_schema){`$_schema`.}`$_tableName`}]
   $lHasPrimary(^lDDL.select($lDDL.Key eq "PRI") == 1)
   $self._primary[]
 
@@ -36,16 +39,11 @@ pfClass
 
     ^if($lDDL.Field ne $lName){$lData.dbField[$lDDL.Field]}
 
-    ^if($lDDL.Key eq "PRI" && $lHasPrimary){
-      $lData.primary(true)
-      $self._primary[$lName]
-    }
-
     $lType[^_parseType[$lDDL.Type]]
     ^switch[^lType.type.lower[]]{
-      ^case[int;integer;smallint;mediumint]{$lData.processor[int]}
+      ^case[int;integer;smallint;mediumint]{$lData.processor[^if($lType.unsigned){uint}{int}]}
       ^case[tinyint]{
-        $lData.processor[$lType.format]
+        $lData.processor[^if($lType.unsigned){uint}{int}]
         ^if(^lType.format.int(0) == 1
             || ^lDDL.Field.pos[is_] == 0){
           $lData.processor[bool]
@@ -63,12 +61,37 @@ pfClass
       ^case[time]{$lData.processor[time]}
     }
 
+    ^if($lDDL.Key eq "PRI" && $lHasPrimary){
+      $lData.primary(true)
+      $self._primary[$lName]
+      ^if(!^lDDL.Extra.match[auto_increment][in]){
+        $lData.sequence(false)
+      }
+      $lData.widget[none]
+    }
+
     ^if($lName eq "createdAt"){
       $lData.processor[auto_now]
       $lData.skipOnUpdate(true)
+      $lData.widget[none]
     }
     ^if($lName eq "updatedAt"){
       $lData.processor[auto_now]
+      $lData.widget[none]
+    }
+    ^if($lName eq "isActive"){
+      $lData.widget[none]
+    }
+    ^if(^lName.match[IP^$][n] || $lName eq "ip"){
+      ^if(!def $lData.dbField){
+        $lData.dbField[$lName]
+      }
+      $lData.processor[inet_ip]
+      $lData.expression[inet_ntoa(^^_builder.quoteIdentifier[^$TABLE_ALIAS].^^_builder.quoteIdentifier[$lData.dbField])]
+    }
+
+    ^if(!def $lData.widget){
+      $lData.label[]
     }
 
     $result.[$lName][$lData]
@@ -81,18 +104,23 @@ pfClass
     $result.type[$match.1]
     $result.format[^match.2.trim[both;()]]
     $result.options[$match.3]
+    ^if(^result.options.match[unsigned][in]){
+      $result.unsigned(true)
+    }
   }
 
 @_makeName[aName]
   $aName[^aName.lower[]]
   $result[^aName.match[_(\w)][g]{^match.1.upper[]}]
   $result[^result.match[Id^$][][ID]]
+  $result[^result.match[Ip^$][][IP]]
 
 @generate[aOptions]
   ^cleanMethodArgument[]
   $result[
   ^@CLASS
   ${_tableName}
+  # Table ^if(def $_schema){`$_schema`.}`$_tableName`
 
   ^@USE
   pf/sql/orm/pfSQLTable.p

@@ -179,7 +179,7 @@ pfString
 
 @stripHTMLTags[aText]
 ## Удаляет из текста все HTML-теги.
-  $result[^aText.match[<\/?[a-z0-9]+(?:\s+(?:[a-z]+(=(?:(?:\'[^^\']*\')|(?:\"[^^\"]*\")|(?:[0-9@\-_a-z:\/?&=\.]+)))?)?)*\/?>][gi][]]
+  $result[^aText.match[<\/?[a-z0-9]+(?:\s+(?:[a-z0-9\_\-]+\s*(?:=(?:(?:\'[^^\']*\')|(?:\"[^^\"]*\")|(?:[0-9@\-_a-z:\/?&=\.]+)))?)?)*\/?>][gi][]]
 
 @dec2bin[iNum;iLength][i]
 ## Преобразует число в двоичную строку. 5 -> '101'
@@ -189,10 +189,10 @@ pfString
 
 @unEscape[aText]
   $result[^aText.replace[^table::create{from	to
-+	 
-%20	 
-%D0	
-%D1	
++	^#20
+%20	^#20
+%D0	^rem{empty}
+%D1	^rem{empty}
 %B0	а
 %B1	б
 %B2	в
@@ -227,3 +227,45 @@ pfString
 %8E	ю
 %8F	я}]]
 
+@levenshteinDistance[aStr1;aStr2][locals]
+## Вычисляет расстояние Левенштейна между двумя строками.
+## Алгоритм потребляет очень много памяти, поэтому его лучше использовать
+## на коротких строках (до 15-20 символов).
+  $result(0)
+
+  ^if(^aStr1.length[] > ^aStr2.length[]){
+#   Make sure n <= m, to use O(min(n,m)) space
+    $lStr1[$aStr2]
+    $lStr2[$aStr1]
+  }{
+     $lStr1[$aStr1]
+     $lStr2[$aStr2]
+   }
+  $n(^lStr1.length[])
+  $m(^lStr2.length[])
+
+  ^if($n > 0 && $m > 0){
+#   Keep current and previous row, not entire matrix
+    $current_row[^hash::create[]]
+    ^for[i](0;$n){
+      $current_row.[$i]($i)
+    }
+    ^for[i](1;$m){
+      $previous_row[$current_row]
+      $current_row[^hash::create[]]
+      $current_row.0($i)
+      ^for[j](1;$n){
+        $add($previous_row.[$j] + 1)
+        $delete($current_row.[^eval($j - 1)] + 1)
+        $change($previous_row.[^eval($j - 1)])
+        ^if(^lStr1.mid($j - 1;1) ne ^lStr2.mid($i - 1;1)){
+          ^change.inc[]
+        }
+        $lTemp(^if($add < $delete){$add}{$delete})
+        $current_row.[$j](^if($lTemp < $change){$lTemp}{$change})
+      }
+    }
+    $result($current_row.[$n])
+  }{
+     $result(^math:abs($n - $m))
+   }
