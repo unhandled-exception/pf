@@ -26,36 +26,36 @@ pfClass
   ^defReadProperty[contentType]
 
 # Переменные с моделями, но они нужны только для работы свойств
-  $__tags[$aOptions.tagsModel]
-  $__items[$aOptions.itemsModel]
-  $__counters[$aOptions.countersModel]
+  $_tags[$aOptions.tagsModel]
+  $_items[$aOptions.itemsModel]
+  $_counters[$aOptions.countersModel]
 
 @GET_tags[]
-  ^if(!def $__tags){
-    $__tags[^pfSQLCTTagsModel::create[${_tablesPrefix}tags;
+  ^if(!def $_tags){
+    $_tags[^pfSQLCTTagsModel::create[${_tablesPrefix}tags;
       $.sql[$CSQL]
       $.tagging[$self]
     ]]
   }
-  $result[$__tags]
+  $result[$_tags]
 
 @GET_items[]
-  ^if(!def $__items){
-    $__items[^pfSQLCTItemsModel::create[${_tablesPrefix}tags_items;
+  ^if(!def $_items){
+    $_items[^pfSQLCTItemsModel::create[${_tablesPrefix}tags_items;
       $.sql[$CSQL]
       $.tagging[$self]
     ]]
   }
-  $result[$__items]
+  $result[$_items]
 
 @GET_counters[]
-  ^if(!def $__counters){
-    $__counters[^pfSQLCTCountersModel::create[${_tablesPrefix}tags_counters;
+  ^if(!def $_counters){
+    $_counters[^pfSQLCTCountersModel::create[${_tablesPrefix}tags_counters;
       $.sql[$CSQL]
       $.tagging[$self]
     ]]
   }
-  $result[$__counters]
+  $result[$_counters]
 
 #----- Таблички в БД -----
 
@@ -76,9 +76,9 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.tagID[$.dbField[tag_id] $.processor[uint] $.primary(true) $.widget[none]]
-    $.parentID[$.dbField[parent_id] $.processor[uint] $.label[]]
-    $.threadID[$.dbField[thread_id] $.processor[uint] $.label[]]
+    $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.primary(true) $.widget[none]]
+    $.parentID[$.dbField[parent_id] $.plural[parents] $.processor[uint] $.label[]]
+    $.threadID[$.dbField[thread_id] $.plural[threads] $.processor[uint] $.label[]]
     $.title[$.label[]]
     $.slug[$.label[]]
     $.description[$.label[]]
@@ -88,7 +88,16 @@ pfSQLTable
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
 
-  $_defaultOrderBy[$.tagID[asc]]
+  $_defaultOrderBy[$.sortOrder[asc] $.title[asc] $.tagID[asc]]
+
+  $_transliter[]
+
+@GET_transliter[]
+  ^if(!def $_transliter){
+    ^use[pf/wiki/pfURLTranslit.p]
+    $_transliter[^pfURLTranslit::create[]]
+  }
+  $result[$_transliter]
 
 @delete[aTagID]
   $result[^modify[$aTagID;$.isActive(false)]]
@@ -114,9 +123,9 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.processor[uint] $.label[]]
-    $.tagID[$.dbField[tag_id] $.processor[uint] $.label[]]
-    $.contentID[$.dbField[content_id] $.processor[uint] $.label[]]
+    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[uint] $.default[$_tagging.contentType] $.label[]]
+    $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
+    $.contentID[$.dbField[content_id] $.plural[content] $.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
@@ -139,8 +148,8 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.processor[int] $.label[]]
-    $.tagID[$.dbField[tag_id] $.processor[uint] $.label[]]
+    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[int] $.label[]]
+    $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
     $.count[$.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
