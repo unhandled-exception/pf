@@ -9,7 +9,7 @@ pfClass
 
 @create[aOptions]
 ## aOptions.sql - ссылка на sql-класс.
-## aOptions.tagsSeparator[] - регулярное выражение для разделителя тегов
+## aOptions.tagsSeparator[,] - разделитель тегов
 ## aOptions.contentType(0) - стандартный content_type_id
 ## aOptions.tablesPrefix
 ## aOptions.tagsModel
@@ -21,6 +21,7 @@ pfClass
   ^defReadProperty[CSQL]
 
   $_tablesPrefix[$aOptions.tablesPrefix]
+  $_tagsSeparator[^if(def $aOptions.tagsSeparator){$aOptions.tagsSeparator}{,}]
 
   $_contentType[^aOptions.contentType.int(0)]
   ^defReadProperty[contentType]
@@ -57,7 +58,7 @@ pfClass
   }
   $result[$_counters]
 
-@tagging[aContent;aTags;aOptions][locals]
+@assignTags[aContent;aTags;aOptions][locals]
 ## Тегирует контент (можно протегировать сразу много объектов по куче тегов)
 ## aContent — string|int|hash|table. Для хеша id берем из ключа, для таблицы из колонки.
 ## aOptions.contentTableColumn[contentID] — имя колонки в таблице с контентом, содержащее ID
@@ -67,6 +68,51 @@ pfClass
 ## aOptions.contentType
 ## TODO:
 ## aOptions.appendParents(false) - добавить родительские теги
+  ^cleanMethodArgument[]
+  ^CSQL.naturalTransaction{
+    $lTags[$aTags]
+    ^if($aTags is string){
+#     Если передали строку, то достаем из нее теги и добавляем, при необходимости
+      $lTags[^hash::create[]]
+      $lAllTags[^tags.all[]]
+      $lTagsParts[^aTags.split[$_tagsSeparator;lv;title]]
+      ^lTagsParts.foreach[k;v]{
+        $lTagTitle[^tags.normalizeString[$v.title]]
+        ^if(^lAllTags.locate[title;$lTagTitle]){
+          $lTags.[$lAllTags.tagID][$lAllTags.title]
+        }{
+           $lNewTagID[^tags.new[^tags.assignSlug[$.title[$lTagTitle]]]]
+           $lTags.[$lNewTagID][$lTagTitle]
+         }
+      }
+    }
+
+    $lContentType[^aOptions.contentType.int($_contentType)]
+    ^if(!def $aOptions.mode || $aOptions.mode eq "new"){
+#     Удаляем старые связи тегов и контента
+      ^content.deleteAll[
+        $.[contentID in][$aContent]
+        $.contentType[$lContentType]
+      ]
+    }
+    ^lTags.foreach[lTagID;lTagTitle]{
+#     Тегируем контент
+      ^switch[$aContent.CLASS_NAME]{
+        ^case[table;hash]{^throw[not.implemented]}
+        ^case[string;int]{
+          ^content.newOrModify[
+            $.tagID[$lTagID]
+            $.contentID[$aContent]
+            $.contentType[$lContentType]
+          ;
+            $.ignore(true)
+          ]
+        }
+      }
+    }
+  }
+
+  ^counters.recount[]
 
 
 #----- Таблички в БД -----
@@ -91,7 +137,7 @@ pfSQLTable
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.primary(true) $.widget[none]]
     $.parentID[$.dbField[parent_id] $.plural[parents] $.processor[uint] $.label[]]
     $.threadID[$.dbField[thread_id] $.plural[threads] $.processor[uint] $.label[]]
-    $.title[$.label[]]
+    $.title[$.label[] $.processor[tag_title]]
     $.slug[$.label[]]
     $.description[$.label[]]
     $.sortOrder[$.dbField[sort_order] $.processor[int] $.label[]]
@@ -117,6 +163,29 @@ pfSQLTable
 @restore[aTagID]
   $result[^modify[$aTagID;$.isActive(true)]]
 
+@fieldValue[aField;aValue]
+  ^if($aField is string){
+    $aField[$_fields.[$aField]]
+  }
+  $result[^switch[$aField.processor]{
+    ^case[tag_title]{"^taint[^normalizeString[$aValue]]"}
+    ^case[DEFAULT]{^BASE:fieldValue[$aField;$aValue]}
+  }]
+
+@normalizeString[aString]
+  $result[^aString.match[\s+][g][ ]]
+  $result[^result.trim[]]
+  $result[^result.lower[]]
+
+@assignSlug[aData][locals]
+  ^cleanMethodArgument[]
+  $lData[^hash::create[$aData]]
+  ^if(!^lData.contains[slug] || (^lData.contains[slug] && !def ^lData.slug.trim[])){
+    $lData.slug[^transliter.toURL[$lData.title]]
+  }
+  $result[$lData]
+
+#--------------------------------------------------------------------------------
 
 @CLASS
 pfSQLCTContentModel
@@ -135,13 +204,23 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[uint] $.default($_tagging.contentType) $.label[]]
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
     $.contentID[$.dbField[content_id] $.plural[content] $.processor[uint] $.label[]]
+    $.contentType[$.dbField[content_type_id] $.plural[contentTypes] $.processor[uint] $.default($_tagging.contentType) $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
 
+@counts[aOptions]
+  ^cleanMethodArgument[]
+  $result[^aggregate[
+    _fields(tagID, contentType);
+    count(*) as count;
+    $aOptions
+    $.groupBy[$.tagID[asc] $.contentType[asc]]
+  ]]
+
+#--------------------------------------------------------------------------------
 
 @CLASS
 pfSQLCTCountersModel
@@ -160,10 +239,19 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.default($_tagging.contentType) $.processor[int] $.label[]]
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
+    $.contentType[$.dbField[content_type_id] $.plural[contentTypes] $.default($_tagging.contentType) $.processor[int] $.label[]]
     $.count[$.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
 
+@recount[aOptions][locals]
+  $aOptions[^hash::create[$aOptions]]
+  ^CSQL.naturalTransaction{
+    $lCounts[^_tagging.content.counts[$aOptions]]
+    ^deleteAll[$aOptions]
+    ^lCounts.foreach[k;v]{
+      ^newOrModify[$v.fields]
+    }
+  }

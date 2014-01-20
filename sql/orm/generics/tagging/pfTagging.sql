@@ -16,18 +16,18 @@ CREATE TABLE `tags` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `tags_content` (
-  `content_type_id` int(10) unsigned NOT NULL DEFAULT '0',
   `tag_id` int(10) unsigned NOT NULL,
   `content_id` int(10) unsigned NOT NULL,
+  `content_type_id` int(10) unsigned NOT NULL DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`content_id`,`tag_id`,`content_type_id`),
+  PRIMARY KEY (`tag_id`,`content_id`,`content_type_id`),
   KEY `idx_tags` (`tag_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `tags_counters` (
-  `content_type_id` int(11) NOT NULL,
   `tag_id` int(10) unsigned NOT NULL,
+  `content_type_id` int(11) NOT NULL,
   `count` int(10) unsigned NOT NULL DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
