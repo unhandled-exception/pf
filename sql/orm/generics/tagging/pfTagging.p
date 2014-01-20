@@ -211,6 +211,22 @@ pfSQLTable
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
 
+@_allJoin[aOptions]
+## aOptions.orderByTags(false)
+  $result[^BASE:_allJoin[$aOptions]
+    ^if(^aOptions.orderByTags.bool(false)){
+      join $_tagging.tags.TABLE_EXPRESSION on ($tagID = $_tagging.tags.tagID)
+    }
+  ]
+
+@_allOrder[aOptions]
+## aOptions.orderByTags(false)
+  ^if(^aOptions.orderByTags.bool(false)){
+    $result[$_tagging.tags.sortOrder asc, $_tagging.tags.title asc, $_tagging.tags.tagID asc]
+  }{
+     $result[^BASE:_allOrder[$aOptions]]
+   }
+
 @counts[aOptions]
   ^cleanMethodArgument[]
   $result[^aggregate[
