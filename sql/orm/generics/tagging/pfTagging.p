@@ -78,7 +78,7 @@ pfClass
       $lTagsParts[^aTags.split[$_tagsSeparator;lv;title]]
       ^lTagsParts.foreach[k;v]{
         $lTagTitle[^tags.normalizeString[$v.title]]
-        ^if(^lAllTags.locate[title;$lTagTitle]){
+        ^if(^lAllTags.locate[lowerTitle;^lTagTitle.lower[]]){
           $lTags.[$lAllTags.tagID][$lAllTags.title]
         }{
            $lNewTagID[^tags.new[^tags.assignSlug[$.title[$lTagTitle]]]]
@@ -104,8 +104,6 @@ pfClass
             $.tagID[$lTagID]
             $.contentID[$aContent]
             $.contentType[$lContentType]
-          ;
-            $.ignore(true)
           ]
         }
       }
@@ -146,6 +144,10 @@ pfSQLTable
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]
 
+  ^addFields[
+    $.lowerTitle[$.expression[lower($title)] $.processor[tag_lower_title]]
+  ]
+
   $_defaultOrderBy[$.sortOrder[asc] $.title[asc] $.tagID[asc]]
 
   $_transliter[]
@@ -169,13 +171,13 @@ pfSQLTable
   }
   $result[^switch[$aField.processor]{
     ^case[tag_title]{"^taint[^normalizeString[$aValue]]"}
+    ^case[tag_lower_title]{"^taint[^normalizeString[^aValue.lower[]]]"}
     ^case[DEFAULT]{^BASE:fieldValue[$aField;$aValue]}
   }]
 
 @normalizeString[aString]
   $result[^aString.match[\s+][g][ ]]
   $result[^result.trim[]]
-  $result[^result.lower[]]
 
 @assignSlug[aData][locals]
   ^cleanMethodArgument[]
