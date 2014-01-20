@@ -13,7 +13,7 @@ pfClass
 ## aOptions.contentType(0) - стандартный content_type_id
 ## aOptions.tablesPrefix
 ## aOptions.tagsModel
-## aOptions.itemsModel
+## aOptions.contentModel
 ## aOptions.countersModel
   ^cleanMethodArgument[]
 
@@ -27,7 +27,7 @@ pfClass
 
 # Переменные с моделями, но они нужны только для работы свойств
   $_tags[$aOptions.tagsModel]
-  $_items[$aOptions.itemsModel]
+  $_content[$aOptions.contentModel]
   $_counters[$aOptions.countersModel]
 
 @GET_tags[]
@@ -39,14 +39,14 @@ pfClass
   }
   $result[$_tags]
 
-@GET_items[]
-  ^if(!def $_items){
-    $_items[^pfSQLCTItemsModel::create[${_tablesPrefix}tags_items;
+@GET_content[]
+  ^if(!def $_content){
+    $_content[^pfSQLCTContentModel::create[${_tablesPrefix}tags_content;
       $.sql[$CSQL]
       $.tagging[$self]
     ]]
   }
-  $result[$_items]
+  $result[$_content]
 
 @GET_counters[]
   ^if(!def $_counters){
@@ -56,6 +56,18 @@ pfClass
     ]]
   }
   $result[$_counters]
+
+@tagging[aContent;aTags;aOptions][locals]
+## Тегирует контент (можно протегировать сразу много объектов по куче тегов)
+## aContent — string|int|hash|table. Для хеша id берем из ключа, для таблицы из колонки.
+## aOptions.contentTableColumn[contentID] — имя колонки в таблице с контентом, содержащее ID
+## aTags — string|table|hash
+## aOptions.tagsTableColumn[tagID] — имя колонки в таблице с тегами, содержащее tagID
+## aOptions.mode[new|append] — заново протегировать контент или добавить теги к уже существующим
+## aOptions.contentType
+## TODO:
+## aOptions.appendParents(false) - добавить родительские теги
+
 
 #----- Таблички в БД -----
 
@@ -107,7 +119,7 @@ pfSQLTable
 
 
 @CLASS
-pfSQLCTItemsModel
+pfSQLCTContentModel
 
 @BASE
 pfSQLTable
@@ -123,7 +135,7 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[uint] $.default[$_tagging.contentType] $.label[]]
+    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[uint] $.default($_tagging.contentType) $.label[]]
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
     $.contentID[$.dbField[content_id] $.plural[content] $.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
@@ -148,7 +160,7 @@ pfSQLTable
   ^defReadProperty[tagging]
 
   ^addFields[
-    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.processor[int] $.label[]]
+    $.contentTypeID[$.dbField[content_type_id] $.plural[contentTypes] $.default($_tagging.contentType) $.processor[int] $.label[]]
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
     $.count[$.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
