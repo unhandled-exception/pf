@@ -334,6 +334,7 @@ pfClass
 @aggregate[*aConds][locals]
 ## Выборки с группировкой
 ## ^aggregate[func(expr) as alias;_fields(field1, field2 as alias2);_fields(*);conditions hash;sqlOptions]
+## aConds.asHashOn[fieldName] — возвращаем хеш таблиц, ключем которого будет fieldName
   $lConds[^__getAgrConds[$aConds]]
   $lResultType[^__getResultType[$lConds.options]]
   $result[^CSQL.[$lResultType]{
@@ -344,6 +345,10 @@ pfClass
      ^if(^lConds.options.contains[limit]){$.limit($lConds.options.limit)}
      ^if(^lConds.options.contains[offset]){$.offset($lConds.options.offset)}
    ][$lConds.sqlOptions]]]
+
+  ^if($result is table && def $lConds.options.asHashOn){
+    $result[^result.hash[$lConds.options.asHashOn;$.type[table] $.distinct(true)]]
+  }
 
 #----- Манипуляции с данными -----
 

@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0
 ---
 
+21.01.2014
+  1. Добавил в pfSQLTable.aggregate параметр asHashOn.
+
 18.01.2014
   1. В pfSiteModule.postXML теперь для тела ответа делается untaint[xml] (раньше был optimized-xml).
      Если в каком-то месте нужно старое поведение, то выполните untaint явно перед возвратом тела из экшна.
