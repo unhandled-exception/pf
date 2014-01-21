@@ -111,7 +111,7 @@ pfClass
   $lOnlyPatternsVar(^aOptions.onlyPatternVars.bool(false))
 
   $aAction[^_trimPath[$aAction]]
-  $aArgs[^if($aArgs is hash){$aArgs}($aArgs is table){$aArgs.fields}{^hash::create[$aArgs]}]
+  $aArgs[^if($aArgs is table){$aArgs.fields}{^hash::create[$aArgs]}]
   ^aArgs.add[$aOptions.form]
   ^_routes.foreach[k;it]{
 #   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
