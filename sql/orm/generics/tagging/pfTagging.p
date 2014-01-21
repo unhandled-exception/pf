@@ -233,7 +233,7 @@ pfSQLTable
   ^cleanMethodArgument[]
   $result[^aggregate[
     _fields(tagID, contentType);
-    count(*) as count;
+    count(*) as cnt;
     $aOptions
     $.groupBy[$.tagID[asc] $.contentType[asc]]
   ]]
@@ -259,7 +259,7 @@ pfSQLTable
   ^addFields[
     $.tagID[$.dbField[tag_id] $.plural[tags] $.processor[uint] $.label[]]
     $.contentType[$.dbField[content_type_id] $.plural[contentTypes] $.default($_tagging.contentType) $.processor[int] $.label[]]
-    $.count[$.processor[uint] $.label[]]
+    $.cnt[$.processor[uint] $.label[]]
     $.createdAt[$.dbField[created_at] $.processor[auto_now] $.skipOnUpdate(true) $.widget[none]]
     $.updatedAt[$.dbField[updated_at] $.processor[auto_now] $.widget[none]]
   ]

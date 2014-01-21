@@ -28,7 +28,7 @@ CREATE TABLE `tags_content` (
 CREATE TABLE `tags_counters` (
   `tag_id` int(10) unsigned NOT NULL,
   `content_type_id` int(11) NOT NULL,
-  `count` int(10) unsigned NOT NULL DEFAULT '0',
+  `cnt` int(10) unsigned NOT NULL DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`tag_id`,`content_type_id`)
