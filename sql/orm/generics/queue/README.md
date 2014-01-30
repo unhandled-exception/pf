@@ -24,7 +24,7 @@ pfSQLQueue
 
 Создаем классы:
 
-      $sql[^pfMySQL[$MAIN:connect-string]]
+      $sql[^pfMySQL::create[$MAIN:connect-string]]
      
     # Сообщения храним в отдельно табличке (messageIВ, address, subject, body)
     # Реализацию этого класса не привожу :)
