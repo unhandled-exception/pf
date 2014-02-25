@@ -11,9 +11,10 @@ pf/tests/pfAssert.p
   $_parserVersion[^hash::create[]]
 
   $_memoryLimit(4096)
-  $_lastMemorySize($status:memory.used)   
-  $_compactsCount(0)  
-  
+  $_lastMemorySize($status:memory.used)
+  $_compactsCount(0)
+  $_maxMemoryUsage(0)
+
   $_profiled[$.last[] $.all[^hash::create[]]]
 # Нужно ли накапливать статистику профилировщика
   $_enableProfilerLog(true)
@@ -47,6 +48,9 @@ pf/tests/pfAssert.p
 @GET_compactsCount[]
   $result($_compactsCount)
 
+@GET_maxMemoryUsage[]
+  $result(^if($_maxMemoryUsage > $status:memory.used){$_maxMemoryUsage}{$status:memory.used})
+
 @GET_profiled[]
   $result[$_profiled]
 
@@ -61,13 +65,17 @@ pf/tests/pfAssert.p
 @compact[aOptions]
 ## Выполняет сборку мусора, если c момента последней сборки мусора было выделено
 ## больше $memoryLimit килобайт.
+## aOptions.isForce(false)
   $result[]
+  ^if($_maxMemoryUsage < $status:memory.used){
+    $_maxMemoryUsage($status:memory.used)
+  }
   ^if(!($aOptions is hash)){$aOptions[^hash::create[]]}
-  ^if(^aOptions.isForce.int(0) || ($status:memory.used - $_lastMemorySize) > $memoryLimit){
+  ^if(^aOptions.isForce.bool(false) || ($status:memory.used - $_lastMemorySize) > $memoryLimit){
      ^memory:compact[]
-     $_lastMemorySize($status:memory.used)  
+     $_lastMemorySize($status:memory.used)
      ^_compactsCount.inc[]
-  }     
+  }
 
 @resources[]
 ## Возвращает хеш с информацией о времени и памяти, затраченных на данный момент
@@ -82,13 +90,13 @@ pf/tests/pfAssert.p
     $.free($status:memory.free)
   ]
 
-@profile[aCode;aComment][lResult]   
+@profile[aCode;aComment][lResult]
 ## Выполняет код и сохраняет ресурсы, затраченные на его исполнение.
   $lResult[$.before[^resources[]] $.comment[$aComment]]
   ^try{
     $result[$aCode]
   }{
-#   pass exceptions 
+#   pass exceptions
   }{
      $lResult.after[^resources[]]
      $lResult.time($lResult.after.time - $lResult.before.time)
