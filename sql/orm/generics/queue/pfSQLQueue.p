@@ -40,25 +40,11 @@ pfSQLTable
   ^cleanMethodArgument[]
   ^CSQL.naturalTransaction{
     $lConds[^hash::create[$aOptions]]
-
-    $lLimit(^aOptions.limit.int(1))
-    $lOffset(^aOptions.offset.int(0))
-    ^lConds.delete[limit]
-    ^lConds.delete[offset]
-
     $result[^all[
       $lConds
       $.[processTime <][$_now]
     ][
-      $.tail[
-#       Хак с ручным заданием limit/offset для того,
-#       чтобы можно было использовать "for update" в MySQL.
-        limit $lLimit
-        ^if($lOffset > 0){
-          offset $lOffset
-        }
-        for update
-      ]
+      $.tail[for update]
     ]]
     ^result.foreach[k;v]{
       ^modify[$v.taskID;

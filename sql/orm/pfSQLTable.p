@@ -268,14 +268,10 @@ pfClass
 ##   + Все опции pfSQL.
  ^cleanMethodArgument[aOptions;aSQLOptions]
  $lResultType[^__getResultType[$aOptions]]
- $result[^CSQL.[$lResultType]{
-   ^_selectExpression[
-     ^__allSelectFieldsExpression[$lResultType;$aOptions;$aSQLOptions]
-   ][$lResultType;$aOptions;$aSQLOptions]
- }[
-    ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
-  ][$aSQLOptions]]]
+ $lExpression[^_selectExpression[
+   ^__allSelectFieldsExpression[$lResultType;$aOptions;$aSQLOptions]
+ ][$lResultType;$aOptions;$aSQLOptions]]
+ $result[^CSQL.[$lResultType]{$lExpression}[][$aSQLOptions]]]
 
  ^if($result is table && def $aOptions.asHashOn){
    $result[^result.hash[$aOptions.asHashOn;$.type[table] $.distinct(true)]]
@@ -298,14 +294,10 @@ pfClass
 
   ^aConds.foreach[k;v]{
     $v[^hash::create[$v]]
-    $lRes[^CSQL.[$lResultType]{
-      ^_selectExpression[
-        ^__allSelectFieldsExpression[$lResultType;$v]
-      ][$lResultType;$v]
-    }[
-       ^if(^v.contains[limit]){$.limit($v.limit)}
-       ^if(^v.contains[offset]){$.offset($v.offset)}
-    ]]
+    $lExpression[^_selectExpression[
+      ^__allSelectFieldsExpression[$lResultType;$v]
+    ][$lResultType;$v]]
+    $lRes[^CSQL.[$lResultType]{$lExpression}]
     ^if($k eq "0"){
       $result[$lRes]
     }($lResultType eq "table"){
@@ -324,12 +316,8 @@ pfClass
 # на поля выборки, которых нет при вызове select count(*).
 # Если нужны сложные варианты используйте aggregate.
   $aConds[^hash::create[$aConds] $.orderBy[] $.having[]]
-  $result[^CSQL.int{
-    ^_selectExpression[count(*)][;$aConds;$aSQLOptions]
-  }[
-    ^if(^aOptions.contains[limit]){$.limit($aConds.limit)}
-    ^if(^aOptions.contains[offset]){$.offset($aConds.offset)}
-  ][$aSQLOptions]]]
+  $lExpression[^_selectExpression[count(*)][;$aConds;$aSQLOptions]]
+  $result[^CSQL.int{$lExpression}[][$aSQLOptions]]]
 
 @aggregate[*aConds][locals]
 ## Выборки с группировкой
@@ -337,14 +325,10 @@ pfClass
 ## aConds.asHashOn[fieldName] — возвращаем хеш таблиц, ключем которого будет fieldName
   $lConds[^__getAgrConds[$aConds]]
   $lResultType[^__getResultType[$lConds.options]]
-  $result[^CSQL.[$lResultType]{
-    ^_selectExpression[
-      ^asContext[select]{^__getAgrFields[$lConds.fields]}
-    ][$lResultType;$lConds.options;$lConds.sqlOptions]
-  }[
-     ^if(^lConds.options.contains[limit]){$.limit($lConds.options.limit)}
-     ^if(^lConds.options.contains[offset]){$.offset($lConds.options.offset)}
-   ][$lConds.sqlOptions]]]
+  $lExpression[^_selectExpression[
+    ^asContext[select]{^__getAgrFields[$lConds.fields]}
+  ][$lResultType;$lConds.options;$lConds.sqlOptions]]
+  $result[^CSQL.[$lResultType]{$lExpression}[][$lConds.sqlOptions]]]
 
   ^if($result is table && def $lConds.options.asHashOn){
     $result[^result.hash[$lConds.options.asHashOn;$.type[table] $.distinct(true)]]
@@ -619,6 +603,15 @@ pfClass
       }
       ^if(def $lOrder){
         order by $lOrder
+      }
+#     Строим выражение для limit и offset.
+      $lLimit(^aOptions.limit.int(-1))
+      $lOffset(^aOptions.offset.int(-1))
+      ^if($lLimit >= 0 || $lOffset >= 0){
+        limit ^if($lLimit >=0){$lLimit}{18446744073709551615}
+        ^if($lOffset >= 0){
+          offset $lOffset
+        }
       }
       ^if(def $aSQLOptions.tail){$aSQLOptions.tail}
   ]

@@ -8,6 +8,12 @@ Changelog
 hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 Веб-интерфейс репозитория: http://code.volchkov.net/parser3-pf/src
 
+1.1 (develop)
+-------------
+16.04.2014
+  1. В классе pfSQLTable выражение для limit/offset теперь формируется самостоятельно, без использования
+     парсеровского механизма коррекции запроса. Это позволяет писать запросы с $.tile[for update] и лимитами.
+
 1.0.0
 -----
 
