@@ -85,7 +85,7 @@ pfClass
   $result[
     <div class="control-group">
       <div class="controls">
-        <label class="$aType"><input type="$aType" name="$aField.name" id="f-${aField.name}1" value="" ^^if($lVarName){checked="true"} /> $aField.label</label>
+        <label class="$aType"><input type="$aType" name="$aField.name" id="f-${aField.name}1" value="1" ^^if($lVarName){checked="true"} /> $aField.label</label>
       </div>
     </div>]
 
