@@ -258,6 +258,7 @@ pfClass
 ##   aOptions.having{expression} — выражение для having
 ##   aOptions.orderBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для orderBy
 ##   aOptions.groupBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для groupBy
+##   aOptions.join[] — выражение для join. Заменяет результат вызова ^_allJoin[].
 ## aOptions.limit
 ## aOptions.offset
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
@@ -593,7 +594,7 @@ pfClass
   $result[
        select $aFields
          from ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
-              ^asContext[where]{^_allJoin[$aOptions]}
+              ^asContext[where]{^if(^aOptions.contains[join]){$aOptions.join}{^_allJoin[$aOptions]}}
         where ^asContext[where]{^_allWhere[$aOptions]}
       ^if(def $lGroup){
         group by $lGroup
