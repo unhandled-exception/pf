@@ -34,7 +34,6 @@ pfClass
     $.margin_bottom[1.5cm]
     $.margin_left[2.5cm]
     $.encoding[$response:charset]
-    $.output_format[pdf]
   ]
   ^defProperty[options]
 
