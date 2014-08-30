@@ -753,6 +753,7 @@ pfClass
 ##   uid, auto_uid - уникальный идентификатор (math:uuid)
 ##   inet_ip — преобразует строку в числовое представление IP
 ##   first_upper - удаляет ведущие пробелы и капитализирует первую букву
+##   hash_md5 — берет md5 от значения
 
 @_processFieldsOptions[aOptions]
   $result[^hash::create[$aOptions]]
@@ -845,6 +846,7 @@ pfClass
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
       ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
       ^case[first_upper]{'^taint[^if(def $aValue){^aValue.match[$_PFSQLBUILDER_PROCESSOR_FIRST_UPPER][]{^match.1.upper[]$match.2}}(def $aField.default){$aField.default}]'}
+      ^case[hash_md5]{'^taint[^if(def $aValue){^math:md5[$aValue]}]'}
       ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{
