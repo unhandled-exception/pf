@@ -88,6 +88,7 @@ pfClass
       }
       $lData.processor[inet_ip]
       $lData.expression[inet_ntoa(^^_builder.quoteIdentifier[^$TABLE_ALIAS].^^_builder.quoteIdentifier[$lData.dbField])]
+      $lData.fieldExpression[^^_builder.quoteIdentifier[^$TABLE_ALIAS].^^_builder.quoteIdentifier[$lData.dbField]]
     }
 
     ^if(!def $lData.widget){

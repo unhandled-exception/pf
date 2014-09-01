@@ -15,6 +15,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.0.1
 -----
 
+01.09.2014
+  1. Добавил параметр fieldExpression в поле с ip-адресом в pfTableModelGenerator.
+
 30.08.2014
   1. В pfSQLBuilder добавил процессор hash_md5.
 
