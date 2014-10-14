@@ -11,9 +11,13 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
-
-1.0.1
------
+14.10.2014
+  1. Добавил в класс pfTableFormGenerator поддержку Bootstrap 3. По-умолчанию форма генерируется
+     для второй версии Бутстрапа. Чтобы переключить на третью версию, надо передать в конструктор
+     параметр $.widgets:
+     ^pfTableFormGenerator::create[
+       $.widgets[^pfTableFormGeneratorBootstrap3Widgets::create[]]
+     ]
 
 01.09.2014
   1. Добавил параметр fieldExpression в поле с ip-адресом в pfTableModelGenerator.
@@ -22,9 +26,16 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
   1. В pfSQLBuilder добавил процессор hash_md5.
 
 21.07.2014
-  1. В метод pfSQLTable.all добавил параметр $.join, для того чтобы можно было писать сложные запросы 
+  1. В метод pfSQLTable.all добавил параметр $.join, для того чтобы можно было писать сложные запросы
      через pfSQLTable.aggregate.
   2. Новый класс для генерации Экселевских таблиц — pf/api/office/excel/pfTableToXLS.
+
+11.05.2014
+  1. Поправил тег для чекбокса в pfTableFormGenerator.
+
+
+1.0.1
+-----
 
 16.04.2014
   1. В классе pfSQLTable выражение для limit/offset теперь формируется самостоятельно, без использования
