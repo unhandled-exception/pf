@@ -21,6 +21,8 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
      ^pfTableFormGenerator::create[
        $.widgets[^pfTableFormGeneratorBootstrap3Widgets::create[]]
      ]
+  2. Новый класс — pf/api/yandex/speechkit/pfYandexSpeechKit.
+     Реализован доступ к синтезатору речи — https://tech.yandex.ru/speechkit/cloud/doc/dg/concepts/speechkit-dg-tts-docpage/.
 
 01.09.2014
   1. Добавил параметр fieldExpression в поле с ip-адресом в pfTableModelGenerator.
