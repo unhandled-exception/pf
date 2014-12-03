@@ -178,6 +178,12 @@ pfClass
 ## Проверяет наличие поля в таблице
   $result(def $aFieldName && ^_fields.contains[$aFieldName])
 
+@replaceField[aFieldName;aOptions]
+  ^if(^hasField[$aFieldName]){
+    ^_fields.delete[$aFieldName]
+  }
+  $result[^addField[$aFieldName;$aOptions]]
+
 @cleanFormData[aFormData]
 ## Возвращает хеш с полями, для которых разрешены html-виджеты.
   ^cleanMethodArgument[aFormData]
