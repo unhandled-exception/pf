@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+15.12.2014
+  1. В pfTableModelGenerator исправил работу со значениями «по-умолчанию» для численных полей.
+
 03.12.2014
   1. Новый метод — pfSQLTable.replaceField.
 

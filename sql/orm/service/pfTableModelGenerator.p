@@ -4,7 +4,6 @@ pfTableModelGenerator
 @USE
 pf/types/pfClass.p
 pf/types/pfString.p
-pf/tests/pfAssert.p
 
 @BASE
 pfClass
@@ -13,7 +12,8 @@ pfClass
 ## aOptions.sql
 ## aOptions.schema
   ^cleanMethodArgument[]
-  ^pfAssert:isTrue($aOptions.sql is pfMySQL)[Не задан объект дл доступа к СУБД.]
+  ^pfAssert:isTrue(def $aOptions.sql)[Не задан объект для доступа к СУБД.]
+  ^pfAssert:isTrue($aOptions.sql is pfMySQL)[Класс поддерживает работу только с MySQL.]
   ^BASE:create[]
 
   $_sql[$aOptions.sql]
@@ -41,13 +41,17 @@ pfClass
 
     $lType[^_parseType[$lDDL.Type]]
     ^switch[^lType.type.lower[]]{
-      ^case[int;integer;smallint;mediumint]{$lData.processor[^if($lType.unsigned){uint}{int}]}
+      ^case[int;integer;smallint;mediumint]{
+        $lData.processor[^if($lType.unsigned){uint}{int}]
+        ^unsafe{$lData.default(^lDDL.Default.int[])}
+      }
       ^case[tinyint]{
         $lData.processor[^if($lType.unsigned){uint}{int}]
+        ^unsafe{$lData.default(^lDDL.Default.int[])}
         ^if(^lType.format.int(0) == 1
             || ^lDDL.Field.pos[is_] == 0){
           $lData.processor[bool]
-          $lData.default(1)
+          $lData.default(^lDDL.Default.bool(true))
         }
       }
       ^case[float;double;decimal;numeric]{
@@ -55,6 +59,7 @@ pfClass
         ^if(def $lType.format){
           $lData.format[^lType.format.match[^^(\d+)\,(\d+)^$][]{%${match.1}.${match.2}f}]
         }
+        ^unsafe{$lData.default(^lDDL.Default.double[])}
       }
       ^case[date]{$lData.processor[date]}
       ^case[datetime]{$lData.processor[datetime]}
