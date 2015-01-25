@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+25.01.2014
+  1. Добавил в конструктор класса pfSQLQueue параметр $.interval(double).
+
 15.12.2014
   1. В pfTableModelGenerator исправил работу со значениями «по-умолчанию» для численных полей.
 
