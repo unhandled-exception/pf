@@ -11,6 +11,10 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+24.04.2015
+  1. Добавил встроенную команду в help в pfCommandsManager.
+  2. Добавил параметр aFinallyCode в pfOS:tempFile.
+
 25.01.2014
   1. Добавил в конструктор класса pfSQLQueue параметр $.interval(double).
 
