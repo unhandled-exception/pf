@@ -109,10 +109,11 @@ pfClass
 ## Return request:uri
   $result[$request:uri]
 
-@GET_PATH[]
+@GET_PATH[][lPos]
 ## Return the request:uri without a query part
   ^if(!def $_PATH){
-    $_PATH[^request:uri.left(^request:uri.pos[?])]
+    $lPos(^request:uri.pos[?])
+    $_PATH[^if($lPos >= 0){^request:uri.left($lPos)}{$request:uri}]
   }
   $result[$_PATH]
 
