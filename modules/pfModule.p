@@ -103,13 +103,14 @@ pfClass
   $lHandler[^_makeActionName[$aAction]]
   $result($$lHandler is junction)
 
-@assignModule[aName;aOptions]
+@assignModule[aName;aOptions][locals]
 ## Добавляет модуль aName
 ## aOptions.class - имя класса (если не задано, то пробуем его взять из имени файла)
 ## aOptions.file - файл с текстом класса
 ## aOptions.source - строка с текстом класса (если определена, то плюем на file)
 ## aOptions.compile(0) - откомпилировать модуль сразу
 ## aOptions.args - опции, которые будут переданы конструктору.
+## aOptions.mountTo[$aName] - точка монтирования относительно текущего модуля.
 
 ## Experimental:
 ## aOptions.faсtory - метод, который будет вызван для создания модуля
@@ -127,9 +128,12 @@ pfClass
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aName)[Не задано имя для модуля.]
   $aName[^aName.lower[]]
+  $lMountTo[^if(def $aOptions.mountTo){^aOptions.mountTo.lower[]}{$aName}]
+  $lMountTo[^lMountTo.trim[both;/]]
 
 #  Добавляем в хэш с модулями данные о модуле
    $_MODULES.[$aName][
+       $.mountTo[$lMountTo]
        $.file[$aOptions.file]
        $.source[$aOptions.source]
        $.class[^if(!def $aOptions.class && def $aOptions.file){^file:justname[$aOptions.file]}{$aOptions.class}]
@@ -147,12 +151,15 @@ pfClass
 
        $.isCompiled(0)
        $.makeAction(^aOptions.makeAction.int(1))
-       $.mountPoint[${_mountPoint}$aName/]
+       $.mountPoint[${_mountPoint}$lMountTo/]
    ]
 
 #  Перекрываем uriPrefix, который пришел к нам в $aOptions.args.
 #  Возможно и не самое удачное решение, но позволяет сохранить цепочку.
    $_MODULES.[$aName].args.mountPoint[$_MODULES.[$aName].mountPoint]
+   ^if(!def $_MODULES.[$aName].args.templatePrefix){
+     $_MODULES.[$aName].args.templatePrefix[${_mountPoint}$aName/]
+   }
 
    ^if(^aOptions.compile.int(0)){
      ^compileModule[$aName]
@@ -246,7 +253,7 @@ pfClass
   }
   $result[$.action[$aAction] $.request[$aRequest] $.prefix[$lRewrite.prefix] $.render[$lRewrite.render]]
 
-@rewriteAction[aAction;aRequest;aOtions][lRewrite;it]
+@rewriteAction[aAction;aRequest;aOtions]
 ## Вызывается каждый раз перед диспатчем - внутренний аналог mod_rewrite.
 ## $result.action - новый экшн.
 ## $result.args - параметры, которые надо добавить к аргументам и передать обработчику.
@@ -259,7 +266,7 @@ pfClass
   }
   ^if(!def $result.args){$result.args[^hash::create[]]}
 
-@processAction[aAction;aRequest;aLocalPrefix;aOptions][lModule;lActionHandler;lHandler;lAction;CALLER;lRequest;lPrefix]
+@processAction[aAction;aRequest;aLocalPrefix;aOptions][locals]
 ## Производит вызов экшна.
 ## aOptions.prefix - префикс, сформированный в processRequest.
   $lAction[$aAction]
@@ -279,13 +286,15 @@ pfClass
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его.
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
     $_activeModule[$lModule]
-    ^if(^hasAction[$lModule]){
-      $_action[^lAction.match[^^^taint[regex][$lModule] (.*)][x]{^match.1.lower[]}]
-      $result[^self.[^_makeActionName[$lModule]][$lRequest]]
+    $lModuleMountTo[$MODULES.[$lModule].mountTo]
+
+    ^if(^hasAction[$lModuleMountTo]){
+      $_action[^lAction.match[^^^taint[regex][$lModuleMountTo] (.*)][x]{^match.1.lower[]}]
+      $result[^self.[^_makeActionName[$lModuleMountTo]][$lRequest]]
       $_action[$lAction]
     }{
-       $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModule.length[]);$lRequest;
-         $.prefix[$uriPrefix/^if(def $aLocalPrefix){$aLocalPrefix/}{$lModule/}]
+       $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModuleMountTo.length[]);$lRequest;
+         $.prefix[$uriPrefix/^if(def $aLocalPrefix){$aLocalPrefix/}{$lModuleMountTo/}]
        ]]
      }
   }{
@@ -376,7 +385,7 @@ pfClass
   $result[]
   ^if(def $aAction){
     ^_MODULES.foreach[k;v]{
-      ^if(^aAction.match[^^^taint[regex][$k] (/|^$)][ixn]){
+      ^if(^aAction.match[^^^taint[regex][$v.mountTo] (/|^$)][ixn]){
         $result[$k]
         ^break[]
       }

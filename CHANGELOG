@@ -16,6 +16,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
   2. Новое поле — pfHTTPRequest.PATH (uri без query).
   3. Исправил ошибку в методе ^pfHTTPRequest.getFullPath, которая приводила к удвоению query-части.
      Вместо метода pfHTTPRequest.getFullPath лучше использовать свойство $pfHTTPRequest.URI.
+  4. Добавил опцию ^pfModule.assignModule[module/name;$.mountTo[new/name]], которая позволяет поменять
+     путь к модулю в адресе, но не менять имя в структуре модулей. 
+     [Патч прислал Алексей Марьин / http://groundzero.ru/]
 
 24.04.2015
   1. Добавил встроенную команду в help в pfCommandsManager.
