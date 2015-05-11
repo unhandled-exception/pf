@@ -19,6 +19,7 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
   4. Добавил опцию ^pfModule.assignModule[module/name;$.mountTo[new/name]], которая позволяет поменять
      путь к модулю в адресе, но не менять имя в структуре модулей. 
      [Патч прислал Алексей Марьин / http://groundzero.ru/]
+  5. Новый класс — pf/security/pfSecurityCrypt.p
 
 24.04.2015
   1. Добавил встроенную команду в help в pfCommandsManager.
