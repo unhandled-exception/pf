@@ -104,10 +104,12 @@ pfClass
 @GET_isAJAX[]
   $result(^HEADERS.[X_Requested_With].pos[XMLHttpRequest] > -1)
 
-
 @GET_URI[]
 ## Return request:uri
   $result[$request:uri]
+
+@GET_ACTION[]
+  $result[$_FIELDS._action]
 
 @GET_QUERY[]
 ## Return request:query

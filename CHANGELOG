@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+11.05.2015
+  1. Новое поле — pfHTTPRequest.ACTION (form:_action).
+
 24.04.2015
   1. Добавил встроенную команду в help в pfCommandsManager.
   2. Добавил параметр aFinallyCode в pfOS:tempFile.
