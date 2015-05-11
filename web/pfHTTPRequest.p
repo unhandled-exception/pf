@@ -11,7 +11,7 @@ pfClass
 
 #----- Constructor -----
 
-@create[aOptions]   
+@create[aOptions]
   ^cleanMethodArgument[]
   ^BASE:create[]
 
@@ -21,16 +21,17 @@ pfClass
   $_TABLES[^if(def $aOptions.tables){$aOptions.tables}{$form:tables}]
   $_FILES[^if(def $aOptions.files){$aOptions.files}{$form:files}]
   $_COOKIE[^if(def $aOptions.cookie){$aOptions.cookie}{$cookie:fields}]
- 
+
   $_META[^if(def $aOptions.meta){$aOptions.meta}{^pfHTTPRequestMeta::create[]}]
-  $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}] 
-  
+  $_HEADERS[^if(def $aOptions.headers){$aOptions.headers}{^pfHTTPRequestHeaders::create[]}]
+
   $_HOST[]
+  $_PATH[]
 
 #----- Properties -----
 
 @GET[]
-## Return request fields count  
+## Return request fields count
   $result($_FIELDS)
 
 @GET_DEFAULT[aName]
@@ -60,7 +61,7 @@ pfClass
 @GET_COOKIE[]
 ## Return cookie
   $result[$_COOKIE]
-  
+
 @GET_QTAIL[]
 ## Return form:qtail field
   $result[$_QTAIL]
@@ -79,7 +80,7 @@ pfClass
 ## Возвращает http-метод запроса в нижнем регистре
   $result[^META.REQUEST_METHOD.lower[]]
   ^if($result eq "post" && def $_FIELDS._method){
-    $result[^switch[^_FIELDS._method.lower[]]{   
+    $result[^switch[^_FIELDS._method.lower[]]{
       ^case[DEFAULT]{post}
       ^case[delete]{delete}
       ^case[put]{put}
@@ -108,13 +109,20 @@ pfClass
 ## Return request:uri
   $result[$request:uri]
 
+@GET_PATH[]
+## Return the request:uri without a query part
+  ^if(!def $_PATH){
+    $_PATH[^request:uri.left(^request:uri.pos[?])]
+  }
+  $result[$_PATH]
+
 @GET_ACTION[]
   $result[$_FIELDS._action]
 
 @GET_QUERY[]
 ## Return request:query
   $result[$request:query]
-  
+
 @GET_CHARSET[]
 ## Return request:charset
   $result[$request:charset]
@@ -141,7 +149,7 @@ pfClass
     $result[^HEADERS.get[X_Forwarded_Host;^HEADERS.get[Host]]]
     ^if(!def $result){
       $result[^META.get[SERVER_NAME]]
-    }            
+    }
     $lPort[^META.get[SERVER_PORT]]
     $result[${result}^if($lPort ne "80" && ($isSECURE && $lPort ne "443")){:$lPort}]
   }{
@@ -162,14 +170,14 @@ pfClass
 
 @getFullPath[]
 ## Returns the path, plus an appended query string, if applicable.
-  $result[$URI^if(def $QUERY){/?$QUERY}]
+  $result[$request:uri]
 
 @buildAbsoluteUri[aLocation]
 ## Returns the absolute URI form of location.
-## If no location is provided, the location will be set to getFullPath 
+## If no location is provided, the location will be set to getFullPath
   ^if(!def $aLocation){
     $aLocation[^getFullPath[]]
-  }                           
+  }
   ^if(^aLocation.left(1) ne "/"){
     $aLocation[/$aLocation]
   }
@@ -183,12 +191,12 @@ pfClass
   $result[^_FIELDS.foreach[k;v]{$caller.[$aKeyName][$k]$caller.[$aValueName][$v]$aCode}{$aSeparator}]
 
 
-#----- Reflection -----  
+#----- Reflection -----
 
 @__add[aNewFields]
 ## Add new fields in to request
   ^pfAssert:isTrue($aNewFields is hash)[New fields must be a hash.]
-  ^_FIELDS.add[$aNewFields]       
+  ^_FIELDS.add[$aNewFields]
   $result[]
 
 
@@ -240,4 +248,3 @@ pfClass
   ^if(!def $result && def $aDefault){
     $result[$aDefault]
   }
-  

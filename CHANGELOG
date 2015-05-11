@@ -13,6 +13,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 
 11.05.2015
   1. Новое поле — pfHTTPRequest.ACTION (form:_action).
+  2. Новое поле — pfHTTPRequest.PATH (uri без query).
+  3. Исправил ошибку в методе ^pfHTTPRequest.getFullPath, которая приводила к удвоению query-части.
+     Вместо метода pfHTTPRequest.getFullPath лучше использовать свойство $pfHTTPRequest.URI.
 
 24.04.2015
   1. Добавил встроенную команду в help в pfCommandsManager.
