@@ -271,8 +271,8 @@ pfClass
 ## aOptions.prefix - префикс, сформированный в processRequest.
   $lAction[$aAction]
   $lRequest[$aRequest]
-  ^if(def $aLocalPrefix){$localUriPrefix[$aLocalPrefix]}
-  ^if(def $aOptions.prefix){$uriPrefix[$aOptions.prefix]}
+  ^if(def $aLocalPrefix){$self.localUriPrefix[$aLocalPrefix]}
+  ^if(def $aOptions.prefix){$self.uriPrefix[$aOptions.prefix]}
 
 # Формируем специальную переменную $CALLER, чтобы передать текущий контекст
 # из которого вызван dispatch. Нужно для того, чтобы можно было из модуля
@@ -285,13 +285,13 @@ pfClass
   ^if(def $lModule){
 #   Если у нас есть экшн, совпадающий с именем модуля, то зовем его.
 #   При этом отсекая имя модуля от экшна перед вызовом (восстанавливаем после экшна).
-    $_activeModule[$lModule]
+    $self._activeModule[$lModule]
     $lModuleMountTo[$MODULES.[$lModule].mountTo]
 
     ^if(^hasAction[$lModuleMountTo]){
-      $_action[^lAction.match[^^^taint[regex][$lModuleMountTo] (.*)][x]{^match.1.lower[]}]
+      $self._action[^lAction.match[^^^taint[regex][$lModuleMountTo] (.*)][x]{^match.1.lower[]}]
       $result[^self.[^_makeActionName[$lModuleMountTo]][$lRequest]]
-      $_action[$lAction]
+      $self._action[$lAction]
     }{
        $result[^self.[mod^_makeSpecialName[^lModule.lower[]]].dispatch[^lAction.mid(^lModuleMountTo.length[]);$lRequest;
          $.prefix[$uriPrefix/^if(def $aLocalPrefix){$aLocalPrefix/}{$lModuleMountTo/}]
