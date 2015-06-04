@@ -11,6 +11,11 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+04.06.2015
+  1. Исправил ошибку, внесенную в commit:b824d682fd2d 11 мая 2015 г. В методе pfModule.processAction переделал
+     список локальных переменных на locals, но не добавил self для полей объекта, которые устанавливал метод.
+     Теперь переменные устанавливаются правильно и prefix в маршрутах работает.
+
 12.05.2015
   1. Добавил в класс sql/generics/settings/pfSQLSettings поддержку схемы базы данных.
 
@@ -20,7 +25,7 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
   3. Исправил ошибку в методе ^pfHTTPRequest.getFullPath, которая приводила к удвоению query-части.
      Вместо метода pfHTTPRequest.getFullPath лучше использовать свойство $pfHTTPRequest.URI.
   4. Добавил опцию ^pfModule.assignModule[module/name;$.mountTo[new/name]], которая позволяет поменять
-     путь к модулю в адресе, но не менять имя в структуре модулей. 
+     путь к модулю в адресе, но не менять имя в структуре модулей.
      [Патч прислал Алексей Марьин / http://groundzero.ru/]
   5. Новый класс — pf/security/pfSecurityCrypt.p
 
