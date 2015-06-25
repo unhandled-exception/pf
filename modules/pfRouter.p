@@ -171,8 +171,9 @@ pfClass
      ]
   }
 
-# Собираем регулярное выражение для всего шаблона
-  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^lSegments.foreach[k;it]{^if($it.hasVars){)^if(!$aOptions.strict || $it.hasTrap){?}}}^$]
+# Собираем регулярное выражение для всего шаблона.
+# Закрывающие скобки ставим в обартном порядке. :)
+  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^for[i](1;$lSegments){$it[^lSegments._at(-$i)]^if($it.hasVars){)^if(!$aOptions.strict || $it.hasTrap){?}}}^$]
 
 @_parsePathByRoute[aPath;aRoute;aOptions][locals]
 ## Преобразует aPath по правилу aOptions.
