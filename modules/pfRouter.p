@@ -147,7 +147,7 @@ pfClass
 @_trimPath[aPath]
   $result[^if(def $aPath){^aPath.trim[both;/. ^#0A]}]
 
-@_compilePattern[aRoute;aOptions][lPattern;lSegments;lRegexp;lParts]
+@_compilePattern[aRoute;aOptions][locals]
 ## result[$.pattern[] $.regexp[] $.vars[] $.trap[]]
   $result[
     $.vars[^hash::create[]]
@@ -161,18 +161,20 @@ pfClass
   $lParts[^lPattern.match[([$_segmentSeparators])([^^$_segmentSeparators]+)][g]]
   ^lParts.menu{
      $lHasVars(false)
-     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\((?!\?[=!<>])][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]}$result.vars.[$match.2](true)$lHasVars(true)}]
+     $lHasTrap(false)
+     $lRegexp[^lParts.2.match[$_pfRouterPatternRegex][]{^if($match.1 eq ":"){(^if(def $aOptions.requirements.[$match.2]){^aOptions.requirements.[$match.2].match[\((?!\?[=!<>])][g]{(?:}}{$_varRegexp})}{$_trapRegexp}^if($match.1 eq "*"){$result.trap[$match.2]$lHasTrap(true)}$result.vars.[$match.2](true)$lHasVars(true)}]
      $lSegments.[^eval($lSegments + 1)][
        $.prefix[$lParts.1]
        $.regexp[$lRegexp]
        $.hasVars($lHasVars)
+       $.hasTrap($lHasTrap)
      ]
   }
 
 # Собираем регулярное выражение для всего шаблона
-  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^lSegments.foreach[k;it]{^if($it.hasVars){)^if(!^aOptions.strict.bool(false)){?}}}^$]
+  $result.regexp[^^^lSegments.foreach[k;it]{^if($it.hasVars){(?:}^if($k>1){\$it.prefix}$it.regexp}^lSegments.foreach[k;it]{^if($it.hasVars){)^if(!$aOptions.strict || $it.hasTrap){?}}}^$]
 
-@_parsePathByRoute[aPath;aRoute;aOptions][lVars;i;k;v]
+@_parsePathByRoute[aPath;aRoute;aOptions][locals]
 ## Преобразует aPath по правилу aOptions.
 ## aOptions.args
 ## result[$.action $.args $.prefix]
@@ -199,4 +201,3 @@ pfClass
   ^cleanMethodArgument[aVars]
   ^cleanMethodArgument[aArgs]
   $result[^if(def $aPath){^aPath.match[$_pfRouterPatternRegex][]{^if(^aVars.contains[$match.2]){$aVars.[$match.2]}{^if(^aArgs.contains[$match.2] || $match.1 eq "*"){$aArgs.[$match.2]}}}}]
-
