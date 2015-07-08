@@ -287,7 +287,7 @@ pfClass
 @__getResultType[aOptions]
   $result[^switch(true){
     ^case(^aOptions.asTable.bool(false)){table}
-    ^case(^aOptions.asHash.bool(false)){hash})
+    ^case(^aOptions.asHash.bool(false)){hash}
     ^case[DEFAULT]{$_defaultResultType}
   }]
 
@@ -324,7 +324,7 @@ pfClass
 # Если нужны сложные варианты используйте aggregate.
   $aConds[^hash::create[$aConds] $.orderBy[] $.having[]]
   $lExpression[^_selectExpression[count(*)][;$aConds;$aSQLOptions]]
-  $result[^CSQL.int{$lExpression}[][$aSQLOptions]]]
+  $result[^CSQL.int{$lExpression}[][$aSQLOptions]]
 
 @aggregate[*aConds][locals]
 ## Выборки с группировкой
@@ -335,7 +335,7 @@ pfClass
   $lExpression[^_selectExpression[
     ^asContext[select]{^__getAgrFields[$lConds.fields]}
   ][$lResultType;$lConds.options;$lConds.sqlOptions]]
-  $result[^CSQL.[$lResultType]{$lExpression}[][$lConds.sqlOptions]]]
+  $result[^CSQL.[$lResultType]{$lExpression}[][$lConds.sqlOptions]]
 
   ^if($result is table && def $lConds.options.asHashOn){
     $result[^result.hash[$lConds.options.asHashOn;$.type[table] $.distinct(true)]]
