@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+15.07.2015
+  1. Алексей Марьин прислал патч с поддержкой опции write-out в pfCurlFile.
+
 25.06.2015
   1. Алексей Марьин прислал патч, исправляющий работу трапов в маршрутах pfRouter в режиме strict.
 
