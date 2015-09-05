@@ -40,9 +40,9 @@ pfConsole
 
   $_isColoring(true)
 
-@GET_stdout[]
+@GET_stdout[][k;v]
   ^if($_STDOUT){
-    $result[^for[i](1;$_STDOUT){${_STDOUT.[$i].line}^if($_STDOUT.[$i].color){$_ccRestore}^if($_STDOUT.[$i].break){^#0A}}]
+    $result[^_STDOUT.foreach[_;v]{${v.line}^if($v.color){$_ccRestore}^if($v.break){^#0A}}]
   }{
      $result[]
    }

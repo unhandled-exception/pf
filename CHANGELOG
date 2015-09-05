@@ -11,6 +11,10 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+05.09.2015
+  1. Поменял в свойстве pfConsole.stdout цикл с for на foreach, чтобы не срабатывало Парсеровское ограничение
+     на количество итераций в цикле.
+
 15.07.2015
   1. Алексей Марьин прислал патч с поддержкой опции write-out в pfCurlFile.
 
