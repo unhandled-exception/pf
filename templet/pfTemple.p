@@ -14,6 +14,8 @@ pfClass
 ## aOptions.templateFolder - путь к базовому каталогу с шаблонами
 ## aOptions.force(false) - принудительно отменяет кеширование в стораджах и пр. местах
 ## aOptions.defaultEnginePattern[(?:pt|htm|html)^$] - шаблон для дефолтного энжина
+## aOptions.defaultEngineOptions[] — опции, которые надо передать дефолтному энжину
+## Дефолтный энжин — parser
   ^cleanMethodArgument[]
   ^BASE:create[$aOptions]
 
@@ -21,20 +23,19 @@ pfClass
   $_templatePath[^hash::create[]]
   ^appendPath[^if(def $aOptions.templateFolder){$aOptions.templateFolder}{/../views}]
 
-  $_force($aOptions.force)
+  $_force(^aOptions.force.bool(false))
 
   $_storages[^hash::create[]]
-  ^registerStorage[file;pfTempleStorage;$.force($_isForce)]
+  ^registerStorage[file;pfTempleStorage;$.force($_force)]
   $_defaultStorage[file]
 
   $_engines[^hash::create[]]
   $_defaultEnginePattern[^if(def $aOptions.defaultEnginePattern){$aOptions.defaultEnginePattern}{(?:pt|htm|html)^$}]
-  ^registerEngine[parser;;pfTempleParserEngine]
+  ^registerEngine[parser;;pfTempleParserEngine;$.args[$aOptions.defaultEngineOptions]]
   $_defaultEngine[parser]
 
   $_globalVars[^hash::create[]]
   $_profiles[^hash::create[]]
-
 
 #----- Properties -----
 
@@ -304,8 +305,10 @@ pfTempleEngine
 
 @create[aTemple;aOptions]
 ## aTemple - ссылка на объект темпла, которому принадлежит энжин
+## aOptions.locals(false) — включить options locals в классе-обертке шаблона
   ^cleanMethodArgument[]
   ^BASE:create[$aTemple;$aOptions]
+  $self._locals(^aOptions.locals.bool(false))
 
 @render[aTemplate;aOptions][lPattern]
 ## aTemplate[$.body $.path]
@@ -342,6 +345,10 @@ $result[]
 ^process{
 ^@CLASS
 $aClassName
+^if($_locals){
+^@OPTIONS
+locals
+}
 ^@BASE
 ^if(def $aBaseName){$aBaseName}{pfTempleParserPattern}
 ^@__create__[]

@@ -13,6 +13,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 
 03.01.2016
   1. Убрал лишние проверки foreach is junction в методах pfTemple.multiAssign и pfSiteModule.multiAssignVar.
+  2. Добавил опцию locals в конструктор pfTempleParserEngine, которая включает options locals в классе-обертке
+     шаблона. Добавил опцию defaultEngineOptions в конструктор класса pfTemple.
+  3. Поправил ошибку при работе с опцией force  в конструкторе pfTemple.
 
 09.11.2015
   1. Поправил работу с текущим временем в pfSQLTable и pfSQLQueue. В обработчиках очередей могли повтороно
