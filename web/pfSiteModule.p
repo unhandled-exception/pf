@@ -204,7 +204,6 @@ pfModule
 
 @multiAssignVar[aVars]
 ## Задает сразу несколько переменных в шаблон.
-  ^pfAssert:isTrue($aVars.foreach is junction)[aVars не поддерживает foreach.]
   ^aVars.foreach[k;v]{
     ^assignVar[$k;$v]
   }
