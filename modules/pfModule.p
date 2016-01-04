@@ -174,7 +174,7 @@ pfClass
    }
 
 @__getModule[aModuleName][locals]
-  ^if(!^_MODULES.contains[$aModuleName]){^throw[pfModule.module.not.found;Module "$aName" not found.]}
+  ^if(!^_MODULES.contains[$aModuleName]){^throw[pfModule.module.not.found;Module "$aModuleName" not found.]}
   $lModule[$_MODULES.[$aModuleName]]
   ^if(!def $lModule.object){
     ^compileModule[$aModuleName]
