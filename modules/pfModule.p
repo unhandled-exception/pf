@@ -111,6 +111,7 @@ pfClass
 ## aOptions.compile(0) - откомпилировать модуль сразу
 ## aOptions.args - опции, которые будут переданы конструктору.
 ## aOptions.mountTo[$aName] - точка монтирования относительно текущего модуля.
+## aOptions.skipModuleProperty(false) — не создавать отдельное свойство с именем модуля.
 
 ## Experimental:
 ## aOptions.faсtory - метод, который будет вызван для создания модуля
@@ -149,7 +150,6 @@ pfClass
        $.args[^if(def $aOptions.args){$aOptions.args}{^hash::create[]} $.parentModule[$self]]
        $.object[]
 
-       $.isCompiled(0)
        $.makeAction(^aOptions.makeAction.int(1))
        $.mountPoint[${_mountPoint}$lMountTo/]
    ]
@@ -165,18 +165,29 @@ pfClass
      ^compileModule[$aName]
    }
 
+   ^if(!^aOptions.skipModuleProperty.bool(false)
+       && !($self.[GET_$aName] is junction)
+    ){
+     ^process[$self]{^@GET_${aName}[]
+       ^$result[^^__getModule[$aName]]
+     }
+   }
+
+@__getModule[aModuleName][locals]
+  ^if(!^_MODULES.contains[$aModuleName]){^throw[pfModule.module.not.found;Module "$aName" not found.]}
+  $lModule[$_MODULES.[$aModuleName]]
+  ^if(!def $lModule.object){
+    ^compileModule[$aModuleName]
+  }
+  $result[$lModule.object]
+
 @GET_DEFAULT[aName][lName]
 ## Эмулирует свойства modModule
   $result[]
   ^if(^aName.left(3) eq "mod"){
     $lName[^aName.mid(3)]
     $lName[^lName.lower[]]
-    ^if(^_MODULES.contains[$lName]){
-      ^if(!$_MODULES.[$lName].isCompiled){
-        ^compileModule[$lName]
-      }
-      $result[$_MODULES.[$lName].object]
-    }
+    $result[^__getModule[$lName]]
   }
 
 @compileModule[aName][lFactory]
@@ -194,7 +205,6 @@ pfClass
       }{
          $_MODULES.[$aName].object[^lFactory[]]
        }
-      $_MODULES.[$aName].isCompiled(1)
     }{
       ^if(def $_MODULES.[$aName].source){
         ^process[$MAIN:CLASS]{^taint[as-is][$_MODULES.[$aName].source]}
@@ -212,7 +222,6 @@ pfClass
         }
        }
       $_MODULES.[$aName].object[^reflection:create[$_MODULES.[$aName].class;create;$_MODULES.[$aName].args $.appendSlash[$appendSlash]]]
-      $_MODULES.[$aName].isCompiled(1)
      }
   }{
      ^throw[pfModule.compile;Module "$aName" not found.]

@@ -11,6 +11,12 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+04.01.2016
+  1. Добавил создание свойства с именем модуля (GET_moduleName) в методе pfModule.assignModule.
+     Если свойство не нужно, то его можно не создавать, передав в assignModule опцию skipModuleProperty(true).
+     Свойство не создается, если в объекте уже есть свойство GET_moduleName.
+     Свойство modModuleName добавляется в любом случае.
+
 03.01.2016
   1. Убрал лишние проверки foreach is junction в методах pfTemple.multiAssign и pfSiteModule.multiAssignVar.
   2. Добавил опцию locals в конструктор pfTempleParserEngine, которая включает options locals в классе-обертке
