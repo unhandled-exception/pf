@@ -27,26 +27,17 @@ pfSQL
 ## aOptions.isNatural
   $result[]
   ^cleanMethodArgument[]
-  ^if(^aOptions.isNatural.bool(false) || $isNaturalTransactions){
-    ^void{set autocommit=0}
-  }
   ^void{start transaction}
 
 @commit[aOptions]
 ## Комитит транзакцию.
   $result[]
   ^void{commit}
-  ^if(!$isNaturalTransactions){
-    ^void{set autocommit=1}
-  }
 
 @rollback[aOptions]
 ## Откатывает транзакцию.
   $result[]
   ^void{rollback}
-  ^if(!$isNaturalTransactions){
-    ^void{set autocommit=1}
-  }
 
 #--- DATE functions ---
 
