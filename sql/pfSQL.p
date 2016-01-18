@@ -43,6 +43,7 @@ pfClass
   ^BASE:create[]
 
   $_connectString[$aConnectString]
+  $_connectionsCount(0)
   $_transactionsCount(0)
 
   $_serverType[SQL Generic]
@@ -118,13 +119,29 @@ pfClass
 
 #----- Public -----
 
+@connect[aCode]
+## Выполняет соединение с сервером и выполняет код, если оно еще не установлено.
+## Выполняется автоматически при попытке отправить запрос или открыть транзакцию.
+  ^if($_connectionsCount){
+    $result[$aCode]
+  }{
+     ^MAIN:connect[$_connectString]{
+       ^_connectionsCount.inc[]
+       ^try{
+         $result[$aCode]
+       }{}{
+         ^_connectionsCount.dec[]
+       }
+     }
+   }
+
 @transaction[aCode;aOptions][lQL]
 ## Организует транзакцию, обеспечивая возможность отката.
 ## aOptions.isNatural - принудительно устанавливает режим "натуральной транзакции".
 ## aOptions.disableQueriesLog(false) - отключить лог на время работы транзакции
   ^cleanMethodArgument[]
   $result[]
-  ^connect[$connectString]{
+  ^self.connect{
     ^try{
       $lQL($_enableQueriesLog)
       ^if(^aOptions.disableQueriesLog.bool(false)){$_enableQueriesLog(false)}
@@ -274,9 +291,9 @@ pfClass
       && !^aOptions.isForce.bool(false)){
     ^if(!def $aOptions.cacheTime){$aOptions.cacheTime[$_cacheLifetime]}
     $lCacheKey[^if(def $aOptions.cacheKey){$aOptions.cacheKey}{$aOptions.queryKey}]
-    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^if($isTransaction){^_exec[$aType]{$aCode}[$aOptions]}{^transaction{^_exec[$aType]{$aCode}[$aOptions]}}}] 
+    $result[^CACHE.data[${_cacheKeyPrefix}$lCacheKey][$aOptions.cacheTime][$aType]{^self.connect{^_exec[$aType]{$aCode}[$aOptions]}}] 
   }{
-     $result[^if($isTransaction){^_exec[$aType]{$aCode}[$aOptions]}{^transaction{^_exec[$aType]{$aCode}[$aOptions]}}]
+     $result[^self.connect{^_exec[$aType]{$aCode}[$aOptions]}]
    }
 
 @_exec[aType;aCode;aOptions][lStart;lEnd;lMemStart;lMemEnd]
