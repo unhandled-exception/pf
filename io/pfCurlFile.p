@@ -83,6 +83,9 @@ pfClass
       }
    }
 
+  $_withStat(false)
+  $_boundary[==========^math:uid64[]]
+
   ^if(!def ${_options.user-agent}){$_options.user-agent[$_defaultUserAgent]}
   $_options.timeout(^_options.timeout.int(2))
 
@@ -156,6 +159,10 @@ pfClass
 @GET_text[]
   $result[$_file.text]
 
+  ^if($_withStat){
+    $result[^result.match[${_boundary}.*;;]]
+  }
+
 @GET_size[]
   $result[$_file.size]
 
@@ -174,6 +181,15 @@ pfClass
 @GET_data[]
 ## Возврашает переменную типа file
   $result[$_file]
+
+@GET_stat[]
+  $result[^hash::create[]]
+
+  ^if($_withStat){
+    $result[^data.text.match[${_boundary}(.+)]]
+    $result[^table::create{param^#09value^#0A^taint[as-is;$result.1]}]
+    $result[^result.hash[param;value;$.type[string]]]
+  }
 
 #----- Public -----
 @save[aFormat;aName]
@@ -228,7 +244,7 @@ pfClass
   }
   ^throw[$lType;$lSource;$lComment]
 
-@_makeOptions[][lColumns;lMethod]
+@_makeOptions[][lColumns;lMethod;lParams;lParam]
   $result[^table::create{arg}]
 
   ^result.append{--connect-timeout}
@@ -239,7 +255,7 @@ pfClass
     ^if(!${_options.any-status}){^result.append{--fail}}
 
     ^result.append{--user-agent}
-    ^result.append{$_options.user-agent}
+    ^result.append{"$_options.user-agent"}
 
     ^if(^aOptions.compressed.bool(true)){^result.append{--compressed}}
 
@@ -304,8 +320,50 @@ pfClass
     ^result.append{$_options.user:$_options.password}
   }
 
+  ^if(!$_isBinary && ^_options.contains[write-out]){
+    $lParams[
+      $.content_type(true)
+      $.filename_effective(true)
+      $.ftp_entry_path(true)
+      $.http_code(true)
+      $.http_connect(true)
+      $.local_ip(true)
+      $.local_port(true)
+      $.num_connects(true)
+      $.num_redirects(true)
+      $.redirect_url(true)
+      $.remote_ip(true)
+      $.remote_port(true)
+      $.size_download(true)
+      $.size_header(true)
+      $.size_request(true)
+      $.size_upload(true)
+      $.speed_download(true)
+      $.speed_upload(true)
+      $.ssl_verify_result(true)
+      $.time_appconnect(true)
+      $.time_connect(true)
+      $.time_namelookup(true)
+      $.time_pretransfer(true)
+      $.time_redirect(true)
+      $.time_starttransfer(true)
+      $.time_total(true)
+      $.url_effective(true)
+    ]
+    ^if($_options.[write-out]){
+      $lParams[^lParams.intersection[$_options.[write-out]]]
+    }
+
+    ^if($lParams){
+      ^result.append{--write-out}
+      ^result.append{"${_boundary}^lParams.foreach[lParam;]{$lParam\t%{$lParam}}[\n]"}
+
+      $_withStat(true)
+    }
+  }
+
   ^result.append{-#}
-  ^result.append{$_URL.url}
+  ^result.append{"$_URL.url"}
 
 #   ^pfAssert:fail[^result.menu{$result.arg}[ ]]
 

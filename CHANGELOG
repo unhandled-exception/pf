@@ -1,15 +1,103 @@
 PF Library
 Copyright (c) Oleg Volchkov
--------------------------------------
+http://unhandled-exception.ru
 
 Changelog
 =========
 
 hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
-Веб-интерфейс репозитория: http://code.volchkov.net/parser3-pf/src
+Веб-интерфейс репозитория: https://bitbucket.org/ovolchkov/parser3-pf/src
 
 1.1 (develop)
 -------------
+
+10.01.2016
+  1. Убрал из pfModule.compileModule оператор use с опцией replace, который скрывал ошибки при подключении модулей.
+     Это изменение может сломать совместимость со старым кодом, если один и тот же модуль подключался несколько раз,
+     но путь к файлу был указан по разному. Если нужен use с replace, то перекройте метод compileModule.
+
+04.01.2016
+  1. Добавил создание свойства с именем модуля (GET_moduleName) в методе pfModule.assignModule.
+     Если свойство не нужно, то его можно не создавать, передав в assignModule опцию skipModuleProperty(true).
+     Свойство не создается, если в объекте уже есть свойство GET_moduleName.
+     Свойство modModuleName добавляется в любом случае.
+
+03.01.2016
+  1. Убрал лишние проверки foreach is junction в методах pfTemple.multiAssign и pfSiteModule.multiAssignVar.
+  2. Добавил опцию locals в конструктор pfTempleParserEngine, которая включает options locals в классе-обертке
+     шаблона. Добавил опцию defaultEngineOptions в конструктор класса pfTemple.
+  3. Поправил ошибку при работе с опцией force  в конструкторе pfTemple.
+  4. Исправил ошибку в pfQueue — неправильно вычислялся индекс последнего элемента при добавлении элемента в очередь
+     из которой уже забирали элементы.
+
+09.11.2015
+  1. Поправил работу с текущим временем в pfSQLTable и pfSQLQueue. В обработчиках очередей могли повтороно
+     обрабатываться задачи, если скрипт выполнялся продолжительное время, например, при пакетной обработке задач.
+
+05.09.2015
+  1. Поменял в свойстве pfConsole.stdout цикл с for на foreach, чтобы не срабатывало Парсеровское ограничение
+     на количество итераций в цикле.
+
+15.07.2015
+  1. Алексей Марьин прислал патч с поддержкой опции write-out в pfCurlFile.
+
+25.06.2015
+  1. Алексей Марьин прислал патч, исправляющий работу трапов в маршрутах pfRouter в режиме strict.
+
+04.06.2015
+  1. Исправил ошибку, внесенную в commit:b824d682fd2d 11 мая 2015 г. В методе pfModule.processAction переделал
+     список локальных переменных на locals, но не добавил self для полей объекта, которые устанавливал метод.
+     Теперь переменные устанавливаются правильно и prefix в маршрутах работает.
+
+12.05.2015
+  1. Добавил в класс sql/generics/settings/pfSQLSettings поддержку схемы базы данных.
+
+11.05.2015
+  1. Новое поле — pfHTTPRequest.ACTION (form:_action).
+  2. Новое поле — pfHTTPRequest.PATH (uri без query).
+  3. Исправил ошибку в методе ^pfHTTPRequest.getFullPath, которая приводила к удвоению query-части.
+     Вместо метода pfHTTPRequest.getFullPath лучше использовать свойство $pfHTTPRequest.URI.
+  4. Добавил опцию ^pfModule.assignModule[module/name;$.mountTo[new/name]], которая позволяет поменять
+     путь к модулю в адресе, но не менять имя в структуре модулей.
+     [Патч прислал Алексей Марьин / http://groundzero.ru/]
+  5. Новый класс — pf/security/pfSecurityCrypt.p
+
+24.04.2015
+  1. Добавил встроенную команду в help в pfCommandsManager.
+  2. Добавил параметр aFinallyCode в pfOS:tempFile.
+
+25.01.2015
+  1. Добавил в конструктор класса pfSQLQueue параметр $.interval(double).
+
+15.12.2014
+  1. В pfTableModelGenerator исправил работу со значениями «по-умолчанию» для численных полей.
+
+03.12.2014
+  1. Новый метод — pfSQLTable.replaceField.
+
+14.10.2014
+  1. Добавил в класс pfTableFormGenerator поддержку Bootstrap 3. По-умолчанию форма генерируется
+     для второй версии Бутстрапа. Чтобы переключить на третью версию, надо передать в конструктор
+     параметр $.widgets:
+     ^pfTableFormGenerator::create[
+       $.widgets[^pfTableFormGeneratorBootstrap3Widgets::create[]]
+     ]
+  2. Новый класс — pf/api/yandex/speechkit/pfYandexSpeechKit.
+     Реализован доступ к синтезатору речи — https://tech.yandex.ru/speechkit/cloud/doc/dg/concepts/speechkit-dg-tts-docpage/.
+
+01.09.2014
+  1. Добавил параметр fieldExpression в поле с ip-адресом в pfTableModelGenerator.
+
+30.08.2014
+  1. В pfSQLBuilder добавил процессор hash_md5.
+
+21.07.2014
+  1. В метод pfSQLTable.all добавил параметр $.join, для того чтобы можно было писать сложные запросы
+     через pfSQLTable.aggregate.
+  2. Новый класс для генерации Экселевских таблиц — pf/api/office/excel/pfTableToXLS.
+
+11.05.2014
+  1. Поправил тег для чекбокса в pfTableFormGenerator.
 
 
 1.0.1

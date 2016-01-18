@@ -11,7 +11,9 @@ pf/sql/orm/pfSQLTable.p
 pfSQLTable
 
 @create[aTableName;aOptions]
-## aOptions.defaultTaskType[0]
+## aOptions.defaultTaskType[0] — значение типа задачи по-умолчанию
+## aOptions.interval(0.0) — интервал в минутах между попытками обработки задач.
+##                          Если ноль, то используем 2**attempt.
   ^BASE:create[$aTableName;$aOptions]
   ^pfAssert:isTrue($CSQL is pfMySQL)[Очередь поддерживает работу только с MySQL.]
 
@@ -28,6 +30,8 @@ pfSQLTable
 
   $_defaultOrderBy[$.taskID[asc]]
 
+  $_interval(^aOptions.interval.double(0.0))
+
 @fetchOne[aOptions]
 ## Достает из базы ровно одну задачу
   $result[^fetch[^hash::create[$aOptions] $.limit(1) $.asHash(true)]]
@@ -42,14 +46,18 @@ pfSQLTable
     $lConds[^hash::create[$aOptions]]
     $result[^all[
       $lConds
-      $.[processTime <][$_now]
+      $.[processTime <][^date::now[]]
     ][
       $.tail[for update]
     ]]
     ^result.foreach[k;v]{
       ^modify[$v.taskID;
         $.attempt($v.attempt + 1)
-        $.processTime[^date::create($_now + ^math:pow(2;$v.attempt)/1440)]
+        ^if($_interval > 0){
+          $.processTime[^date::create(^date::now[] + ($_interval/1440))]
+        }{
+          $.processTime[^date::create(^date::now[] + ^math:pow(2;$v.attempt)/1440)]
+        }
       ]
     }
   }

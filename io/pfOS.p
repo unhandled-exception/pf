@@ -129,15 +129,17 @@ pf/tests/pfAssert.p
      $result[text/plain]
    }
 
-@tempFile[aPath;aVarName;aCode][lTempFileName]
+@tempFile[aPath;aVarName;aCode;aFinallyCode][lTempFileName]
 ## Формирует на время выполнения кода aCode уникальное имя для временного
 ## файла в папке aPath. После работы кода удаляет временный файл, если он создан.
+## Если задан параметр aFinallyCode, то он запускается, даже если произошла ошибка.
   ^pfAssert:isTrue(def $aVarName)[Не задано имя переменной для названия временного файла.]
   ^try{
     $lTempFileName[^aPath.trim[end;/\]/${status:pid}_^math:uid64[].tmp]
     $caller.[$aVarName][$lTempFileName]
     $result[$aCode]
   }{}{
+     $aFinallyCode
      ^if(-f $lTempFileName){
        ^file:delete[$lTempFileName]
      }

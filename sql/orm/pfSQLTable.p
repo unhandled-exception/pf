@@ -178,6 +178,12 @@ pfClass
 ## Проверяет наличие поля в таблице
   $result(def $aFieldName && ^_fields.contains[$aFieldName])
 
+@replaceField[aFieldName;aOptions]
+  ^if(^hasField[$aFieldName]){
+    ^_fields.delete[$aFieldName]
+  }
+  $result[^addField[$aFieldName;$aOptions]]
+
 @cleanFormData[aFormData]
 ## Возвращает хеш с полями, для которых разрешены html-виджеты.
   ^cleanMethodArgument[aFormData]
@@ -258,6 +264,7 @@ pfClass
 ##   aOptions.having{expression} — выражение для having
 ##   aOptions.orderBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для orderBy
 ##   aOptions.groupBy[hash[$.field[asc]]|{expression}] — хеш с полями или выражение для groupBy
+##   aOptions.join[] — выражение для join. Заменяет результат вызова ^_allJoin[].
 ## aOptions.limit
 ## aOptions.offset
 ## aOptions.primaryKeyColumn[:primaryKey] — имя колонки для первичного ключа
@@ -280,7 +287,7 @@ pfClass
 @__getResultType[aOptions]
   $result[^switch(true){
     ^case(^aOptions.asTable.bool(false)){table}
-    ^case(^aOptions.asHash.bool(false)){hash})
+    ^case(^aOptions.asHash.bool(false)){hash}
     ^case[DEFAULT]{$_defaultResultType}
   }]
 
@@ -317,7 +324,7 @@ pfClass
 # Если нужны сложные варианты используйте aggregate.
   $aConds[^hash::create[$aConds] $.orderBy[] $.having[]]
   $lExpression[^_selectExpression[count(*)][;$aConds;$aSQLOptions]]
-  $result[^CSQL.int{$lExpression}[][$aSQLOptions]]]
+  $result[^CSQL.int{$lExpression}[][$aSQLOptions]]
 
 @aggregate[*aConds][locals]
 ## Выборки с группировкой
@@ -328,7 +335,7 @@ pfClass
   $lExpression[^_selectExpression[
     ^asContext[select]{^__getAgrFields[$lConds.fields]}
   ][$lResultType;$lConds.options;$lConds.sqlOptions]]
-  $result[^CSQL.[$lResultType]{$lExpression}[][$lConds.sqlOptions]]]
+  $result[^CSQL.[$lResultType]{$lExpression}[][$lConds.sqlOptions]]
 
   ^if($result is table && def $lConds.options.asHashOn){
     $result[^result.hash[$lConds.options.asHashOn;$.type[table] $.distinct(true)]]
@@ -593,7 +600,7 @@ pfClass
   $result[
        select $aFields
          from ^if(def $SCHEMA){^_builder.quoteIdentifier[$SCHEMA].}^_builder.quoteIdentifier[$TABLE_NAME] as ^_builder.quoteIdentifier[$TABLE_ALIAS]
-              ^asContext[where]{^_allJoin[$aOptions]}
+              ^asContext[where]{^if(^aOptions.contains[join]){$aOptions.join}{^_allJoin[$aOptions]}}
         where ^asContext[where]{^_allWhere[$aOptions]}
       ^if(def $lGroup){
         group by $lGroup
@@ -752,6 +759,7 @@ pfClass
 ##   uid, auto_uid - уникальный идентификатор (math:uuid)
 ##   inet_ip — преобразует строку в числовое представление IP
 ##   first_upper - удаляет ведущие пробелы и капитализирует первую букву
+##   hash_md5 — берет md5 от значения
 
 @_processFieldsOptions[aOptions]
   $result[^hash::create[$aOptions]]
@@ -832,9 +840,9 @@ pfClass
       ^case[int;auto_int]{^try{$lVal($aValue)}{^if(^aField.contains[default]){$exception.handled(true) $lVal($aField.default)}}^lVal.format[^if(def $aField.format){$aField.format}{%d}]}
       ^case[double;auto_double]{^if(^aField.contains[default]){$lValue(^aValue.double($aField.default))}{$lValue(^aValue.double[])}^lValue.format[^if(def $aField.format){$aField.format}{%.16g}]}
       ^case[bool;auto_bool]{^if(^aValue.bool(^if(^aField.contains[default]){$aField.default}{false})){1}{0}}
-      ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{'^_now.sql-string[]'}}
-      ^case[curtime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{^_now.sql-string[time]}'}
-      ^case[curdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{^_now.sql-string[date]}'}
+      ^case[now;auto_now]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{$lNow[^date::now[]]'^lNow.sql-string[]'}}
+      ^case[curtime;auto_curtime]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}}{$lNow[^date::now[]]^lNow.sql-string[time]}'}
+      ^case[curdate;auto_curdate]{'^if(def $aValue){^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}}{$lNow[^date::now[]]^lNow.sql-string[date]}'}
       ^case[datetime]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[]}{^taint[$aValue]}'}{null}}
       ^case[date]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[date]}{^taint[$aValue]}'}{null}}
       ^case[time]{^if(def $aValue){'^if($aValue is date){^aValue.sql-string[time]}{^taint[$aValue]}'}{null}}
@@ -844,6 +852,7 @@ pfClass
       ^case[uid;auto_uid]{'^taint[^if(def $aValue){$aValue}{^math:uuid[]}']}
       ^case[inet_ip]{^unsafe{^inet:aton[$aValue]}{null}}
       ^case[first_upper]{'^taint[^if(def $aValue){^aValue.match[$_PFSQLBUILDER_PROCESSOR_FIRST_UPPER][]{^match.1.upper[]$match.2}}(def $aField.default){$aField.default}]'}
+      ^case[hash_md5]{'^taint[^if(def $aValue){^math:md5[$aValue]}]'}
       ^case[DEFAULT;auto_default]{'^taint[^if(def $aValue){$aValue}(def $aField.default){$aField.default}]'}
     }]
   }{

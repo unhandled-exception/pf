@@ -18,16 +18,15 @@ pfCollection
 #----- Constructor -----
 
 @create[aValues;aOptions]
-## Создает коллекцию. 
 ## aValues - таблица, хэш или коллекция, содержимое которой копируется в новую коллекцию.
   ^clear[]
   ^reset[]
   ^BASE:create[$aValues;$aOptions]
 
 @clear[]
-## Удаляет все элементы из коллекции
   $_queue[^hash::create[]]
   $_first(0)
+  $_last(0)
 
 #----- Properties -----
 
@@ -42,7 +41,8 @@ pfCollection
 
 @enqueue[aItem]
 ## Добавляет элемент в конец очереди.
-  $_queue.[$count][$aItem]
+  $_queue.[$_last][$aItem]
+  ^_last.inc[]
   ^reset[]
 
 @dequeue[]
@@ -54,26 +54,26 @@ pfCollection
   ^reset[]
 
 @peek[]
-## Извлекает элемент из вершины стека, но не удаляет его.
+## Извлекает элемент из начала очереди, но не удаляет его.
   ^pfAssert:isTrue($count)[Очередь пуста.]
   $result[$_queue.[$_first]]
 
-@reverse[][result;lNew;it]
-## Меняет порядок элементов на обратный
-  ^if($count){
+@reverse[][result;lNew;it;lCount]
+  $lCount($count)
+  ^if($lCount){
   	$lNew[^hash::create[]]
-    ^foreach[it]{
-    	$lNew.[^eval($count - $lNew - 1)][$it]
+    $i($lCount - 1)
+    ^_queue.foreach[_;v]{
+    	$lNew.[$i][$v]
+      ^i.dec[]
     }
     $_queue[$lNew]
     $_first(0)
+    $_last($lNew - 1)
   }
   ^reset[]
-  
+
 #----- Iterator's -----
 
 @GET_currentItem[]
-## Текущий элемент коллекции c порядкоовым номером $currentIndex
   $result[$_queue.[^eval($_first + $currentIndex)]]
-
-
