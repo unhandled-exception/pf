@@ -70,21 +70,25 @@ pfClass
 ## Return form:imap field
   $result[$_IMAP]
 
-
 @GET_isSECURE[]
 ## Проверяет пришел ли нам запрос по протоколу HTTPS.
   $result((def $META.HTTPS && ^META.HTTPS.lower[] eq "on") || ^META.SERVER_PORT.int(80) == 443)
 
+@GET_SCHEME[]
+## Возвращает схему запроса (http/https)
+  $result[http^if($isSECURE){s}]
+
+@GET_isLOCALREFERER[]
+## Проверяет является ли Referer локальным.
+  $result(^HEADERS.Referer.pos[${SCHEME}://$HOST] == 0)
 
 @GET_METHOD[]
 ## Возвращает http-метод запроса в нижнем регистре
+## Чтобы задать произвольный метод в форме, надо передать на сервер
+## post-запрос с полем _method в котором будет имя метода.
   $result[^META.REQUEST_METHOD.lower[]]
   ^if($result eq "post" && def $_FIELDS._method){
-    $result[^switch[^_FIELDS._method.lower[]]{
-      ^case[DEFAULT]{post}
-      ^case[delete]{delete}
-      ^case[put]{put}
-    }]
+    $result[^_FIELDS._method.lower[]]
   }
 
 @GET_isGET[]

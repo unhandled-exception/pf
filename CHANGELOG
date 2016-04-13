@@ -11,6 +11,10 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+13.04.2016
+  1. Добавил в pfHTTPRequest свойства $SCHEME, $isLOCALREFERER и добавил поддержку произвольных
+     http-методов в свойство $METHOD.
+
 18.01.2016
   1. Добавил метод pfSQL.connect, который отсекает вложенные коннекты. Убрал в pfMySQL изменение autocommit в транзакциях.
 
