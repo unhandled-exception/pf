@@ -184,18 +184,24 @@ pfModule
 
   $lVars[^hash::create[$_templateVars]]
   ^if(def $aOptions.vars){^lVars.add[$aOptions.vars]}
-  ^if(!^lVars.contains[REQUEST]){$lVars.REQUEST[$request]}
-  ^if(!^lVars.contains[ACTION]){$lVars.ACTION[$action]}
-  ^if(!^lVars.contains[linkTo]){$lVars.linkTo[$linkTo]}
-  ^if(!^lVars.contains[redirectTo]){$lVars.redirectTo[$redirectTo]}
-  ^if(!^lVars.contains[linkFor]){$lVars.linkFor[$linkFor]}
-  ^if(!^lVars.contains[redirectFor]){$lVars.redirectFor[$redirectFor]}
+  $lVars[^lVars.union[^templateDefaults[]]]
 
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
     $.vars[$lVars]
     $.force($aOptions.force)
     $.engine[$aOptions.engine]
   ]]
+
+@templateDefaults[]
+## Задает переменные шаблона по умолчанию.
+  $result[
+    $.REQUEST[$request]
+    $.ACTION[$action]
+    $.linkTo[$linkTo]
+    $.redirectTo[$redirectTo]
+    $.linkFor[$linkFor]
+    $.redirectFor[$redirectFor]
+  ]
 
 @assignVar[aVarName;aValue]
 ## Задает переменную для шаблона
