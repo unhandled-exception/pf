@@ -54,6 +54,7 @@ pfModule
   $_templet[^if(def $aOptions.templet){$aOptions.templet}]
 
   $_templateVars[^hash::create[]]
+  ^assignTemplateDefaults[]
 
 # Метод display лучше не использовать (deprecated).
   ^alias[display;$render]
@@ -184,7 +185,6 @@ pfModule
 
   $lVars[^hash::create[$_templateVars]]
   ^if(def $aOptions.vars){^lVars.add[$aOptions.vars]}
-  $lVars[^lVars.union[^templateDefaults[]]]
 
   $result[^TEMPLET.render[${lTemplatePrefix}^if(def $aTemplate){$aTemplate^if(!def ^file:justext[$aTemplate]){.pt}}{default.pt};
     $.vars[$lVars]
@@ -202,6 +202,9 @@ pfModule
     $.linkFor[$linkFor]
     $.redirectFor[$redirectFor]
   ]
+
+@assignTemplateDefaults[]
+  ^TEMPLET.multiAssign[^templateDefaults[]]
 
 @assignVar[aVarName;aValue]
 ## Задает переменную для шаблона
