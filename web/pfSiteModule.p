@@ -193,7 +193,7 @@ pfModule
   ]]
 
 @templateDefaults[]
-## Задает переменные шаблона по умолчанию.
+## Возвращает переменные шаблона по умолчанию.
   $result[
     $.REQUEST[$REQUEST]
     $.ACTION[$ACTION]
