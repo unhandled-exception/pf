@@ -195,8 +195,8 @@ pfModule
 @templateDefaults[]
 ## Возвращает переменные шаблона по умолчанию.
   $result[
-    $.REQUEST[$REQUEST]
-    $.ACTION[$ACTION]
+    $.REQUEST[$request]
+    $.ACTION[$action]
     $.linkTo[$linkTo]
     $.redirectTo[$redirectTo]
     $.linkFor[$linkFor]
