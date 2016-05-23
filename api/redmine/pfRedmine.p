@@ -22,7 +22,7 @@ pfClass
   ^pfAssert:isTrue(def $aOptions.sql)[Не задан sql-класс для работы с редмайном.]
 
   $_sql[$aOptions.sql]
-  $_database[^if(def $aOptions.database){$aOptions.database}{redmine}]
+  $_database[`^taint[^if(def $aOptions.database){$aOptions.database}{redmine}]`]
 
   $ISSUE_STATUS_ID_NEW[1]
   $ISSUE_STATUS_ID_RESOLVED[3]
@@ -116,11 +116,11 @@ pfClass
 
 @activateUser[aUserID]
   $result[]
-  ^CSQL.void{update ${_database}.users set status = 1 where id = "^aUserID.int(-1)"}
+  ^CSQL.void{update ${_database}.users set status = 1 where id = '^aUserID.int(-1)'}
 
 @deactivateUser[aUserID]
   $result[]
-  ^CSQL.void{update ${_database}.users set status = 3 where id = "^aUserID.int(-1)"}
+  ^CSQL.void{update ${_database}.users set status = 3 where id = '^aUserID.int(-1)'}
 
 @createUser[aOptions]
   ^cleanMethodArgument[]
@@ -132,47 +132,61 @@ pfClass
          set login = "$aOptions.login",
 
 #            The hashed password is stored in the following form: SHA1(salt + SHA1(password))
-             hashed_password = "^math:sha1[^math:sha1[$aOptions.password]]",
-             salt = "",
+             hashed_password = '^math:sha1[^math:sha1[$aOptions.password]]',
+             salt = '',
 
-             firstname = "$aOptions.firstname",
-             lastname = "$aOptions.lastname",
-#              mail = "$aOptions.mail",
-             mail_notification = "only_my_events",
-             type = "User",
-             language = "ru",
+             firstname = '$aOptions.firstname',
+             lastname = '$aOptions.lastname',
+             type = 'User',
+             language = 'ru',
              status = 1,
              created_on = ^CSQL.now[]
     }
     $result[^CSQL.lastInsertId[]]
+    ^if(^aOptions.contains[mail]){
+      ^_updateUserEmail[$result;$aOptions.mail]
+    }
     ^_updateUserPermissions[$result;$aOptions.group]
   }[$.isNatural(true)]
 
-@updateUser[aUserID;aOptions]
+@updateUser[aUserID;aOptions][locals]
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def ^aUserID.int(0))[На задан id пользователя.]
   ^CSQL.transaction{
     ^CSQL.void{
       update ${_database}.users
-         set ^if(^aOptions.contains[login]){login = "$aOptions.login",}
+         set ^if(^aOptions.contains[login]){login = '$aOptions.login',}
              ^if(def $aOptions.password){
-               hashed_password = "^math:sha1[^math:sha1[$aOptions.password]]",
-               salt = "",
+               hashed_password = '^math:sha1[^math:sha1[$aOptions.password]]',
+               salt = '',
              }
-             ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
-             ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
-#              ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
+             ^if(^aOptions.contains[firstname]){firstname = '$aOptions.firstname',}
+             ^if(^aOptions.contains[lastname]){lastname = '$aOptions.lastname',}
              updated_on = ^CSQL.now[]
-       where id = "^aUserID.int(-1)"
+       where id = '^aUserID.int(-1)'
+    }
+    ^if(^aOptions.contains[mail]){
+      ^_updateUserEmail[$aUserID;$aOptions.mail]
     }
     ^_updateUserPermissions[$aUserID;$aOptions.group]
   }[$.isNatural(true)]
 
+@_updateUserEmail[aUserID;aEmail]
+  ^CSQL.void{delete from ${_database}.email_addresses where user_id = '^aUserID.int(-1)'}
+  ^if(def $aEmail){
+    ^CSQL.void{
+      insert into ${_database}.email_addresses
+        (`user_id`, `address`, `is_default`, `notify`, `created_on`, `updated_on`)
+      values
+        ('$aUserID', '^taint[$aEmail]', 1, 'only_my_events', now(), now())
+    }
+  }
+
 @_updateUserPermissions[aUserID;aGroup]
   $result[]
   ^if(^aUserID.int(0) && ^aGroup.int(0)){
-    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("^aGroup.int(0)", "^aUserID.int(0)")}
+    ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ('^aGroup.int(0)', '^aUserID.int(0)')}
     ^CSQL.void{insert ignore into ${_database}.members (user_id, project_id, mail_notification, created_on)
                  select ^aUserID.int(0), project_id, mail_notification, ^CSQL.now[]
                    from ${_database}.members

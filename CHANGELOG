@@ -11,6 +11,9 @@ hg clone https://bitbucket.org/ovolchkov/parser3-pf ./
 1.1 (develop)
 -------------
 
+23.05.2016
+  1. Сделал клас api/redmine/pfRedmine.p совместимым с Redmine 3.2.
+
 30.04.2016
   1. Вынес в метод pfSiteModule.templateDefaults установку переменных по-умолчанию для шаблонов. [GZ]
 
