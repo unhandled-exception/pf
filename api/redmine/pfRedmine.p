@@ -3,6 +3,7 @@
 
 ## Модуль для работы с системой управления проектами Redmine.
 ## REST API пока нерабочее, поэтому класс реализует работу с системой через БД.
+## Redmine >= 3.2, MySQL only
 
 @CLASS
 pfRedmine
@@ -26,7 +27,7 @@ pfClass
   $ISSUE_STATUS_ID_NEW[1]
   $ISSUE_STATUS_ID_RESOLVED[3]
   $ISSUE_STATUS_ID_CLOSED[5]
-  
+
   $PRIORITY_NORMAL[4]
 
   $_validIssueFields[
@@ -66,7 +67,7 @@ pfClass
           ^if(!def $aOptions.trackerID){tracker_id = '3',}
           ^if(!def $aOptions.statusID){status_id = '$ISSUE_STATUS_ID_NEW',}
           ^if(!def $aOptions.priority){priority_id = '$PRIORITY_NORMAL',}
-          created_on = ^CSQL.now[], updated_on = ^CSQL.now[], 
+          created_on = ^CSQL.now[], updated_on = ^CSQL.now[],
           lft = 1, rgt = 2
   }
   $result[^CSQL.lastInsertId[]]
@@ -77,7 +78,7 @@ pfClass
       values ^aOptions.custom.foreach[k;v]{('Issue', '$result', '$k', '$v')}[,]
     }
   }
-  
+
   ^if(!def $aOptions.rootID){
     ^CSQL.void{
       update ${_database}.issues
@@ -91,14 +92,23 @@ pfClass
 ## aOptions.login
   ^cleanMethodArgument[]
   $result[^CSQL.table{
-    select id, login, firstname as firstName, lastname as lastName, 
-           mail, admin as isAdmin, language, type, identity_url as identityURL
-      from ${_database}.users
-     where 1=1   
+    select u.id,
+           u.login,
+           u.firstname as firstName,
+           u.lastname as lastName,
+           group_concat(distinct e.address separator ', ') as mail,
+           admin as isAdmin,
+           language,
+           type,
+           identity_url as identityURL
+      from ${_database}.users as u
+           left join ${_database}.email_addresses as e on u.id = e.user_id
+     where 1=1
            ^if(^aOptions.contains[login]){
-             and login = "$aOptions.login"
+             and login = '$aOptions.login'
            }
-  }] 
+  group by u.id
+  }]
 
 @findUser[aUserName]
 ## Возвращает данные пользователя
@@ -112,7 +122,7 @@ pfClass
   $result[]
   ^CSQL.void{update ${_database}.users set status = 3 where id = "^aUserID.int(-1)"}
 
-@createUser[aOptions]      
+@createUser[aOptions]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aOptions.login)[На задан логин.]
   ^pfAssert:isTrue(def $aOptions.password)[На задан пароль.]
@@ -121,13 +131,13 @@ pfClass
       insert into ${_database}.users
          set login = "$aOptions.login",
 
-#            The hashed password is stored in the following form: SHA1(salt + SHA1(password))             
+#            The hashed password is stored in the following form: SHA1(salt + SHA1(password))
              hashed_password = "^math:sha1[^math:sha1[$aOptions.password]]",
              salt = "",
 
-             firstname = "$aOptions.firstname", 
-             lastname = "$aOptions.lastname", 
-             mail = "$aOptions.mail", 
+             firstname = "$aOptions.firstname",
+             lastname = "$aOptions.lastname",
+#              mail = "$aOptions.mail",
              mail_notification = "only_my_events",
              type = "User",
              language = "ru",
@@ -137,8 +147,8 @@ pfClass
     $result[^CSQL.lastInsertId[]]
     ^_updateUserPermissions[$result;$aOptions.group]
   }[$.isNatural(true)]
-  
-@updateUser[aUserID;aOptions]      
+
+@updateUser[aUserID;aOptions]
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def ^aUserID.int(0))[На задан id пользователя.]
@@ -152,9 +162,9 @@ pfClass
              }
              ^if(^aOptions.contains[firstname]){firstname = "$aOptions.firstname",}
              ^if(^aOptions.contains[lastname]){lastname = "$aOptions.lastname",}
-             ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
+#              ^if(^aOptions.contains[mail]){mail = "$aOptions.mail",}
              updated_on = ^CSQL.now[]
-       where id = "^aUserID.int(-1)"       
+       where id = "^aUserID.int(-1)"
     }
     ^_updateUserPermissions[$aUserID;$aOptions.group]
   }[$.isNatural(true)]
@@ -163,12 +173,12 @@ pfClass
   $result[]
   ^if(^aUserID.int(0) && ^aGroup.int(0)){
     ^CSQL.void{insert ignore into ${_database}.groups_users (group_id, user_id) values ("^aGroup.int(0)", "^aUserID.int(0)")}
-    ^CSQL.void{insert ignore into ${_database}.members (user_id, project_id, mail_notification, created_on) 
-                 select ^aUserID.int(0), project_id, mail_notification, ^CSQL.now[] 
-                   from ${_database}.members 
+    ^CSQL.void{insert ignore into ${_database}.members (user_id, project_id, mail_notification, created_on)
+                 select ^aUserID.int(0), project_id, mail_notification, ^CSQL.now[]
+                   from ${_database}.members
                   where user_id = ^aGroup.int(0)
               }
-    ^CSQL.void{insert ignore into ${_database}.member_roles (member_id, role_id, inherited_from) 
+    ^CSQL.void{insert ignore into ${_database}.member_roles (member_id, role_id, inherited_from)
                  select m1.id, mr.role_id, mr.inherited_from
                  from ${_database}.members as m1
                       join ${_database}.members as m2 on (m1.user_id = ^aUserID.int(0) and m1.project_id = m2.project_id and m2.user_id = ^aGroup.int(0))
