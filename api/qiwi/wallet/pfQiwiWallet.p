@@ -18,28 +18,28 @@ pfClass
 @create[aOptions]
 ## aOptions.shopID
 ## aOptions.password
-## aOptions.url[https://ishop.qiwi.ru/xml]  
+## aOptions.url[https://ishop.qiwi.ru/xml]
 ## aOptions.timeout(10)
 ## aOptions.prefix[QIWI_PF_] - Глобальный префикс для счетов. Счета, которые создаются, отменяются,
 ##                             проверяются через этот модуль будут иметь ID, начинающийся с этого
 ##                             префикса. Можно оставить пустым.
-## aOptions.charset[utf-8] 
+## aOptions.charset[utf-8]
 ## aOptions.lifetime(0) - Время жизни счёта по умолчанию. Задается в часах.
 ##                        Если 0, то "неограничен" (45 суток).
 ## aOptions.createClient(true) - при выставлении счёта создается пользователь в системе QIWI.
-##                               При этом оплатить счёт можно в терминале наличными без ввода ПИН-кода. 
+##                               При этом оплатить счёт можно в терминале наличными без ввода ПИН-кода.
 ## aOptions.alarmSMS(false) - sms оповещение пользователя о выставлении счета.
 ## aOptions.alarmCall(false) - звонок-оповещение пользователя о выставлении счета.
   ^cleanMethodArgument[]
-  ^BASE:create[$aOptions]                
+  ^BASE:create[$aOptions]
   ^pfAssert:isTrue(def $aOptions.shopID)[Не задан shopID (login) магазина.]
-  
+
   $_shopID[$aOptions.shopID]
   $_password[$aOptions.password]
   $_url[^if(def $aOptions.url){$aOptions.url}{https://ishop.qiwi.ru/xml}]
   $_charset[^if(def $aOptions.charset){$aOptions.charset}{utf-8}]
   $_timeout(^aOptions.timeout.int(10))
-  
+
   $_options[
     $.prefix[^if(def $aOptions.prefix){$aOptions.prefix}{QIWI_PF_}]
     $.lifetime(^aOptions.lifetime.double(0))
@@ -70,7 +70,7 @@ pfClass
     $.161(true)
     $._default(false)
   ]
-  
+
   $_errors[
     $._default[Неизвестная ошибка.]
     $.300[Неизвестная ошибка.]
@@ -83,7 +83,7 @@ pfClass
     $.370[Превышено максимальное количество одновременно выполняемых запросов.]
     $.0[OK]
   ]
-    
+
 #----- Public -----
 
 @createBill[aBill;aOptions][lOptions;lResponse;lDoc]
@@ -95,7 +95,7 @@ pfClass
 ## aOptions - если не указывать, будут использоваться соответствующие параметры из конструктора.
 ## aOptions.ignorePrefix(false) - не вставлять префикс перед номером счета.
   ^cleanMethodArgument[aBill]
-  ^cleanMethodArgument[]   
+  ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aBill.phone)[Не задан номер телефона.]
   ^pfAssert:isTrue(def $aBill.txnID)[Не задан номер транзакции (счета).]
   ^pfAssert:isTrue($aBill.amount > 0)[Сумма счета должна быть положительной.]
@@ -106,9 +106,10 @@ pfClass
 
   $lResponse[^pfCFile:load[text;$_url;
     $.charset[$_charset]
-    $.method[POST]     
+    $.method[POST]
     $.content-type[text/xml]
     $.timeout($_timeout)
+    $.any-status(true)
     $.body[<?xml version="1.0" encoding="$_charset"?>
       <request>
         <protocol-version>4.00</protocol-version>
@@ -123,17 +124,21 @@ pfClass
         <extra name="ltime">^lOptions.lifetime.double(0)</extra>
         <extra name="ALARM_SMS">^lOptions.alarmSMS.int(0)</extra>
         <extra name="ACCEPT_CALL">^lOptions.alarmCall.int(0)</extra>
-      </request>          
+      </request>
     ]
-  ]] 
+  ]]
+  ^if($lResponse.status ne "200"){
+    ^throw[pfQiwiWallet.fail;HTTP error $lResponse.status;$lResponse.text]
+  }
+
   $lDoc[^xdoc::create{<?xml version="1.0" encoding="$_charset"?>^taint[as-is][$lResponse.text]}]
   ^_checkResponse[$lDoc]
 
 @cancelBill[aTxnID;aOptions][lResponse;lDoc;lOptions]
-## Отмена счета. 
+## Отмена счета.
 ## aTxnID - номер счета
 ## aOptions.ignorePrefix(false) - не вставлять префикс перед номером счета.
-  ^cleanMethodArgument[]   
+  ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aTxnID)[Не задан номер транзакции (счета).]
 
   $result[]
@@ -142,9 +147,10 @@ pfClass
 
   $lResponse[^pfCFile:load[text;$_url;
     $.charset[$_charset]
-    $.method[POST]     
+    $.method[POST]
     $.content-type[text/xml]
     $.timeout($_timeout)
+    $.any-status(true)
     $.body[<?xml version="1.0" encoding="$_charset"?>
       <request>
         <protocol-version>4.00</protocol-version>
@@ -155,18 +161,22 @@ pfClass
         <extra name="status">reject</extra>
       </request>
     ]
-  ]] 
+  ]]
+  ^if($lResponse.status ne "200"){
+    ^throw[pfQiwiWallet.fail;HTTP error $lResponse.status;$lResponse.text]
+  }
+
   $lDoc[^xdoc::create{<?xml version="1.0" encoding="$_charset"?>^taint[as-is][$lResponse.text]}]
   ^_checkResponse[$lDoc]
-  
+
 @billStatus[aIDS;aOptions][lOptions;lResponse;lDoc;k;v;i;lNodes;lID]
-## Проверка статуса счетов. 
+## Проверка статуса счетов.
 ## aIDS<string|hash|table> - номера счетов, которые необходимо проверить.
-## aOptions.ignorePrefix(false) - не вставлять префикс перед номером счета. 
+## aOptions.ignorePrefix(false) - не вставлять префикс перед номером счета.
 ## aOptions.column[id] - имя колонки с номерами счетов (если в aIDS пришла таблица)
-## result<hash>[$.[txnID][$.status $.amount $.isPaid $.isCanceled $.rawID]] 
+## result<hash>[$.[txnID][$.status $.amount $.isPaid $.isCanceled $.rawID]]
 ##      - ключ - номер счета без префикса (если не задан ignorePrefix)
-  ^cleanMethodArgument[]   
+  ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aIDS)[Не заданы номера транзакций (счетов).]
 
   $result[^hash::create[]]
@@ -176,9 +186,10 @@ pfClass
 
   $lResponse[^pfCFile:load[text;$_url;
     $.charset[$_charset]
-    $.method[POST]     
+    $.method[POST]
     $.content-type[text/xml]
     $.timeout($_timeout)
+    $.any-status(true)
     $.body[<?xml version="1.0" encoding="$_charset"?>
       <request>
         <protocol-version>4.00</protocol-version>
@@ -188,25 +199,29 @@ pfClass
         <bills-list>
           ^switch(true){
             ^case($aIDS is string || $aIDS is int){
-              <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$aIDS]" /> 
+              <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$aIDS]" />
             }
             ^case($aIDS is hash){
               ^aIDS.foreach[k;v]{
-                <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$k]" /> 
+                <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$k]" />
               }
             }
             ^case($aIDS is table){
               ^aIDS.menu{
-                <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$aIDS.[$lOptions.column]]" /> 
+                <bill txn-id="^taint[xml][^if(!^lOptions.ignorePrefix.bool(false)){$_options.prefix}$aIDS.[$lOptions.column]]" />
               }
             }
           }
         </bills-list>
-      </request>          
+      </request>
     ]
-  ]] 
+  ]]
+  ^if($lResponse.status ne "200"){
+    ^throw[pfQiwiWallet.fail;HTTP error $lResponse.status;$lResponse.text]
+  }
+
   $lDoc[^xdoc::create{<?xml version="1.0" encoding="$_charset"?>^taint[as-is][$lResponse.text]}]
-  ^_checkResponse[$lDoc]  
+  ^_checkResponse[$lDoc]
 
   $lNodes[^lDoc.select[/response/bills-list/bill]]
   ^if($lNodes){
@@ -216,7 +231,7 @@ pfClass
         $.status[^lNodes.[$i].getAttribute[status]]
         $.isPaid($_successStatuses.[^lNodes.[$i].getAttribute[status]])
         $.isCanceled($_cancelStatuses.[^lNodes.[$i].getAttribute[status]])
-        $.amount[^lNodes.[$i].getAttribute[sum]]   
+        $.amount[^lNodes.[$i].getAttribute[sum]]
         $.rawID[$lID]
       ]
     }
@@ -229,7 +244,7 @@ pfClass
   $lRes[
     $.status(^aDoc.selectString[string(/response/result-code)])
     $.fatality(^if(^aDoc.selectString[string(/response/result-code/@fatal)] eq "true"){1}{0})
-  ]    
+  ]
   ^if($lRes.status > 0 && $lRes.fatality){
     ^throw[pfQiwiWallet.fail;$_errors.[$lRes.status] ($lRes.status);^aDoc.string[$.method[html]]]
   }
