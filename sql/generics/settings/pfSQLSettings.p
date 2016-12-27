@@ -29,7 +29,7 @@ pfClass
   $_valueColumn[^taint[^if(def $aOptions.valueColumn){$aOptions.valueColumn}{value}]]
 
   $_vars[^_CSQL.hash{
-    select distinct ^if($_ignoreKeyCase){upper(`$_keyColumn`)}{`$_keyColumn`} as `key`,
+    select ^if($_ignoreKeyCase){upper(`$_keyColumn`)}{`$_keyColumn`} as `key`,
                     `$_valueColumn` as value
                from $_tableName
         }[$.type[string]]]
