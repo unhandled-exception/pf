@@ -98,7 +98,7 @@ pfClass
              }
              ^if(def $aOptions.title){
                ^if($aOptions.title is hash){
-                 and t.title in (^aOptions.title.foreach[k;v]{"$k",} -1)
+                 and t.title in (^aOptions.title.foreach[k;v]{"$k",} null)
                }{
                  and t.title = "$aOptions.title"
                }
@@ -144,10 +144,10 @@ pfClass
                ^case[DEFAULT;string;int]{and ti.content_id = "$aContent"}
                ^case[table]{
                  $lContentTableColumn[^if(def $aOptions.contentTableColumn){$aOptions.contentTableColumn}{contentID}]
-                 and ti.content_id in (^aContent.menu{"$aContent.[$lContentTableColumn]", } -1)
+                 and ti.content_id in (^aContent.menu{"$aContent.[$lContentTableColumn]", } null)
                }
                ^case[hash]{
-                 and ti.content_id in (^aContent.foreach[ck;cv]{"$ck",} -1)
+                 and ti.content_id in (^aContent.foreach[ck;cv]{"$ck",} null)
                }
              }
              ^if(^aOptions.onlyVisible.bool(false)){
@@ -178,10 +178,10 @@ pfClass
        }
        ^case[table]{                       
          $lTagTableColumn[^if(def $aOptions.tagTableColumn){$aOptions.tagTableColumn}{tagID}]
-         and tag_id in (^aTag.menu{"$aTag.[$lTagTableColumn]", } -1)
+         and tag_id in (^aTag.menu{"$aTag.[$lTagTableColumn]", } null)
        }
        ^case[hash]{
-         and tag_id in (^aTag.foreach[k;v]{"$k",} -1)
+         and tag_id in (^aTag.foreach[k;v]{"$k",} null)
        }
      }
      and content_type_id = "^aOptions.contentType.int($_defaultContentType)"
@@ -344,7 +344,7 @@ pfClass
   ^CSQL.transaction{
 #   В MySQL'е можно все сделать сильно проще (за счет поддержки replace-select), 
 #   но для джененрик-класса привязка к одной базе не канает. 
-    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{"$aTags.tagID"}[, ], -1}]
+    $lTagsList[^if(def $aTags && $aTags){^aTags.menu{"$aTags.tagID"}[, ], null}]
     $lWhere[1=1
       ^if(def $lTagsList){
         and tag_id in ($lTagsList)
@@ -395,8 +395,8 @@ pfClass
         where 
         ^switch[$aContent.CLASS_NAME]{
           ^case[string;int;double]{content_id = "$aContent"}
-          ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{"$ck"}[, ],} -1)}
-          ^case[table]{content_id in (^if($aContent){^aContent.menu{"$aContent.[$lContentColumnName]"}[, ],} -1)}
+          ^case[hash]{content_id in (^if($aContent){^aContent.foreach[ck;cv]{"$ck"}[, ],} null)}
+          ^case[table]{content_id in (^if($aContent){^aContent.menu{"$aContent.[$lContentColumnName]"}[, ],} null)}
         }
         and content_type_id = "$lContentType"
       }
