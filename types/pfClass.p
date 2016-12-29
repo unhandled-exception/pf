@@ -148,6 +148,32 @@ pf/tests/pfAssert.p
 ## if наоборот.
   $result[^if(!$aCond){$aFalseCode}{$aTrueCode}]
 
+@ifdef[aValue;aDefaultValue]
+## Возвращает значение aValue, если переменная определена (def) или возвращает aDefaultValue.
+## Лучше передавать значение по-умолчанию как код:
+## ^ifdef[value]{default}
+## ^ifdef[value](expression)
+  $result[^if(def $aValue){$aValue}{$aDefaultValue}]
+
+@firstdef[*aArgs]
+## Возвращает первый попавшийся определенный (def) аргумент.
+## Аналог coalesce из sql.
+  $result[$__VOID__]
+  ^aArgs.foreach[_;v]{
+    ^if(def $v){
+      $result[$v]
+      ^break[]
+    }
+  }
+
+@ifcontains[aObject;aName;aDefaultValue]
+## Возвращает значение поля aObject.[aName], если поле в объекте есть или aDefaultValue если нет.
+## Для проверки поля вызывает метод contains объекта.
+## aDefaultValue лучше вызывать как код:
+## ^ifcontains[$hash;key]{default}
+## ^ifcontains[$hash;key](expression))
+  $result[^if(^aObject.contains[$aName]){$aObject.[$aName]}{$aDefaultValue}]
+
 #----- Декораторы -----
 
 @decorateMethod[aFunctionName;aDecoratorFunction;aObject][locals]

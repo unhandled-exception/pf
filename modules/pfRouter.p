@@ -14,6 +14,8 @@ pfClass
   ^BASE:create[]
 
   $_routes[^hash::create[]]
+  $_reverseIndex[^hash::create[]]
+
   $_segmentSeparators[\./]
   $_varRegexp[[^^$_segmentSeparators]+]
   $_trapRegexp[(.*)]
@@ -45,7 +47,7 @@ pfClass
   ^if(!def $aOptions.requirements){$aOptions.requirements[^hash::create[]]}
 
   $lCompiledPattern[^_compilePattern[$aPattern;$aOptions]]
-  $_routes.[^eval($_routes + 1)][
+  $lRoute[
     $.pattern[$lCompiledPattern.pattern]
     $.regexp[^regex::create[$lCompiledPattern.regexp][^if(^aOptions.ignoreCase.bool(true)){i}]]
     $.ignoreCase(^aOptions.ignoreCase.bool(true))
@@ -62,6 +64,16 @@ pfClass
     $.strict(^aOptions.strict.bool(false))
     $.render[$aOptions.render]
   ]
+  $_routes.[^math:uid64[]][$lRoute]
+
+# Добавляем маршрут в обратный индекс
+  $_reverseIndex.[$lRoute.routeTo][^ifcontains[$_reverseIndex;$lRoute.routeTo]{^hash::create[]}]
+  $_reverseIndex.[$lRoute.routeTo].[^math:uid64[]][$lRoute]
+
+  ^if($lRoute.routeTo ne $lRoute.name){
+    $_reverseIndex.[$lRoute.name][^ifcontains[$_reverseIndex;$lRoute.name]{^hash::create[]}]
+    $_reverseIndex.[$lRoute.name].[^math:uid64[]][$lRoute]
+  }
 
 @root[aRouteTo;aOptions]
 ## Добавляет действие для пустого роута
@@ -113,23 +125,26 @@ pfClass
   $aAction[^_trimPath[$aAction]]
   $aArgs[^if($aArgs is table){$aArgs.fields}{^hash::create[$aArgs]}]
   ^aArgs.add[$aOptions.form]
-  ^_routes.foreach[k;it]{
-#   Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
-    ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){
-      $lPath[^_applyPath[$it.pattern;$aArgs]]
-#     Проверяем соотвтетствует ли полученный путь шаблоу (с ограничениями requirements)
-      ^if(^lPath.match[$it.regexp]){
-#       Добавляем оставшиеся параметры из aArgs или aOptions.form в result.args
-        $result.path[$lPath]
-        $result.prefix[^_applyPath[$it.prefix;$aArgs]]
-        $result.reversePrefix[^_applyPath[$it.reversePrefix;$aArgs]]
-        ^if($lOnlyPatternsVar){
-          $result.args[^hash::create[$aOptions.form]]
-        }{
-           $result.args[$aArgs]
-         }
-        ^result.args.sub[$it.vars]
-        ^break[]
+
+  ^if(^_reverseIndex.contains[$aAction]){
+    ^_reverseIndex.[$aAction].foreach[k;it]{
+#     Ищем подходящий маршрут по action (если в routeTo содержатся переменные, то лучше использовать name для маршрута)
+      ^if((def $it.name && $aAction eq $it.name) || $aAction eq $it.routeTo){
+        $lPath[^_applyPath[$it.pattern;$aArgs]]
+#       Проверяем соотвтетствует ли полученный путь шаблоу (с ограничениями requirements)
+        ^if(^lPath.match[$it.regexp]){
+#         Добавляем оставшиеся параметры из aArgs или aOptions.form в result.args
+          $result.path[$lPath]
+          $result.prefix[^_applyPath[$it.prefix;$aArgs]]
+          $result.reversePrefix[^_applyPath[$it.reversePrefix;$aArgs]]
+          ^if($lOnlyPatternsVar){
+            $result.args[^hash::create[$aOptions.form]]
+          }{
+             $result.args[$aArgs]
+           }
+          ^result.args.sub[$it.vars]
+          ^break[]
+        }
       }
     }
   }
@@ -140,7 +155,6 @@ pfClass
     $result.prefix[^_applyPath[$_rootRoute.prefix;$aArgs]]
     $result.args[$aArgs]
   }
-
 
 #----- Private -----
 
