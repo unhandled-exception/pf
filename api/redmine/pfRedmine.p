@@ -123,17 +123,20 @@ pfClass
   ^CSQL.void{update ${_database}.users set status = 3 where id = '^aUserID.int(-1)'}
 
 @createUser[aOptions]
+## aOptions.salt[uuid]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aOptions.login)[На задан логин.]
   ^pfAssert:isTrue(def $aOptions.password)[На задан пароль.]
+
   ^CSQL.transaction{
     ^CSQL.void{
       insert into ${_database}.users
          set login = "$aOptions.login",
 
 #            The hashed password is stored in the following form: SHA1(salt + SHA1(password))
-             hashed_password = '^math:sha1[^math:sha1[$aOptions.password]]',
-             salt = '',
+             $lSalt[^ifdef[$aOptions.salt]{^math:uuid[]}]
+             hashed_password = '^math:sha1[${lSalt}^math:sha1[$aOptions.password]]',
+             salt = '$lSalt',
 
              firstname = '$aOptions.firstname',
              lastname = '$aOptions.lastname',
@@ -150,16 +153,20 @@ pfClass
   }[$.isNatural(true)]
 
 @updateUser[aUserID;aOptions][locals]
+## aOptions.salt[uuid]
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def ^aUserID.int(0))[На задан id пользователя.]
+
   ^CSQL.transaction{
     ^CSQL.void{
       update ${_database}.users
          set ^if(^aOptions.contains[login]){login = '$aOptions.login',}
              ^if(def $aOptions.password){
-               hashed_password = '^math:sha1[^math:sha1[$aOptions.password]]',
-               salt = '',
+#              The hashed password is stored in the following form: SHA1(salt + SHA1(password))
+               $lSalt[^ifdef[$aOptions.salt]{^math:uuid[]}]
+               hashed_password = '^math:sha1[${lSalt}^math:sha1[$aOptions.password]]',
+               salt = '$lSalt',
              }
              ^if(^aOptions.contains[firstname]){firstname = '$aOptions.firstname',}
              ^if(^aOptions.contains[lastname]){lastname = '$aOptions.lastname',}
