@@ -145,7 +145,7 @@ pfAuthStorage
     ^case[md5]{$result[^math:md5[$aPassword]]}
     ^case[sha1]{$result[^math:sha1[$aPassword]]}
     ^case[mysql]{$result[^CSQL.string{select PASSWORD("$aPassword")}]}
-    ^case[mysql_old]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
+    ^case[old_mysql]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
   }
 
 @clearSessionsForLogin[aLogin;aOptions]
