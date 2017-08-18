@@ -146,8 +146,9 @@ pfCFile
             ^case[;GET;HEAD;DELETE]{
               $result.url[$result.url^if(^result.url.pos[?] >= 0){&}{?}^_formUrlencode[$lForm]]
             }
-            ^case[POST]{
+            ^case[POST;PUT;PATCH]{
               $result.postfields[^_formUrlencode[$lForm]]
+              $result.post(1)
             }
           }
         }
