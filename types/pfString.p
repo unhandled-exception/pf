@@ -5,9 +5,12 @@
 @CLASS
 pfString
 
-#@doc
 ##  Класс с различными строковыми функциями.
-#/doc
+
+@auto[]
+  $self.__pfString__[
+    $.classDefRegex[^regex::create[^^([^^@:]*)(?:@([^^:]+))?(?::+(.+))?^$]]
+  ]
 
 @trim[aString;aSide;aSymbols]
 ## Обертка над стандартным парсеровским trim'ом, которая проверяет существование строку.
@@ -269,3 +272,17 @@ pfString
   }{
      $result(^math:abs($n - $m))
    }
+
+@parseClassDef[aClassDef] -> [$.className $.constructor $.package $.classDef]
+## Метод может быть вызван из других классов для разбора пути к пакетам.
+  $aClassDef[^aClassDef.trim[]]
+  $result[$.classDef[$aClassDef]]
+  ^aClassDef.match[$self.__pfString__.classDefRegex][]{
+    $result.constructor[^if(def $match.3){$match.3}{create}]
+    ^if(def $match.2){
+      $result.className[$match.2]
+    }{
+       $result.className[^file:justname[$match.1]]
+     }
+    $result.package[^if($match.1 ne $result.className){$match.1}]
+  }

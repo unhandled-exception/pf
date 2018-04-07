@@ -107,7 +107,7 @@ pfClass
   $result($_transactionsCount > 0)
 
 @GET_serverType[]
-  $result[$_severType]
+  $result[$_serverType]
 
 @GET_isNaturalTransactions[]
 ## Возвращает true, если включен резим "натуральной транзакции".

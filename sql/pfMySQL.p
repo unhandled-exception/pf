@@ -20,7 +20,7 @@ pfSQL
 @create[aConnectString;aOptions]
   ^cleanMethodArgument[]
   ^BASE:create[$aConnectString;$aOptions]
-  $_serverType[MySQL]
+  $_serverType[mysql]
 
 @startTransaction[aOptions]
 ## Открывает транзакцию.
