@@ -241,8 +241,13 @@ pfClass
 ## Возвращает результат запроса из коллекции объектов.
 ## Если объект не найден, то запускает запрос и добавляет его результат в коллекцию.
 ## aOptions.isForce(false) - принудительно отменяет кеширование
+## aOptions.force(false) - принудительно отменяет кеширование
 ## aOptions.identityMapKey[] - ключ для коллекции (по-умолчанию MD5 на aQuery).    
   $result[]
+  ^if(^aOptions.contains[force]){
+    $aOptions[^hash::create[$aOptions]]
+    $aOptions.isForce(^aOptions.force.bool(false))
+  }
   $lIsIM($_enableIdentityMap && !^aOptions.isForce.bool(false))
   $lKey[^if(def $aOptions.identityMapKey){$aOptions.identityMapKey}{$aOptions.queryKey}]
 
@@ -268,6 +273,10 @@ pfClass
 ## вычисляет ключ запроса.
   ^cleanMethodArgument[]
   ^cleanMethodArgument[aSQLOptions]
+  ^if(^aOptions.contains[force]){
+    $aOptions[^hash::create[$aOptions]]
+    $aOptions.isForce(^aOptions.force.bool(false))
+  }
   $result[^hash::create[$aOptions]]
   ^result.add[$aSQLOptions]   
   $result.type[$aType]
@@ -282,10 +291,15 @@ pfClass
 ## Возвращает результат запроса. Если нужно оранизует транзакцию.
 ## aOptions.isCaching(false) - принудительно включает кеширование
 ## aOptions.isForce(false) - принудительно отменяет кеширование (если оно включено глобально)
+## aOptions.force(false) - принудительно отменяет кеширование (если оно включено глобально)
 ## aOptions.cacheKey[] - ключ кеширования
 ## aOptions.cacheTime[секунды|дата окончания]
 ## aOptions.queryKey
   ^cleanMethodArgument[]
+  ^if(^aOptions.contains[force]){
+    $aOptions[^hash::create[$aOptions]]
+    $aOptions.isForce(^aOptions.force.bool(false))
+  }
   ^if(($isCaching || $aOptions.isCaching) 
       && (def $aOptions.cacheKey || def $aOptions.queryKey) 
       && !^aOptions.isForce.bool(false)){
@@ -309,7 +323,7 @@ pfClass
   ^if($_enableQueriesLog){
     ^_stat.queries.add[                
       $.type[$aType]
-      $.query[^taint[$aOptions.query]] 
+      $.query[^taint[^ifdef[$aOptions.log]{^self.connect{^apply-taint[sql][$aOptions.query]}}]]
       $.time($lEnd-$lStart) 
       $.limit[$aOptions.limit] 
       $.offset[$aOptions.offset] 
