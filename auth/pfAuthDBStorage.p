@@ -1,7 +1,7 @@
 # PF Library
 
 #@info     Модуль для работы с хранилищем данных аутентификации, хранящимся в БД
-#@author   Oleg Volchkov <oleg@volchkov.net>                                                                                                          
+#@author   Oleg Volchkov <oleg@volchkov.net>
 #@web      http://oleg.volchkov.net
 
 @CLASS
@@ -18,7 +18,7 @@ pfAuthStorage
 @create[aOptions]
 ## aOptions.sql - объект для доступа к БД
 ## aOptions.usersTable[users] - имя таблицы с пользователем
-## aOptions.sessionsTable[sessions] - имя таблицы сессий  
+## aOptions.sessionsTable[sessions] - имя таблицы сессий
 ## aOptions.cryptType[crypt|md5|sha1|mysql|old_mysql] - тип хеширования пароля (default: crypt)
 ## aOptions.salt
   ^cleanMethodArgument[]
@@ -27,15 +27,15 @@ pfAuthStorage
   ^BASE:create[$aOptions]
 
   $_sql[$aOptions.sql]
-  $_usersTable[^if(def $aOptions.usersTable){$aOptions.usersTable}{users}]  
-  $_sessionsTable[^if(def $aOptions.sessionsTable){$aOptions.sessionsTable}{sessions}]  
+  $_usersTable[^if(def $aOptions.usersTable){$aOptions.usersTable}{users}]
+  $_sessionsTable[^if(def $aOptions.sessionsTable){$aOptions.sessionsTable}{sessions}]
 
-  $_cryptType[$aOptions.cryptType] 
+  $_cryptType[$aOptions.cryptType]
   $_salt[^if(def $aOptions.salt){$aOptions.salt}{^$apr1^$}]
-  
+
   $_extraFields[^hash::create[]]
 
-#----- Properties -----   
+#----- Properties -----
 
 @GET_CSQL[]
   $result[$_sql]
@@ -52,7 +52,7 @@ pfAuthStorage
 @getUser[aID;aOptions][k;v]
 ## Загрузить данные о пользователе по ID (по-умолчанию логину)
 ## aOptions.active[active|inactive|any]
-## aOptions.idType[login|id] 
+## aOptions.idType[login|id]
   ^cleanMethodArgument[]
   $result[^CSQL.table{select id, login, password
                              ^if($_extraFields){
@@ -68,38 +68,46 @@ pfAuthStorage
                                ^case[inactive]{and is_active = "0"}
                                ^case[any]{}
                              }
-                   }[][$.isForce(true)]]
+                   }[][
+                     $.isForce(true)
+                     $.log[-- Get an user]
+                   ]]
   $result[^if($result){$result.fields}{^hash::create[]}]
 
 @getSession[aOptions]
-## Загрузить сессию 
+## Загрузить сессию
 ## aOptions.uid - первый идентификатор сессии (пользовательский)
 ## aOptions.sid - второй идентификатор сессии (сессионный)
-  ^cleanMethodArgument[]                              
+  ^cleanMethodArgument[]
   ^if(def $aOptions.uid && def $aOptions.sid){
     $result[^CSQL.table{select uid, sid, login, is_persistent, dt_create, dt_access, dt_close
                           from $_sessionsTable
                          where uid = "$aOptions.uid"
                                and sid = "$aOptions.sid"
                                and is_active = "1"
-    }[][$.isForce(true)]]
+    }[][
+      $.isForce(true)
+      $.log[-- Get an auth session]
+    ]]
     $result[^if($result){$result.fields}{^hash::create[]}]
   }{
     $result[^hash::create[]]
-  }               
-  
+  }
+
 @addSession[aSession]
 ## Добавляем сессию в хранилище
   ^CSQL.void{insert into $_sessionsTable (uid, sid, login, dt_access, dt_create, is_persistent, ip)
              values ("$aSession.uid", "$aSession.sid", "$aSession.login",
-                      ^if(def $aSession.dt_access){"$aSession.dt_create"}{^CSQL.now[]},  
-                      ^if(def $aSession.dt_login){"$aSession.dt_login"}{^CSQL.now[]},  
+                      ^if(def $aSession.dt_access){"$aSession.dt_create"}{^CSQL.now[]},
+                      ^if(def $aSession.dt_login){"$aSession.dt_login"}{^CSQL.now[]},
                       ^if(def $aSession.is_persistent && $aSession.is_persistent){"1"}{"0"},
-                      inet_aton("$env:REMOTE_ADDR")                    
+                      inet_aton("$env:REMOTE_ADDR")
                      )
-  }     
+  }[][
+    $.log[-- Insert an auth session]
+  ]
   $result(true)
-  
+
 @updateSession[aSession;aNewSession]
 ## Обновить данные о сессии в хранилище
   ^CSQL.void{update $_sessionsTable
@@ -109,7 +117,9 @@ pfAuthStorage
                     dt_access = ^if(def $aNewSession.dt_access){"$aNewSession.dt_access"}{^CSQL.now[]}
               where uid = "$aSession.uid"
                     and sid = "$aSession.sid"
-  }     
+  }[][
+    $.log[-- Update an auth session]
+  ]
   $result(true)
 
 @deleteSession[aSession]
@@ -119,7 +129,9 @@ pfAuthStorage
                  dt_close = ^CSQL.now[]
            where uid = "$aSession.uid"
                  and sid = "$aSession.sid"
-  }     
+  }[][
+    $.log[-- Delete an auth session]
+  ]
   $result(true)
 
 @isValidPassword[aPassword;aCrypted]
@@ -129,14 +141,14 @@ pfAuthStorage
       ^case[crypt;DEFAULT]{$result(^math:crypt[$aPassword;$aCrypted] eq $aCrypted)}
       ^case[md5]{$result(^math:md5[$aPassword] eq $aCrypted)}
       ^case[sha1]{$result(^math:sha1[$aPassword] eq $aCrypted)}
-      ^case[mysql]{$result(^CSQL.int{select "$aCrypted" = PASSWORD("$aPassword")})}
-      ^case[old_mysql]{$result(^CSQL.int{select "$aCrypted" = OLD_PASSWORD("$aPassword")})}
+      ^case[mysql]{$result(^CSQL.int{select "$aCrypted" = PASSWORD("$aPassword")}[][$.log[-- Validate a password (mysql password())]])}
+      ^case[old_mysql]{$result(^CSQL.int{select "$aCrypted" = OLD_PASSWORD("$aPassword")[][$.log[-- Validate a password (mysql old_password())]]})}
     }
   }
 
 @passwordHash[aPassword;aOptions]
 ## aOptions.type - перекрывает тип, заданный в классе
-## aOptions.salt[$apr1$] - salt для метода crypt    
+## aOptions.salt[$apr1$] - salt для метода crypt
   ^cleanMethodArgument[]
   ^switch[^if(def $aOptions.type){$aOptions.type}{^_cryptType.lower[]}]{
     ^case[crypt;DEFAULT]{
@@ -144,8 +156,8 @@ pfAuthStorage
     }
     ^case[md5]{$result[^math:md5[$aPassword]]}
     ^case[sha1]{$result[^math:sha1[$aPassword]]}
-    ^case[mysql]{$result[^CSQL.string{select PASSWORD("$aPassword")}]}
-    ^case[old_mysql]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}]}
+    ^case[mysql]{$result[^CSQL.string{select PASSWORD("$aPassword")}[][$.log[-- Hash a password (mysql password())]]]}
+    ^case[old_mysql]{$result[^CSQL.string{select OLD_PASSWORD("$aPassword")}[][$.log[-- Hash a password (mysql old_password())]]]}
   }
 
 @clearSessionsForLogin[aLogin;aOptions]
@@ -159,14 +171,14 @@ pfAuthStorage
         and uid != "^taint[$aOptions.ignoreSession.uid]"
       }
   }
-   
+
 @userAdd[aOptions][k;v]
 ## Добавляет пользователя
 ## aOptions.login
 ## aOptions.password
 ## aOptions.isActive
 ## aOptions.<> - поля из _extraFields
-## result[id пользователя] 
+## result[id пользователя]
   $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(def $aOptions.login)[Не задан login.]
@@ -174,10 +186,12 @@ pfAuthStorage
     ^CSQL.void{
       insert into $_usersTable (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){`^if(def $v){$v}{$k}`, }} login, password, is_active)
       values (^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){"$aOptions.[$k]", }} "^taint[$aOptions.login]", "^taint[^passwordHash[$aOptions.password]]", "^aOptions.isActive.int(1)")
-    }
+    }[][
+      $.log[-- Insert an user]
+    ]
     $result[^CSQL.lastInsertId[]]
   }{
-     ^throw[pfAuth.user.exists;Пользователь "$aOptions.login" уже есть в системе.] 
+     ^throw[pfAuth.user.exists;Пользователь "$aOptions.login" уже есть в системе.]
    }
 
 @userModify[aUserID;aOptions][k;v]
@@ -197,14 +211,16 @@ pfAuthStorage
            ^_extraFields.foreach[k;v]{^if(^aOptions.contains[$k]){ `^if(def $v){$v}{$k}` = ^if(def $aOptions.[$k]){"^taint[$aOptions.[$k]]"}{null}, }}
            id = id
      where id = "^aUserID.int(0)"
-  }
+  }[][
+    $.log[-- Update an user (uid: $aUserID)]
+  ]
 
 @userDelete[aUserID;aOptions]
-## Удаляет пользователя                          
+## Удаляет пользователя
 ## По-умолчанию делает пользователя неактивным
 ## aOptions.force(false) - удаляет запись и сессии
 ## aOptions.cleanSessions(false) - удалить сессии
-  $result[]                                      
+  $result[]
   ^cleanMethodArgument[]
   ^pfAssert:isTrue(^aUserID.int(0) > 0)[Не задан userID.]
 
@@ -215,10 +231,10 @@ pfAuthStorage
    }
 
   ^if(^aOptions.cleanSessions.bool(false) || ^aOptions.force.bool(false)){
-    ^CSQL.void{delete from s 
-                     using $_sessionsTable as s 
-                           join $_usersTable as u 
-                     where s.login = u.login 
+    ^CSQL.void{delete from s
+                     using $_sessionsTable as s
+                           join $_usersTable as u
+                     where s.login = u.login
                            and u.id = "^aUserID.int(0)"
               }
   }
@@ -227,7 +243,7 @@ pfAuthStorage
 ## Таблица со всеми пользователями
 ## aOptions.active[active|inactive|any]
 ## aOptions.limit
-## aOptions.offset   
+## aOptions.offset
 ## aOptions.sort[id|login]
   ^cleanMethodArgument[]
   $result[^CSQL.table{select id, login, password, is_active as isActive
@@ -248,5 +264,7 @@ pfAuthStorage
   }[
      ^if(^aOptions.contains[limit]){$.limit($aOptions.limit)}
      ^if(^aOptions.contains[offset]){$.offset($aOptions.offset)}
-   ][$.isForce(true)]]
-
+  ][
+    $.isForce(true)
+    $.log[-- Fetch users]
+  ]]
