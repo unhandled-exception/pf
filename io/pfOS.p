@@ -158,13 +158,16 @@ pf/tests/pfAssert.p
     ^lHashfile.release[]
   }
 
-@absolutePath[aPath;aBasePath][lBaseParts;lParts;lStep;i]
+@absolutePath[aPath;aBasePath]
 ## Возвращает полный путь к файлу относительно aBasePath[$request:document-root].
   $aPath[^file:fullpath[$aPath]]
   $aPath[^aPath.trim[both;/\]]
-  $aBasePath[^if(def $aBasePath){^aBasePath.trim[both;/\]}{^request:document-root.trim[both;/\]}]
+
+  $aBasePath[^if(def $aBasePath){$aBasePath}{$request:document-root}]
+  $aBasePath[^aBasePath.trim[both;/\]]
+
   $lParts[^aPath.split[/]]
-  
+
 # Вычисляем число уровней на которые нам надо подняться
   $lStep(0)
   ^for[i](1;$lParts){
