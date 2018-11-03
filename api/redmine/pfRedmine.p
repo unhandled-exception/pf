@@ -59,7 +59,7 @@ pfClass
       set project_id = '$aProjectID',
           ^aOptions.foreach[k;v]{
             ^if(def $_validIssueFields.$k){
-              ${_validIssueFields.$k} = '$v',
+              ${_validIssueFields.$k} = '^taint[$v]',
             }
           }
           ^if(!def $aOptions.startDate){start_date = ^CSQL.today[],}
@@ -75,7 +75,7 @@ pfClass
   ^if($aOptions.custom){
     ^CSQL.void{
       insert into ${_database}.custom_values (customized_type, customized_id, custom_field_id, value)
-      values ^aOptions.custom.foreach[k;v]{('Issue', '$result', '$k', '$v')}[,]
+      values ^aOptions.custom.foreach[k;v]{('Issue', '$result', '^taint[$k]', '^taint[$v]')}[,]
     }
   }
 
