@@ -29,6 +29,12 @@ pf/tests/pfAssert.p
 
 #----- Public -----
 
+@assert[aCondition;aComment] -> [] | throws: assert.fail
+  $result[]
+  ^if(!$aCondition){
+    ^throw[assert.fail;An incorrect assertion;^self.ifdef[$aComment]{Assertion failed exception.}]
+  }
+
 @cleanMethodArgument[aName1;aName2;aName3;aName4;aName5;aName6;aName7;aName8;aName9;aName10][i;lName]
 ## Метод проверяет пришел ли вызывающему методу параметр с именем aName[1-10].
 ## Если пришел пустой параметр или строка, то записываем в него пустой хеш.
